@@ -8,3 +8,22 @@ data/processed/*.csv
 data/processed/*.parquet
 outputs/*.csv
 outputs/*.md
+
+# Raw API data can get large
+data/raw/
+data/raw/price_history/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local generated data
+data/raw/
+data/processed/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Mac
+.DS_Store

@@ -1,14 +1,14 @@
 """
 01_pull_raw_api_data.py
 
-Purpose:
-    Pull real raw market metadata from Polymarket and Kalshi APIs.
+Pull real raw market metadata from Polymarket and Kalshi APIs.
 
-Important:
-    This script does NOT use local/sample data.
-    This script does NOT clean data.
-    This script does NOT compute Brier scores.
-    This script only calls APIs and saves raw JSON/JSONL files.
+This script:
+    - uses real API calls
+    - saves raw JSON/JSONL files
+    - does NOT use local/sample data
+    - does NOT clean data
+    - does NOT calculate Brier scores
 
 Outputs:
     data/raw/polymarket/polymarket_raw_pages.json
@@ -31,15 +31,8 @@ from typing import Any
 import requests
 
 
-# =============================================================================
-# Config
-# =============================================================================
-
 WINDOW_DAYS = 180
 
-# Polymarket Gamma API appears to reject too-large offset pagination.
-# Earlier, offset=2500 caused a 422. So we use limit=100 and max_pages=25,
-# meaning max offset is 2400.
 POLYMARKET_LIMIT = 100
 POLYMARKET_MAX_PAGES = 25
 
@@ -58,47 +51,33 @@ HEADERS = {
 }
 
 
-# =============================================================================
-# Helpers
-# =============================================================================
-
 def save_json(path: Path, data: Any) -> None:
-    """Save a Python object as pretty JSON."""
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
     print(f"Saved JSON: {path}")
 
 
 def save_jsonl(path: Path, rows: list[dict]) -> None:
-    """Save a list of dicts as JSONL, one JSON object per line."""
     with path.open("w", encoding="utf-8") as f:
         for row in rows:
-            f.write(json.dumps(row) + "\n")
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
     print(f"Saved JSONL: {path} ({len(rows)} rows)")
 
 
 def parse_time(value: str | None) -> datetime | None:
-    """
-    Parse timestamp strings from Polymarket/Kalshi.
-
-    Handles formats like:
-        2026-03-19T23:20:15Z
-        2026-03-19 23:20:15+00
-        2028-01-01
-    """
     if not value:
         return None
 
     value = str(value).strip()
 
-    # Date only, like "2028-01-01"
+    # Example: "2028-01-01"
     if len(value) == 10:
         value = value + "T00:00:00+00:00"
 
-    # Convert Zulu time to Python ISO offset
+    # Example: "2026-03-19T23:20:15Z"
     value = value.replace("Z", "+00:00")
 
-    # Polymarket sometimes has "+00" instead of "+00:00"
+    # Example: "2026-03-19 23:20:15+00"
     if value.endswith("+00"):
         value = value + ":00"
 
@@ -107,7 +86,6 @@ def parse_time(value: str | None) -> datetime | None:
     except Exception:
         return None
 
-    # Make timezone-naive timestamps explicitly UTC
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
 
@@ -116,11 +94,8 @@ def parse_time(value: str | None) -> datetime | None:
 
 def get_polymarket_resolution_time(market: dict) -> datetime | None:
     """
-    Best estimate of Polymarket actual resolution/close time.
-
-    Important:
-        For Polymarket, endDate can be the original deadline in the rules.
-        Some markets resolve early, so closedTime / umaEndDate is better.
+    For Polymarket, endDate can be the original rule deadline.
+    closedTime / umaEndDate is usually closer to actual resolution time.
     """
     return (
         parse_time(market.get("closedTime"))
@@ -131,9 +106,6 @@ def get_polymarket_resolution_time(market: dict) -> datetime | None:
 
 
 def get_kalshi_resolution_time(market: dict) -> datetime | None:
-    """
-    Best estimate of Kalshi actual settlement time.
-    """
     return (
         parse_time(market.get("settlement_ts"))
         or parse_time(market.get("close_time"))
@@ -141,29 +113,31 @@ def get_kalshi_resolution_time(market: dict) -> datetime | None:
     )
 
 
-# =============================================================================
-# Polymarket
-# =============================================================================
+def dedupe_by_key(rows: list[dict], key: str) -> list[dict]:
+    seen = set()
+    deduped = []
+
+    for row in rows:
+        value = row.get(key)
+
+        if value is None:
+            deduped.append(row)
+            continue
+
+        if value in seen:
+            continue
+
+        seen.add(value)
+        deduped.append(row)
+
+    return deduped
+
 
 def pull_polymarket_closed_markets(
     window_days: int = WINDOW_DAYS,
     limit: int = POLYMARKET_LIMIT,
     max_pages: int = POLYMARKET_MAX_PAGES,
 ) -> list[dict]:
-    """
-    Pull raw closed Polymarket markets from Gamma API.
-
-    This function:
-        - makes real API calls
-        - saves raw API pages
-        - saves all pulled markets
-        - saves recent closed markets
-
-    It does NOT:
-        - clean markets
-        - calculate p_hat
-        - calculate Brier score
-    """
     print("\n" + "=" * 80)
     print("Pulling Polymarket closed markets")
 
@@ -181,7 +155,6 @@ def pull_polymarket_closed_markets(
             "closed": "true",
             "limit": limit,
             "offset": offset,
-            # From your curl test, this returns newer-looking closed markets.
             "order": "endDate",
             "ascending": "false",
         }
@@ -207,7 +180,6 @@ def pull_polymarket_closed_markets(
             break
 
         response.raise_for_status()
-
         data = response.json()
 
         if not isinstance(data, list):
@@ -253,6 +225,9 @@ def pull_polymarket_closed_markets(
 
         time.sleep(0.25)
 
+    all_pulled_markets = dedupe_by_key(all_pulled_markets, "id")
+    recent_closed_markets = dedupe_by_key(recent_closed_markets, "id")
+
     save_json(
         POLYMARKET_RAW_DIR / "polymarket_raw_pages.json",
         all_raw_pages,
@@ -275,34 +250,19 @@ def pull_polymarket_closed_markets(
     return recent_closed_markets
 
 
-# =============================================================================
-# Kalshi
-# =============================================================================
-
 def pull_kalshi_settled_markets(
     window_days: int = WINDOW_DAYS,
     limit: int = KALSHI_LIMIT,
     max_pages: int = KALSHI_MAX_PAGES,
 ) -> list[dict]:
-    """
-    Pull raw settled/finalized Kalshi markets.
-
-    This function:
-        - makes real API calls
-        - saves raw API pages
-        - saves all pulled markets
-        - saves recent settled markets
-
-    It does NOT:
-        - clean markets
-        - calculate p_hat
-        - calculate Brier score
-    """
     print("\n" + "=" * 80)
     print("Pulling Kalshi settled markets")
 
     base_url = "https://external-api.kalshi.com/trade-api/v2/markets"
     cutoff = datetime.now(timezone.utc) - timedelta(days=window_days)
+
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+    cutoff_ts = int(cutoff.timestamp())
 
     all_raw_pages: list[dict] = []
     all_pulled_markets: list[dict] = []
@@ -314,6 +274,9 @@ def pull_kalshi_settled_markets(
         params = {
             "status": "settled",
             "limit": limit,
+            "mve_filter": "exclude",
+            "min_settled_ts": cutoff_ts,
+            "max_settled_ts": now_ts,
         }
 
         if cursor:
@@ -333,13 +296,35 @@ def pull_kalshi_settled_markets(
         print("URL:", response.url)
 
         if response.status_code == 422:
-            print("Kalshi returned 422. Stopping Kalshi pagination gracefully.")
-            print("Response preview:")
-            print(response.text[:500])
-            break
+            print("Kalshi returned 422 with timestamp filters.")
+            print("Retrying this page without min_settled_ts / max_settled_ts...")
+
+            fallback_params = {
+                "status": "settled",
+                "limit": limit,
+                "mve_filter": "exclude",
+            }
+
+            if cursor:
+                fallback_params["cursor"] = cursor
+
+            response = requests.get(
+                base_url,
+                params=fallback_params,
+                headers=HEADERS,
+                timeout=30,
+            )
+
+            print("Fallback status:", response.status_code)
+            print("Fallback URL:", response.url)
+
+            if response.status_code == 422:
+                print("Kalshi still returned 422. Stopping Kalshi pagination gracefully.")
+                print("Response preview:")
+                print(response.text[:500])
+                break
 
         response.raise_for_status()
-
         data = response.json()
 
         if not isinstance(data, dict):
@@ -392,6 +377,9 @@ def pull_kalshi_settled_markets(
 
         time.sleep(0.25)
 
+    all_pulled_markets = dedupe_by_key(all_pulled_markets, "ticker")
+    recent_settled_markets = dedupe_by_key(recent_settled_markets, "ticker")
+
     save_json(
         KALSHI_RAW_DIR / "kalshi_raw_pages.json",
         all_raw_pages,
@@ -413,10 +401,6 @@ def pull_kalshi_settled_markets(
 
     return recent_settled_markets
 
-
-# =============================================================================
-# Main
-# =============================================================================
 
 def main() -> None:
     print("=" * 80)
