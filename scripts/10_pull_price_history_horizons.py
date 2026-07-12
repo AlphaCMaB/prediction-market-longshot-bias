@@ -65,7 +65,7 @@ HORIZONS_HOURS = [24, 48, 168]
 PRICE_HISTORY_WINDOW_HOURS = 12
 
 # Keep this moderate for now. Set to 0 to use all available rows.
-MAX_POLYMARKET_MARKETS = 500
+MAX_POLYMARKET_MARKETS = 0
 MAX_KALSHI_MARKETS = 500
 
 # Reuse saved JSON files if the script is rerun.

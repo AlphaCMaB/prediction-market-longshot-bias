@@ -1,0 +1,553 @@
+family_id,review_status,manual_anchor_type,manual_anchor_time,review_note
+kalshi_event::KXATP-26HALLE,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATP-26LONDON,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPCHALLENGERMATCH-26JUN18ALCSAN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPCHALLENGERMATCH-26JUN18BUESVR,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPCHALLENGERMATCH-26JUN18CAMRAT,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPCHALLENGERMATCH-26JUN18DJETSE,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPCHALLENGERMATCH-26JUN18FELRAQ,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPCHALLENGERMATCH-26JUN18MOCBER,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPCHALLENGERMATCH-26JUN18OCOBON,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPCHALLENGERMATCH-26JUN18RODZHO,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPEXACTMATCH-26JUN17PAUVAN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPEXACTMATCH-26JUN18ZVEHAN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPGSPREAD-26JUN17PAUVAN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPGSPREAD-26JUN18ZVEHAN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPGTOTAL-26JUN17PAUVAN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPGTOTAL-26JUN18ZVEHAN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPMATCH-26JUN17PAUVAN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPMATCH-26JUN18ZVEHAN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPSETWINNER-26JUN17PAUVAN-2,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPSETWINNER-26JUN18ZVEHAN-1,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXATPSETWINNER-26JUN18ZVEHAN-2,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB-26JUN1812,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB15M-26JUN181015,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB15M-26JUN181030,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB15M-26JUN181045,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB15M-26JUN181100,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB15M-26JUN181115,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB15M-26JUN181130,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB15M-26JUN181145,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB15M-26JUN181200,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNB15M-26JUN181215,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNBD-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNBD-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBNBD-26JUN1812,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC-26JUN1812,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC15M-26JUN181015,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC15M-26JUN181030,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC15M-26JUN181045,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC15M-26JUN181100,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC15M-26JUN181115,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC15M-26JUN181130,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC15M-26JUN181145,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC15M-26JUN181200,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTC15M-26JUN181215,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTCD-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXBTCD-26JUN1812,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2GAME-26JUN180630EXMANAPSNA,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2GAME-26JUN180800PHAJJH,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2GAME-26JUN180945BETAUR,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2GAME-26JUN181000G1HOTU,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2MAP-26JUN180800PHAJJH-2,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2MAP-26JUN180900INFOXUJI-1,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2MAP-26JUN180900INFOXUJI-2,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2MAP-26JUN180945BETAUR-1,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2MAP-26JUN180945BETAUR-2,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2MAP-26JUN181000G1HOTU-1,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2MAP-26JUN181000G1HOTU-2,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2MAP-26JUN181100KOLECH-1,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2TOTALMAPS-26JUN180630EXMANAPSNA,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2TOTALMAPS-26JUN180800PHAJJH,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2TOTALMAPS-26JUN180945BETAUR,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXCS2TOTALMAPS-26JUN181000G1HOTU,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE15M-26JUN181015,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE15M-26JUN181030,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE15M-26JUN181045,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE15M-26JUN181100,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE15M-26JUN181115,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE15M-26JUN181130,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE15M-26JUN181145,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE15M-26JUN181200,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGE15M-26JUN181215,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGED-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOGED-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXDOTA2MAP-26JUN181000AMAEB-1,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH-26JUN1812,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH15M-26JUN181015,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH15M-26JUN181030,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH15M-26JUN181045,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH15M-26JUN181100,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH15M-26JUN181115,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH15M-26JUN181130,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH15M-26JUN181145,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH15M-26JUN181200,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETH15M-26JUN181215,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETHD-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETHD-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXETHD-26JUN1812,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHIGHCHI-26JUN17,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHIGHTHOU-26JUN17,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHIGHTMIN-26JUN17,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHIGHTSEA-26JUN17,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE-26JUN1812,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE15M-26JUN181015,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE15M-26JUN181030,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE15M-26JUN181045,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE15M-26JUN181100,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE15M-26JUN181115,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE15M-26JUN181130,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE15M-26JUN181145,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE15M-26JUN181200,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPE15M-26JUN181215,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPED-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPED-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXHYPED-26JUN1812,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXINXU-26JUN18H1100,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXINXU-26JUN18H1200,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18AGEDIB,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18AUBKOP,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18AVAHYS,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18BIEHIP,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18CHABAB,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18DYEPER,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18GARPAL,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18GONDOM,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18INCBOU,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18KOVGAL,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18MALMAJ,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18PERGUI,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18POGBON,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18POPBRO,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18RATDEL,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18SCHBOO,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18SILECH,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18STABUT,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFMATCH-26JUN18ZICLIE,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18CCUZOR,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18CEXBAL,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18DRASAR,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18HURBOS,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18JANGLU,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18LOPGON,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18PAWEWA,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18PERCOL,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18SLANOE,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18THOMAQ,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXITFWMATCH-26JUN18VERDAN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXKOSPI-JUN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXLIUKELIMINATION-26JUN17,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+kalshi_event::KXLOLGAME-26JUN180500NSEAKTC,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXLOLTOTALMAPS-26JUN180500NSEAKTC,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXLOWTLAX-26JUN17,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXLOWTNOLA-26JUN17,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXLOWTSATX-26JUN17,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXLOWTSFO-26JUN17,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXNASDAQ100U-26JUN18H1100,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXNASDAQ100U-26JUN18H1200,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXOWGAME-26JUN180700T12ELMT,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXOWGAME-26JUN180830TSSSE,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXPGAHOLESCORE-USO26R1RMCI,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXPGAHOLESCORE-USO26R1SSCH,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXPOLITICSMENTION-26JUN18,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSCOTUSMARIJUANAGUN,reviewed_exclude_unclear,exclude,,Decision timing is not known ex ante from the available family metadata.
+kalshi_event::KXSOL15M-26JUN181015,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOL15M-26JUN181030,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOL15M-26JUN181045,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOL15M-26JUN181100,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOL15M-26JUN181115,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOL15M-26JUN181130,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOL15M-26JUN181145,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOL15M-26JUN181200,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOL15M-26JUN181215,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOLD-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOLD-26JUN1812,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOLE-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXSOLE-26JUN1812,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXT20MATCH-26JUN160530ROCHII,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXTEMPNYCH-26JUN1809,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXTEMPNYCH-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXTRUMPSAY-26JUN22,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+kalshi_event::KXTRUMPSAYMONTH-26JUL01,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+kalshi_event::KXTRUMPZELENSKYBILAT-26,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+kalshi_event::KXUSIRANMOU-27JAN01,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+kalshi_event::KXVALORANTGAME-26JUN180700FCYTRN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXVALORANTGAME-26JUN180700T1ADRX,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXVALORANTGAME-26JUN180900555OAS,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXVALORANTMAP-26JUN180900555OAS-1,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXVALORANTMAP-26JUN180900555OAS-2,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXVBAGAME-26JUN180830NHACHI,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWNBACCUP-26,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWT20MATCH-26JUN180730ZIMMAL,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTA-26BERLIN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTA-26NOTTIN,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTACHALLENGERMATCH-26JUN17VIDMIC,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTAMATCH-26JUN17KEYMUC,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTAMATCH-26JUN18BOUKLU,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTASETWINNER-26JUN17ANNPRE-1,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTASETWINNER-26JUN17KEYMUC-1,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTASETWINNER-26JUN17KEYMUC-2,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTASETWINNER-26JUN18BOUKLU-1,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTASETWINNER-26JUN18BOUKLU-2,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXWTI-26JUN1714,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP15M-26JUN181015,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP15M-26JUN181030,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP15M-26JUN181045,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP15M-26JUN181100,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP15M-26JUN181115,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP15M-26JUN181130,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP15M-26JUN181145,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP15M-26JUN181200,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRP15M-26JUN181215,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRPD-26JUN1810,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+kalshi_event::KXXRPD-26JUN1811,reviewed_include_fixed,scheduled_absolute,,Structured Kalshi event with a contract-level scheduled close; use each contract scheduled_end_time.
+polymarket_event::101714,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::102007,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::102030,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::102740,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::103576,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::103763,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::104392,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::105864,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::106152,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::106176,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::107569,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::108522,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::110515,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::112071,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::115614,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::117810,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::118455,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::121853,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::123568,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::127082,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::127091,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::127100,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::127101,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::127102,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::127107,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::127108,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::131190,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::131229,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::131313,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::131438,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::131448,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::131517,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::133604,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::133657,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::133675,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::133689,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::133720,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::133755,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::133760,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::134977,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::135516,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::137398,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::138745,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::139444,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::139881,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::143642,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::143669,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::145075,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::145648,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::145731,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::145887,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::145906,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::145911,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::145985,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::147394,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::147463,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::147521,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::147523,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::147778,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::148000,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::148014,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::148239,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::148353,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::148423,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::149775,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::149845,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::151953,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::152123,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::153513,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::153755,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::153927,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::153936,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::155674,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::156618,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::158299,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::159929,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::161660,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::161668,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::16167,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::161687,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::16180,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::161872,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::162167,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::162173,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::162276,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::164114,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::164589,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::174498,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::174803,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::174976,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::175155,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::175465,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::175504,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::175521,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::176745,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::179766,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::181347,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::183698,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::183726,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::184020,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::184050,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::186419,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::188561,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::189550,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::189551,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::189559,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::189755,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::189761,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::189831,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::190485,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::190503,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::191689,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::191701,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::192790,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::192882,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::192924,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::193690,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::194853,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::19587,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::196854,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::197683,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::197703,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::197913,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::198574,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::198575,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::198589,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::198590,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::198672,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::198756,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::199451,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::199695,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::199727,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::200421,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::200525,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::203836,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::204497,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::204499,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::206578,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::206736,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::206761,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::207922,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::211086,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::211794,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::212877,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::212975,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::213293,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::217185,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::217507,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::218090,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::224159,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::226619,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::226784,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::230200,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::230927,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::234800,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::235592,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::236840,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::237569,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::237598,reviewed_include_fixed,scheduled_absolute,,Outcome is evaluated at an explicit fixed calendar boundary; use contract-level scheduled_end_time.
+polymarket_event::241861,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::243854,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::243875,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::244388,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::244512,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::246512,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::248286,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::248393,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::255195,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::256921,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::259240,reviewed_exclude_unclear,exclude,,Available title and metadata do not provide a defensible ex-ante anchor.
+polymarket_event::259726,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::259788,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::26004,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::261455,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::264031,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::265906,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::277152,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::280825,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::284268,reviewed_exclude_unclear,exclude,,Available title and metadata do not provide a defensible ex-ante anchor.
+polymarket_event::307822,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::308245,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::308518,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::31212,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::314557,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::315405,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::315414,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::322911,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::326055,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::326070,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::326093,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::326109,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::329566,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::330437,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::330438,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::333041,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::333162,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::336248,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::336260,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::336508,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::336641,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::336761,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::337056,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::337072,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::337075,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::337076,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::337079,reviewed_needs_anchor_verification,scheduled_absolute,,"Likely scheduled event, but verify the exact ex-ante event time from the contract rules before inclusion."
+polymarket_event::337156,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::339799,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::339963,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::34050,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::357807,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::357873,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::35908,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::360860,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::376231,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::379514,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::382447,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::385367,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::385825,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::389715,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::399704,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::400690,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::400712,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::400878,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::400933,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::401113,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::401121,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::404632,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::407054,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::407744,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::407745,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::41353,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::43053,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::432271,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::432287,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::432304,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::436391,reviewed_exclude_unclear,exclude,,Available title and metadata do not provide a defensible ex-ante anchor.
+polymarket_event::437851,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::438050,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::448098,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::45214,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::452382,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::462467,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::474178,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::478472,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::485540,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::486199,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::499369,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::500753,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::500791,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::500816,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::500824,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::500825,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::500855,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::507129,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::511422,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::514175,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::517737,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::527767,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::531004,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::555963,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::578328,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::61056,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::66070,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::71693,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::72419,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::73079,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::73096,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::73105,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::73106,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::73108,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::73128,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::73213,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::73226,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::73835,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::73871,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::73897,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::74069,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::74939,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::75605,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::78016,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::79048,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::79103,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::79104,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::79123,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::79836,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::79899,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::79926,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::79932,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::80064,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::80066,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::80773,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::83173,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::83771,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::83803,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::84018,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::84066,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::84622,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::84788,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::84910,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::84920,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::84921,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::84939,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::84940,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::84945,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::84946,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::84947,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::85299,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::86832,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::87073,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::88710,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89062,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89175,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::89502,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89519,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89525,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89530,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89554,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89559,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89572,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89582,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89583,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89588,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89597,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::89603,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::90177,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::90366,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::91275,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::91280,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::91919,reviewed_separate_trigger,trigger_relative,,Trigger-relative timing; keep outside the primary fixed-time analysis.
+polymarket_event::91942,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::92611,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::92975,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::95091,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
+polymarket_event::95127,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::98133,reviewed_separate_deadline,deadline_window,,Event can occur at any time before an explicit or implied calendar deadline.
+polymarket_event::98230,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::98374,reviewed_separate_trigger,trigger_relative,,Outcome timing depends on an endogenous future event or unknown trigger.
+polymarket_event::99583,reviewed_separate_deadline,deadline_window,,Unknown occurrence time before a known deadline; analyze separately.
