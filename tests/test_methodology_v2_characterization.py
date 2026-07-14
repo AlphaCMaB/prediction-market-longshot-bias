@@ -24,7 +24,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_transition_script(number: str, filename: str):
-    path = ROOT / "scripts" / f"{number}_{filename}.py"
+    base = ROOT / "scripts/legacy/transition_audits"
+    if number == "26":
+        base = base / "superseded_prototypes"
+    path = base / f"{number}_{filename}.py"
     spec = importlib.util.spec_from_file_location(f"transition_{number}", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)

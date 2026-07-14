@@ -134,7 +134,11 @@ def test_staleness_buckets(minutes, bucket):
 
 
 def test_new_pure_logic_matches_script_26_for_valid_candle():
-    existing_path = ROOT / "scripts/26_pull_clean_kalshi_candlesticks.py"
+    existing_path = (
+        ROOT
+        / "scripts/legacy/transition_audits/superseded_prototypes"
+        / "26_pull_clean_kalshi_candlesticks.py"
+    )
     spec = importlib.util.spec_from_file_location("transition_26_equivalence", existing_path)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
