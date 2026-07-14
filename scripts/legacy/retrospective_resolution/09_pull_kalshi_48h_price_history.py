@@ -278,7 +278,7 @@ def main() -> None:
     print("Zero history:", zero)
     print("")
     print("Next:")
-    print("  python scripts/05_extract_p_hat_batch.py")
+    print("  python scripts/legacy/retrospective_resolution/05_extract_p_hat_batch.py")
     print("  cat outputs/p_hat_batch_report.md")
 
 
