@@ -1,0 +1,9 @@
+candidate_horizons_hours = [1, 6, 12, 24, 48]
+fixed_clock_selected_horizons_hours = [1]
+scheduled_event_start_selected_horizons_hours = [1, 6, 12]
+main_staleness_minutes = 15
+robustness_staleness_minutes = 60
+early_settlement_tolerance_minutes = 15
+candlestick_interval_minutes = 1
+candlestick_lookback_hours = 24
+batch_size = 100
