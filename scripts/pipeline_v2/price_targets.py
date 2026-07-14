@@ -26,7 +26,16 @@ def deterministic_target_key(row: Mapping[str, Any]) -> str:
     )
 
 
-def build_price_targets(rows: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
+def build_price_targets(
+    rows: Iterable[Mapping[str, Any]],
+    *,
+    selected_horizons: Mapping[str, Iterable[int]] | None = None,
+) -> list[dict[str, Any]]:
+    horizon_policy = (
+        {key: frozenset(int(value) for value in values) for key, values in selected_horizons.items()}
+        if selected_horizons is not None
+        else SELECTED_HORIZONS
+    )
     selected: dict[str, dict[str, Any]] = {}
     for source in rows:
         row = dict(source)
@@ -36,8 +45,8 @@ def build_price_targets(rows: Iterable[Mapping[str, Any]]) -> list[dict[str, Any
         except (TypeError, ValueError):
             continue
 
-        eligible = row.get("eligible") is True or str(row.get("eligible")) == "1"
-        if not eligible or horizon not in SELECTED_HORIZONS.get(timing_structure, frozenset()):
+        eligible = str(row.get("eligible") or "").strip().lower() in {"1", "true", "yes"}
+        if not eligible or horizon not in horizon_policy.get(timing_structure, frozenset()):
             continue
         if parse_iso_utc(row.get("target_time")) is None:
             continue

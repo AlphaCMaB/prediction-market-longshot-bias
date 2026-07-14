@@ -17,6 +17,8 @@ def _family_id(row: Mapping[str, Any]) -> str:
 
 def validate_anchor_families(
     rows: Iterable[Mapping[str, Any]],
+    *,
+    early_settlement_tolerance_minutes: float = EARLY_SETTLEMENT_TOLERANCE_MINUTES,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Annotate rows and return ``(audit_rows, valid_rows)``.
 
@@ -41,7 +43,7 @@ def validate_anchor_families(
                 continue
             if settlement is not None:
                 offset_minutes = (settlement - anchor).total_seconds() / 60.0
-                if offset_minutes < -EARLY_SETTLEMENT_TOLERANCE_MINUTES:
+                if offset_minutes < -float(early_settlement_tolerance_minutes):
                     reasons.add("settled_more_than_15m_before_occurrence")
 
         status = "excluded" if reasons else "valid"
