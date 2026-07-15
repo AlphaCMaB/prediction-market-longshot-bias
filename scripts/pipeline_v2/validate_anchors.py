@@ -1,4 +1,4 @@
-"""Apply configured family-level occurrence-anchor anomaly validation."""
+"""Validate anchors; invoke as ``python -m scripts.pipeline_v2.validate_anchors``."""
 
 from __future__ import annotations
 

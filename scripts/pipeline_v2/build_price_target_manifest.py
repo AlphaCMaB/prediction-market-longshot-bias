@@ -1,4 +1,4 @@
-"""Select configured V2 price targets and build a unique market universe."""
+"""Build targets; invoke as ``python -m scripts.pipeline_v2.build_price_target_manifest``."""
 
 from __future__ import annotations
 

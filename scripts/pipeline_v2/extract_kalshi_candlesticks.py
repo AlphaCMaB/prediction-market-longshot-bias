@@ -1,4 +1,4 @@
-"""Runnable, cache-first Methodology V2 Kalshi snapshot extraction stage."""
+"""Extract snapshots; invoke as ``python -m scripts.pipeline_v2.extract_kalshi_candlesticks``."""
 
 from __future__ import annotations
 

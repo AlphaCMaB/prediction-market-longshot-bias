@@ -7,3 +7,12 @@ early_settlement_tolerance_minutes = 15
 candlestick_interval_minutes = 1
 candlestick_lookback_hours = 24
 batch_size = 100
+
+[kalshi_metadata]
+page_size = 1000
+max_retries = 5
+backoff_base_seconds = 1.0
+backoff_cap_seconds = 30.0
+requests_per_second = 3.0
+timeout_seconds = 45.0
+mve_filter = "exclude"

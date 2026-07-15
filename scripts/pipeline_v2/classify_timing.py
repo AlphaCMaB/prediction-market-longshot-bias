@@ -1,4 +1,4 @@
-"""Assign one reviewed Methodology V2 timing structure per anchor row."""
+"""Classify timing; invoke as ``python -m scripts.pipeline_v2.classify_timing``."""
 
 from __future__ import annotations
 

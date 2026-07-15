@@ -1,4 +1,4 @@
-"""Build verified ex-ante occurrence anchors from downloaded metadata CSV."""
+"""Build anchors; invoke as ``python -m scripts.pipeline_v2.build_occurrence_anchors``."""
 
 from __future__ import annotations
 

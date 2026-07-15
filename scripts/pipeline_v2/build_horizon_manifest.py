@@ -1,4 +1,4 @@
-"""Build configured candidate-horizon eligibility rows from clean anchors."""
+"""Build horizons; invoke as ``python -m scripts.pipeline_v2.build_horizon_manifest``."""
 
 from __future__ import annotations
 
