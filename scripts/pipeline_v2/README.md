@@ -15,6 +15,8 @@ python -m scripts.pipeline_v2.build_horizon_manifest --help
 python -m scripts.pipeline_v2.build_price_target_manifest --help
 python -m scripts.pipeline_v2.extract_kalshi_candlesticks --help
 python -m scripts.pipeline_v2.pull_kalshi_settled_metadata --help
+python -m scripts.pipeline_v2.prepare_kalshi_market_universe --help
+python -m scripts.pipeline_v2.apply_anchor_verification --help
 ```
 
 Direct path execution such as `python scripts/pipeline_v2/<stage>.py` is not a
@@ -103,6 +105,112 @@ market request; cache-hit manifest and provenance records are still retained.
 V2 measures prices relative to event times that were known ex ante rather than
 relative to realized platform resolution or settlement timestamps. Current V2
 results must not be presented as a Kalshi-versus-Polymarket comparison.
+
+## Study boundary and outcome quarantine
+
+The acquisition cohort consists of markets located because settled-market
+metadata is available. It is not the analysis cohort. The analysis cohort is
+selected later using verified ex-ante anchor times within the frozen half-open
+study window. `settlement_ts` is retrieval and diagnostic metadata; it is never
+the forecasting anchor.
+
+The universe-preparation stage validates a completed acquisition commit and
+then publishes separate immutable metadata and outcome files:
+
+```bash
+python -m scripts.pipeline_v2.prepare_kalshi_market_universe \
+  --raw-root data/raw/kalshi/settled_markets \
+  --output-dir outputs/v2/market_universe
+```
+
+`market_metadata.csv` is the only market-level input allowed for anchor
+evidence, verification, timing, horizon, target, and candlestick stages. It
+contains `settlement_ts` only under the diagnostic name
+`diagnostic_settlement_ts`. `market_outcomes.csv` quarantines `result`,
+settlement value, and the raw settlement timestamp. Active research-feature
+interfaces reject outcome columns mechanically. Invalid or unusual result
+values remain unchanged and receive an explicit status; they are not coerced
+to yes or no.
+
+Presence of an API `occurrence_datetime` or `strike_date` is candidate evidence,
+not verification. A reviewed family decision must pass through
+`apply_anchor_verification` before `build_occurrence_anchors` can create an
+eligible anchor. The strict decision schema is:
+
+```text
+family_id,family_id_source,verification_status,verified_anchor_time,
+verified_anchor_source,timing_structure,evidence_reference,review_note
+```
+
+Only `verified_automatic` and `verified_manual` can advance. `needs_review`,
+`rejected`, and unmatched families remain explicitly ineligible. Allowed
+sources are `verified_occurrence_datetime`,
+`verified_official_scheduled_timestamp`, `validated_strike_date`, and
+`manual_override`.
+Decisions match markets by the composite `(family_id, family_id_source)` key;
+the same identifier text in another namespace is independent and cannot
+overwrite the market's original family source.
+The same composite identity is used by family-level anchor validation,
+clean/excluded membership, downstream family counts, and deterministic
+ordering, so one namespace cannot invalidate another.
+
+The required serialized order is:
+
+1. settled metadata acquisition;
+2. validate the acquisition commit;
+3. prepare the metadata/outcome split;
+4. freeze the metadata universe;
+5. build candidate anchor evidence;
+6. apply family anchor-verification decisions;
+7. build verified occurrence anchors;
+8. classify timing;
+9. validate anchors;
+10. construct eligible horizons within the anchor window;
+11. construct targets;
+12. extract pre-target prices;
+13. freeze the research sample; and
+14. merge outcomes last.
+
+Thus `result` is unavailable to anchor, timing, target, and price stages.
+Outcomes are merged only after `p_hat` and sample inclusion are frozen. The
+canonical study-rule record carries a schema version and deterministic SHA-256
+fingerprint so later reports can identify the exact frozen design.
+
+The frozen Phase 9A window is exactly
+`[2025-07-01T00:00:00Z, 2026-07-01T00:00:00Z)`. Its timing vocabulary is
+exactly `fixed_clock` and `scheduled_event_start`, and its binary-result
+vocabulary is exactly `yes` and `no`. These vocabularies are canonicalized in
+that order before fingerprinting. Configuration changes, omissions, or extra
+values are rejected.
+
+`diagnostic_settlement_ts` can produce descriptive early-settlement audit
+fields, but those fields never determine clean/excluded status, horizon
+eligibility, or targets. Horizon eligibility depends only on an allowed timing
+structure, a verified and family-valid ex-ante anchor, and a market opening at
+or before the candidate target. It does not consult settlement, close, or
+expiration timestamps.
+The field is stripped before occurrence-anchor and timing research CSVs are
+serialized and therefore cannot appear in horizon or target manifests.
+Header-only research CSVs retain canonical schemas. An all-unverified cohort
+therefore completes with deterministic empty clean, horizon, target, and
+unique-market manifests instead of being treated as malformed input.
+
+Both horizon construction and price-target selection load and validate the
+configured `StudyRules`. The target stage receives that validated object
+explicitly and cannot fall back to an unvalidated configuration window.
+
+`--limit` is a smoke/inspection aid. The universe report records the requested
+limit, pre-limit and output counts, omissions, and whether the resulting
+universe is complete. Supplying a limit at or above the full count records
+`limited_run=true` but leaves `universe_complete=true` and zero omissions.
+
+Research provenance is distinct from acquisition provenance. The acquisition
+commit retains and validates full page and response hashes. After validation,
+`market_source_provenance.jsonl` records stable page/request identifiers and a
+`research_metadata_sha256` computed from the outcome-free, non-diagnostic
+metadata projection; it does not copy outcome-dependent raw-page hashes into
+the frozen research identity. `event_tickers.csv` contains only
+`event_ticker`, `contract_count`, and `first_open_time`.
 
 ## Planned stages
 

@@ -18,9 +18,11 @@ from scripts.pipeline_v2 import (
     price_targets,
     timing,
 )
+from scripts.pipeline_v2.study_rules import load_study_rules
 
 
 ROOT = Path(__file__).resolve().parents[1]
+STUDY_RULES = load_study_rules(ROOT / "configs/pipeline_v2.toml")
 
 
 def load_transition_script(number: str, filename: str):
@@ -198,17 +200,17 @@ def member(market_id, family_id, settlement, anchor="2026-07-01T12:00:00Z"):
         "family_id": family_id,
         "family_id_source": "event_ticker",
         "anchor_time": anchor,
-        "settlement_time": settlement,
+        "diagnostic_settlement_ts": settlement,
     }
 
 
-def test_settlement_more_than_15_minutes_early_flags_family():
+def test_settlement_more_than_15_minutes_early_is_diagnostic_only():
     audit, valid = anchor_validation.validate_anchor_families(
         [member("m1", "f1", "2026-07-01T11:44:59Z")]
     )
-    assert audit[0]["anchor_validation_status"] == "excluded"
-    assert audit[0]["anchor_validation_reasons"] == "settled_more_than_15m_before_occurrence"
-    assert valid == []
+    assert audit[0]["anchor_validation_status"] == "valid"
+    assert audit[0]["diagnostic_early_settlement_flag"] is True
+    assert len(valid) == 1
 
 
 def test_settlement_exactly_15_minutes_early_is_valid():
@@ -219,15 +221,50 @@ def test_settlement_exactly_15_minutes_early_is_valid():
     assert len(valid) == 1
 
 
-def test_one_anomalous_member_flags_entire_family_and_clean_family_remains():
+def test_one_diagnostic_anomaly_does_not_exclude_family():
     rows = [
         member("m1", "bad", "2026-07-01T12:05:00Z"),
         member("m2", "bad", "2026-07-01T11:40:00Z"),
         member("m3", "clean", "2026-07-01T12:05:00Z"),
     ]
     audit, valid = anchor_validation.validate_anchor_families(rows)
-    assert {row["market_id"] for row in valid} == {"m3"}
-    assert {row["anchor_validation_status"] for row in audit if row["family_id"] == "bad"} == {"excluded"}
+    assert {row["market_id"] for row in valid} == {"m1", "m2", "m3"}
+    assert {row["anchor_validation_status"] for row in audit} == {"valid"}
+    assert next(row for row in audit if row["market_id"] == "m2")["diagnostic_early_settlement_flag"] is True
+
+
+@pytest.mark.parametrize(("invalid_source", "valid_source"), [
+    ("source_b", "source_a"), ("source_a", "source_b"),
+])
+def test_family_validation_isolated_by_identity_namespace(invalid_source, valid_source):
+    rows = [
+        {**member("invalid", "F1", ""), "family_id_source": invalid_source, "anchor_time": ""},
+        {**member("valid", "F1", ""), "family_id_source": valid_source},
+    ]
+    audit, clean = anchor_validation.validate_anchor_families(rows)
+    assert {(row["market_id"], row["anchor_validation_status"]) for row in audit} == {
+        ("invalid", "excluded"), ("valid", "valid")
+    }
+    assert {row["market_id"] for row in clean} == {"valid"}
+
+
+def test_invalid_member_affects_only_same_composite_family():
+    rows = [
+        {**member("bad", "F1", ""), "family_id_source": "source_a", "anchor_time": ""},
+        {**member("peer", "F1", ""), "family_id_source": "source_a"},
+        {**member("other", "F1", ""), "family_id_source": "source_b"},
+    ]
+    audit, clean = anchor_validation.validate_anchor_families(rows)
+    assert {row["market_id"] for row in clean} == {"other"}
+    assert {row["anchor_validation_status"] for row in audit if row["family_id_source"] == "source_a"} == {"excluded"}
+
+
+def test_missing_family_source_is_explicitly_excluded():
+    audit, clean = anchor_validation.validate_anchor_families([
+        {**member("missing", "F1", ""), "family_id_source": ""}
+    ])
+    assert clean == []
+    assert audit[0]["anchor_validation_reasons"] == "missing_family_id_source"
 
 
 @pytest.mark.parametrize("anchor", [None, "", "invalid"])
@@ -249,10 +286,11 @@ def source_row(**overrides):
         "timing_structure": "fixed_clock",
         "family_id": "family-a",
         "family_id_source": "event_ticker",
-        "anchor_time": "2026-07-01T12:00:00Z",
+        "anchor_time": "2026-06-30T12:00:00Z",
         "anchor_source": "occurrence_datetime",
+        "validation_status": "verified",
         "market_open_time": "2026-06-30T00:00:00Z",
-        "settlement_time": "2026-07-01T12:10:00Z",
+        "settlement_time": "2026-06-30T12:10:00Z",
     }
     row.update(overrides)
     return row
@@ -265,14 +303,14 @@ def at_horizon(rows, value):
 def test_candidate_horizons_and_target_calculation():
     rows = horizon_eligibility.build_horizon_eligibility([source_row()])
     assert [row["horizon_hours"] for row in rows] == [1, 6, 12, 24, 48]
-    assert at_horizon(rows, 6)["target_time"] == "2026-07-01T06:00:00+00:00"
+    assert at_horizon(rows, 6)["target_time"] == "2026-06-30T06:00:00+00:00"
 
 
 def test_market_open_at_or_before_target_is_eligible():
     before = at_horizon(horizon_eligibility.build_horizon_eligibility([source_row()]), 1)
     exactly = at_horizon(
         horizon_eligibility.build_horizon_eligibility(
-            [source_row(market_open_time="2026-07-01T11:00:00Z")]
+            [source_row(market_open_time="2026-06-30T11:00:00Z")]
         ),
         1,
     )
@@ -283,7 +321,7 @@ def test_market_open_at_or_before_target_is_eligible():
 def test_market_open_after_target_is_ineligible():
     row = at_horizon(
         horizon_eligibility.build_horizon_eligibility(
-            [source_row(market_open_time="2026-07-01T11:00:01Z")]
+            [source_row(market_open_time="2026-06-30T11:00:01Z")]
         ),
         1,
     )
@@ -297,25 +335,48 @@ def test_missing_anchor_is_ineligible():
     assert row["eligibility_status"] == "missing_or_invalid_anchor"
 
 
-def test_missing_settlement_is_ineligible():
+@pytest.mark.parametrize(("anchor", "expected", "eligible"), [
+    ("2025-06-30T23:59:59Z", "anchor_before_analysis_window", False),
+    ("2025-07-01T00:00:00Z", "eligible", True),
+    ("2026-06-30T23:59:59Z", "eligible", True),
+    ("2026-07-01T00:00:00Z", "anchor_at_or_after_analysis_window", False),
+    ("2026-07-01T00:00:01Z", "anchor_at_or_after_analysis_window", False),
+])
+def test_frozen_anchor_window_boundaries(anchor, expected, eligible):
+    row = at_horizon(horizon_eligibility.build_horizon_eligibility([
+        source_row(anchor_time=anchor, market_open_time="2025-06-01T00:00:00Z")
+    ]), 1)
+    assert row["eligibility_status"] == expected
+    assert row["eligible"] is eligible
+
+
+def test_window_decision_ignores_result_and_settlement_fields_for_both_samples():
+    rows = [
+        source_row(timing_structure="fixed_clock", result="yes", settlement_time="1900-01-01Z"),
+        source_row(market_id="m2", timing_structure="scheduled_event_start", result="no", settlement_time=""),
+    ]
+    assert {row["eligibility_status"] for row in horizon_eligibility.build_horizon_eligibility(rows, horizons=[1])} == {"eligible"}
+
+
+def test_missing_settlement_does_not_affect_eligibility():
     row = at_horizon(
         horizon_eligibility.build_horizon_eligibility(
             [source_row(settlement_time="")]
         ),
         1,
     )
-    assert row["eligibility_status"] == "missing_or_invalid_settlement_time"
+    assert row["eligibility_status"] == "eligible"
 
 
-@pytest.mark.parametrize("settlement", ["2026-07-01T10:59:59Z", "2026-07-01T11:00:00Z"])
-def test_settlement_before_or_at_target_is_ineligible(settlement):
+@pytest.mark.parametrize("settlement", ["2026-06-30T10:59:59Z", "2026-06-30T11:00:00Z"])
+def test_settlement_before_or_at_target_does_not_affect_eligibility(settlement):
     row = at_horizon(
         horizon_eligibility.build_horizon_eligibility(
             [source_row(settlement_time=settlement)]
         ),
         1,
     )
-    assert row["eligibility_status"] == "settled_before_or_at_target"
+    assert row["eligibility_status"] == "eligible"
 
 
 def test_eligibility_preserves_methodology_fields_and_separate_samples():
@@ -334,9 +395,9 @@ def test_horizon_target_matches_transition_logic_for_equivalent_row():
     old_source = {
         "market_id": "m1",
         "family_id_v2": "family-a",
-        "anchor_time_final_v2": "2026-07-01T12:00:00Z",
+        "anchor_time_final_v2": "2026-06-30T12:00:00Z",
         "market_open_time": "2026-06-30T00:00:00Z",
-        "actual_settlement_time": "2026-07-01T12:10:00Z",
+        "actual_settlement_time": "2026-06-30T12:10:00Z",
     }
     old = at_horizon(transition_horizons.build_manifest([old_source], "fixed_clock"), 6)
     assert new["target_time"] == old["target_time"]
@@ -355,7 +416,7 @@ def eligibility_row(timing_structure, horizon, market="m1", family="family-a", *
     row.update(
         {
             "horizon_hours": horizon,
-            "target_time": "2026-07-01T11:00:00Z",
+            "target_time": "2026-06-30T11:00:00Z",
             "eligible": True,
         }
     )
@@ -369,7 +430,7 @@ def test_price_targets_select_only_approved_horizons():
         for sample in ("fixed_clock", "scheduled_event_start")
         for horizon in (1, 6, 12, 24, 48)
     ]
-    selected = price_targets.build_price_targets(rows)
+    selected = price_targets.build_price_targets(rows, study_rules=STUDY_RULES)
     assert {(row["timing_structure"], row["horizon_hours"]) for row in selected} == {
         ("fixed_clock", 1),
         ("scheduled_event_start", 1),
@@ -382,18 +443,42 @@ def test_price_targets_select_only_approved_horizons():
     "sample", ["scheduled_window", "deadline_window", "endogenous_subevent", "unclear"]
 )
 def test_excluded_timing_classes_never_enter_target_manifest(sample):
-    assert price_targets.build_price_targets([eligibility_row(sample, 1)]) == []
+    assert price_targets.build_price_targets(
+        [eligibility_row(sample, 1)], study_rules=STUDY_RULES
+    ) == []
 
 
 def test_targets_deduplicate_deterministically_and_preserve_fields():
     row = eligibility_row("fixed_clock", 1, family="official-family")
-    selected = price_targets.build_price_targets([row, dict(row)])
+    selected = price_targets.build_price_targets(
+        [row, dict(row)], study_rules=STUDY_RULES
+    )
     assert len(selected) == 1
     assert selected[0]["family_id"] == "official-family"
     assert selected[0]["family_id_source"] == "event_ticker"
-    assert selected[0]["anchor_time"] == "2026-07-01T12:00:00Z"
+    assert selected[0]["anchor_time"] == "2026-06-30T12:00:00Z"
     assert selected[0]["anchor_source"] == "occurrence_datetime"
     assert selected[0]["target_key"] == price_targets.deterministic_target_key(selected[0])
+
+
+def test_target_builder_cannot_reintroduce_out_of_window_anchor():
+    assert price_targets.build_price_targets([
+        eligibility_row("fixed_clock", 1, anchor_time="2026-07-01T00:00:00Z")
+    ], study_rules=STUDY_RULES) == []
+
+
+def test_target_window_membership_ignores_retrospective_and_outcome_fields():
+    base = eligibility_row("fixed_clock", 1)
+    changed = {
+        **base, "result": "no", "settlement_value_dollars": "0.00",
+        "settlement_time": "1900-01-01Z", "close_time": "1900-01-01Z",
+        "expiration_time": "1900-01-01Z",
+    }
+    assert [row["target_key"] for row in price_targets.build_price_targets(
+        [base], study_rules=STUDY_RULES
+    )] == [row["target_key"] for row in price_targets.build_price_targets(
+        [changed], study_rules=STUDY_RULES
+    )]
 
 
 # Existing candlestick extraction remains characterized until its V2 module is built.

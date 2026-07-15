@@ -8,6 +8,25 @@ candlestick_interval_minutes = 1
 candlestick_lookback_hours = 24
 batch_size = 100
 
+[study_window]
+analysis_anchor_start_utc = "2025-07-01T00:00:00Z"
+analysis_anchor_end_utc_exclusive = "2026-07-01T00:00:00Z"
+allowed_timing_structures = [
+  "fixed_clock",
+  "scheduled_event_start",
+]
+allowed_binary_results = [
+  "yes",
+  "no",
+]
+
+[anchor_verification]
+api_occurrence_datetime_is_verified_by_default = false
+event_strike_date_is_verified_by_default = false
+close_time_may_be_anchor = false
+expiration_time_may_be_anchor = false
+settlement_time_may_be_anchor = false
+
 [kalshi_metadata]
 page_size = 1000
 max_retries = 5

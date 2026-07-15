@@ -8,18 +8,23 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from scripts.common.io_utils import read_csv, write_csv
+from scripts.common.io_utils import read_csv_with_header, write_csv
 from scripts.pipeline_v2.build_occurrence_anchors import validate_columns
 from scripts.pipeline_v2.config import load_config
-from scripts.pipeline_v2.horizon_eligibility import build_horizon_eligibility
+from scripts.pipeline_v2.horizon_eligibility import AUDIT_ONLY_FIELDS, build_horizon_eligibility
+from scripts.pipeline_v2.study_rules import load_study_rules
+from scripts.pipeline_v2.validate_anchors import VALIDATION_OUTPUT_FIELDS
 
 
 DEFAULT_CONFIG = Path(__file__).resolve().parents[2] / "configs/pipeline_v2.toml"
 REQUIRED_COLUMNS = {
     "market_id", "family_id", "family_id_source", "timing_structure",
     "anchor_time", "anchor_source", "validation_status", "market_open_time",
-    "settlement_time",
 }
+HORIZON_OUTPUT_FIELDS = (
+    *(field for field in VALIDATION_OUTPUT_FIELDS if field not in AUDIT_ONLY_FIELDS),
+    "horizon_hours", "target_time", "eligibility_status", "eligible",
+)
 
 
 def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -31,7 +36,7 @@ def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         {
             "timing_structure": key[0], "horizon_hours": key[1],
             "eligibility_status": key[2], "contract_count": len(members),
-            "family_count": len({row["family_id"] for row in members}),
+            "family_count": len({(row["family_id"], row["family_id_source"]) for row in members}),
         }
         for key, members in sorted(groups.items())
     ]
@@ -39,20 +44,29 @@ def summarize(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def run(input_path: Path, output_path: Path, *, config_path: Path = DEFAULT_CONFIG, limit=None, dry_run=False) -> dict[str, Any]:
     config = load_config(config_path)
-    rows = read_csv(input_path)
-    validate_columns(rows, REQUIRED_COLUMNS)
+    study_rules = load_study_rules(config_path)
+    rows, columns = read_csv_with_header(input_path)
+    validate_columns(rows, REQUIRED_COLUMNS, available_columns=columns)
     if limit is not None:
         rows = rows[:limit]
-    output = build_horizon_eligibility(rows, horizons=config.candidate_horizons_hours)
-    output.sort(key=lambda row: (str(row["timing_structure"]), int(row["horizon_hours"]), str(row["family_id"]), str(row["market_id"])))
+    output = build_horizon_eligibility(
+        rows, horizons=config.candidate_horizons_hours, study_rules=study_rules
+    )
+    output.sort(key=lambda row: (
+        str(row["timing_structure"]), int(row["horizon_hours"]),
+        str(row["family_id_source"]), str(row["family_id"]), str(row["market_id"]),
+    ))
     summary = {
         "rows": len(output), "input_contracts": len(rows),
-        "input_families": len({row["family_id"] for row in rows}),
+        "input_families": len({(row["family_id"], row["family_id_source"]) for row in rows}),
+        "contract_count": len(rows),
+        "family_count": len({(row["family_id"], row["family_id_source"]) for row in rows}),
+        "eligible_count": sum(bool(row["eligible"]) for row in output),
         "groups": summarize(output),
     }
     print(json.dumps(summary, sort_keys=True))
     if not dry_run:
-        write_csv(output_path, output)
+        write_csv(output_path, output, fieldnames=HORIZON_OUTPUT_FIELDS)
     return summary
 
 

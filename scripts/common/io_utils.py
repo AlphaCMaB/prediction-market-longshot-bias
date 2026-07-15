@@ -13,6 +13,18 @@ def read_csv(path: str | Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+def read_csv_with_header(path: str | Path) -> tuple[list[dict[str, str]], tuple[str, ...]]:
+    """Read rows and the declared schema, including for a header-only CSV."""
+    with Path(path).open(newline="", encoding="utf-8-sig") as handle:
+        reader = csv.DictReader(handle)
+        fields = tuple(reader.fieldnames or ())
+        if not fields:
+            raise ValueError(f"CSV has no header: {path}")
+        if len(fields) != len(set(fields)):
+            raise ValueError(f"CSV has duplicate header columns: {path}")
+        return list(reader), fields
+
+
 def write_csv(
     path: str | Path,
     rows: Iterable[Mapping[str, Any]],

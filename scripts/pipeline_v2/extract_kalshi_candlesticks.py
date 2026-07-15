@@ -16,6 +16,7 @@ from scripts.common.io_utils import read_csv, write_csv
 from scripts.common.time_utils import parse_iso_utc
 from scripts.pipeline_v2.candlesticks import build_snapshot
 from scripts.pipeline_v2.kalshi_candlestick_client import KalshiCandlestickClient
+from scripts.pipeline_v2.study_rules import validate_research_feature_columns
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -105,6 +106,7 @@ def extract_rows(
 def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, Any]:
     config = load_config(args.config)
     rows = read_csv(args.input)
+    validate_research_feature_columns(rows[0].keys() if rows else ())
     if args.market_limit is not None:
         allowed = sorted({_market_id(row) for row in rows})[: args.market_limit]
         rows = [row for row in rows if _market_id(row) in set(allowed)]
