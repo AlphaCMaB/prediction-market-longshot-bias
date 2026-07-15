@@ -85,6 +85,21 @@ payloads unchanged. The provenance file identifies the selected variant, lists
 all variant sources, references its monthly output path and hash, and is itself
 required and hash-verified by the run commit.
 
+`--limit-pages N` is an acquisition-only smoke mode. The limit applies to the
+total number of newly requested market pages across the invocation; cutoff
+requests and cache hits do not consume it. Successful cutoff snapshots, raw
+pages, and operational manifest entries are preserved, but every affected
+chain is marked incomplete and no audit, provenance, monthly output, staging
+completion, or run commit is produced. Smoke mode exits with status `3` and
+never prints `run_complete=true`. Removing the option on a later run allows
+resume to reuse cached smoke pages and continue from their stored cursors.
+
+Active metadata requests use the canonical production base URL
+`https://external-api.kalshi.com`. After the smoke request budget is exhausted,
+pagination continues through any valid cached cursor pages and later cached
+segments. It stops at the first required cache miss without sending another
+market request; cache-hit manifest and provenance records are still retained.
+
 V2 measures prices relative to event times that were known ex ante rather than
 relative to realized platform resolution or settlement timestamps. Current V2
 results must not be presented as a Kalshi-versus-Polymarket comparison.

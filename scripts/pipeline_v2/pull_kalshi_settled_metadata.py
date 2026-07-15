@@ -49,6 +49,7 @@ from scripts.pipeline_v2.kalshi_metadata_planner import (
 
 DEFAULT_CONFIG = Path("configs/pipeline_v2.toml")
 DEFAULT_RAW_ROOT = Path("data/raw/kalshi/settled_markets")
+SMOKE_INCOMPLETE_EXIT = 3
 
 
 def _bytes_sha256(content: bytes) -> str:
@@ -186,10 +187,8 @@ def _segment_key(segment: Any) -> tuple[Any, ...]:
 
 
 def _validate_endpoint_coverage_plan(
-    months: Sequence[Any], cutoff: datetime, planned_segments: Sequence[Any], limit_pages: int | None
+    months: Sequence[Any], cutoff: datetime, planned_segments: Sequence[Any]
 ) -> None:
-    if limit_pages is not None:
-        raise ValueError("--limit-pages is smoke-test-only and cannot produce a committed run")
     required_segments = plan_endpoint_segments(months, cutoff)
     required = {_segment_key(segment) for segment in required_segments}
     planned = {_segment_key(segment) for segment in planned_segments}
@@ -416,6 +415,14 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
     raw_root = Path(args.raw_root)
     manifest_path = Path(args.manifest) if args.manifest else raw_root / "manifest.jsonl"
     cache = MetadataCache(raw_root)
+    smoke_mode = args.limit_pages is not None
+    if smoke_mode:
+        print("smoke_mode=true")
+        print(f"limit_pages={args.limit_pages}")
+        print("limit_scope=total_market_page_requests_across_invocation")
+        print("committed_run_possible=false")
+        print("raw_pages_will_be_preserved=true")
+        print("expected_exit=smoke_incomplete")
 
     cutoff_payload: dict[str, Any] | None = None
     cutoff_source = "unresolved"
@@ -465,7 +472,7 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
         historical_mode=args.historical_mode,
         live_mode=args.live_mode,
     )
-    _validate_endpoint_coverage_plan(months, cutoff, segments, args.limit_pages)
+    _validate_endpoint_coverage_plan(months, cutoff, segments)
     estimate = estimate_requests(segments)
     cache_hits_known = sum(
         1
@@ -490,6 +497,7 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
     all_sources: list[dict[str, Any]] = []
     all_source_pages: list[dict[str, Any]] = []
     incomplete = False
+    remaining_market_pages = args.limit_pages
     for segment in segments:
         result = client.paginate(
             segment,
@@ -497,7 +505,7 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
             cutoff_id=cutoff_id,
             run_id=request_run_id,
             resume=args.resume,
-            limit_pages=args.limit_pages,
+            limit_pages=remaining_market_pages,
             mve_filter=config["mve_filter"],
             manifest_sink=lambda record: append_manifest(manifest_path, record),
         )
@@ -505,6 +513,17 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
         all_sources.extend(record.provenance for record in result.fetched_records)
         all_source_pages.extend(result.page_provenance)
         incomplete = incomplete or not result.complete
+        if remaining_market_pages is not None:
+            remaining_market_pages -= result.market_page_requests
+        if result.stopped_at_uncached_page_due_to_limit:
+            break
+
+    if smoke_mode:
+        print(
+            f"smoke_market_page_requests={args.limit_pages - (remaining_market_pages or 0)}"
+        )
+        print("smoke_incomplete=true", file=sys.stderr)
+        return SMOKE_INCOMPLETE_EXIT
 
     if incomplete:
         print("required data is incomplete", file=sys.stderr)

@@ -22,11 +22,13 @@ from scripts.pipeline_v2.kalshi_metadata_cache import (
     canonical_json,
     publish_immutable_bytes,
     reject_sensitive_response,
+    sha256_json,
 )
 from scripts.pipeline_v2.kalshi_metadata_client import (
     CursorLoopError,
     EmptyPageCursorError,
     KalshiMetadataClient,
+    KALSHI_PRODUCTION_BASE_URL,
     MetadataClientError,
     RequestFailure,
 )
@@ -1184,14 +1186,17 @@ def test_required_endpoint_coverage_cannot_be_skipped(
     assert not (Path(args.raw_root) / "run_commits").exists()
 
 
-def test_page_limit_cannot_create_commit_even_with_terminal_first_page(tmp_path):
+def test_page_limit_terminal_first_page_is_preserved_but_never_committed(tmp_path, capsys):
     args = _live_cli_args(tmp_path)
     args.limit_pages = 1
     session = FakeSession([FakeResponse(payload={"markets": [], "cursor": ""})])
-    with pytest.raises(ValueError, match="cannot produce a committed run"):
-        run(args, session=session)
-    assert not session.calls
-    assert not Path(args.raw_root).exists()
+    assert run(args, session=session) == metadata_cli.SMOKE_INCOMPLETE_EXIT
+    captured = capsys.readouterr()
+    assert len(session.calls) == 1
+    assert "run_complete=true" not in captured.out
+    assert "smoke_incomplete=true" in captured.err
+    assert list((Path(args.raw_root) / "2025-08" / "live_pages").glob("*.json"))
+    assert not (Path(args.raw_root) / "run_commits").exists()
 
 
 def test_new_commit_must_pass_final_validation_before_success(tmp_path, monkeypatch, capsys):
@@ -1630,3 +1635,243 @@ def test_valid_nonsensitive_market_and_cutoff_responses_still_work(tmp_path):
         [FakeResponse(200, {"market_settled_ts": "2025-01-01T00:00:00Z"})]
     )
     assert client(cutoff_session).fetch_cutoff()["market_settled_ts"].startswith("2025")
+
+
+def _network_smoke_args(tmp_path):
+    config = tmp_path / "config.toml"
+    _write_test_config(config)
+    return build_parser().parse_args(
+        [
+            "--start-date", "2026-06-01", "--end-date", "2026-06-30",
+            "--month", "2026-06", "--raw-root", str(tmp_path / "raw"),
+            "--manifest", str(tmp_path / "operational" / "manifest.jsonl"),
+            "--config", str(config), "--page-size", "1000", "--limit-pages", "1",
+            "--historical-mode", "skip", "--live-mode", "require",
+        ]
+    )
+
+
+def test_limit_pages_one_performs_one_market_request_and_preserves_incomplete_raw_page(
+    tmp_path, capsys
+):
+    args = _network_smoke_args(tmp_path)
+    cutoff = {"market_settled_ts": "2026-01-01T00:00:00Z"}
+    first_page = {
+        "markets": [market("SMOKE", "2026-06-15T00:00:00Z")],
+        "cursor": "continue-from-smoke",
+    }
+    session = FakeSession([FakeResponse(200, cutoff), FakeResponse(200, first_page)])
+    assert run(args, session=session) == metadata_cli.SMOKE_INCOMPLETE_EXIT
+    captured = capsys.readouterr()
+    cutoff_calls = [call for call in session.calls if call["url"].endswith("/historical/cutoff")]
+    market_calls = [call for call in session.calls if call["url"].endswith("/markets")]
+    assert len(cutoff_calls) == 1
+    assert len(market_calls) == 1
+    assert all("candlestick" not in call["url"] for call in session.calls)
+    assert "smoke_mode=true" in captured.out
+    assert "limit_pages=1" in captured.out
+    assert "committed_run_possible=false" in captured.out
+    assert "raw_pages_will_be_preserved=true" in captured.out
+    assert "expected_exit=smoke_incomplete" in captured.out
+    assert "run_complete=true" not in captured.out
+
+    raw_root = Path(args.raw_root)
+    pages = list((raw_root / "2026-06" / "live_pages").glob("*.json"))
+    assert len(pages) == 1
+    manifest = Path(args.manifest)
+    records = [json.loads(line) for line in manifest.read_text().splitlines()]
+    assert len(records) == 1
+    assert records[0]["returned_row_count"] == 1
+    assert records[0]["intentionally_incomplete_due_to_page_limit"] is True
+    assert not list(raw_root.glob("2026-06/settled_markets_*.jsonl"))
+    assert not (raw_root / "audits").exists()
+    assert not (raw_root / ".staging").exists()
+    assert not (raw_root / "run_commits").exists()
+
+
+def test_unrestricted_resume_reuses_smoke_page_and_continues_cursor(tmp_path):
+    args = _network_smoke_args(tmp_path)
+    cutoff = {"market_settled_ts": "2026-01-01T00:00:00Z"}
+    first_page = {
+        "markets": [market("A", "2026-06-10T00:00:00Z")],
+        "cursor": "next-page",
+    }
+    assert run(
+        args,
+        session=FakeSession([FakeResponse(200, cutoff), FakeResponse(200, first_page)]),
+    ) == metadata_cli.SMOKE_INCOMPLETE_EXIT
+
+    args.limit_pages = None
+    second_page = {
+        "markets": [market("B", "2026-06-20T00:00:00Z")],
+        "cursor": "",
+    }
+    resume_session = FakeSession([FakeResponse(200, cutoff), FakeResponse(200, second_page)])
+    assert run(args, session=resume_session) == 0
+    market_calls = [call for call in resume_session.calls if call["url"].endswith("/markets")]
+    assert len(market_calls) == 1
+    assert market_calls[0]["params"]["cursor"] == "next-page"
+    assert len(list((Path(args.raw_root) / "2026-06" / "live_pages").glob("*.json"))) == 2
+    assert len(list((Path(args.raw_root) / "run_commits").glob("*.json"))) == 1
+
+
+def test_smoke_sensitive_page_remains_fully_fail_closed(tmp_path):
+    args = _live_cli_args(tmp_path)
+    args.limit_pages = 1
+    secret = "SMOKE-SENSITIVE-DO-NOT-PERSIST"
+    session = FakeSession(
+        [FakeResponse(200, {"unexpected": {"accessToken": secret}})]
+    )
+    with pytest.raises(SensitiveResponseError) as failure:
+        run(args, session=session)
+    assert len(session.calls) == 1
+    assert secret not in str(failure.value)
+    assert not Path(args.raw_root).exists()
+    assert not Path(args.manifest).exists()
+
+
+def test_dry_run_with_page_limit_sends_nothing_and_writes_nothing(tmp_path, capsys):
+    args = _network_smoke_args(tmp_path)
+    args.dry_run = True
+    session = FakeSession()
+    assert run(args, session=session) == 0
+    captured = capsys.readouterr()
+    assert not session.calls
+    assert "smoke_mode=true" in captured.out
+    assert "expected_exit=smoke_incomplete" in captured.out
+    assert not Path(args.raw_root).exists()
+    assert not Path(args.manifest).exists()
+
+
+def test_default_metadata_urls_use_canonical_external_api_host(tmp_path):
+    assert KALSHI_PRODUCTION_BASE_URL == "https://external-api.kalshi.com"
+
+    cutoff_session = FakeSession(
+        [FakeResponse(200, {"market_settled_ts": "2025-01-01T00:00:00Z"})]
+    )
+    client(cutoff_session).fetch_cutoff()
+    assert cutoff_session.calls[0]["url"] == (
+        "https://external-api.kalshi.com/trade-api/v2/historical/cutoff"
+    )
+
+    live_session = FakeSession([FakeResponse()])
+    client(live_session).paginate(
+        live_segment(), MetadataCache(tmp_path / "live"), cutoff_id="c", run_id="r"
+    )
+    assert live_session.calls[0]["url"] == (
+        "https://external-api.kalshi.com/trade-api/v2/markets"
+    )
+
+    historical_session = FakeSession([FakeResponse()])
+    client(historical_session).paginate(
+        historical_segment(), MetadataCache(tmp_path / "historical"),
+        cutoff_id="c", run_id="r",
+    )
+    assert historical_session.calls[0]["url"] == (
+        "https://external-api.kalshi.com/trade-api/v2/historical/markets"
+    )
+
+
+def test_active_pipeline_has_no_elections_host_default_and_injected_base_url_works(tmp_path):
+    active_root = Path(__file__).resolve().parents[1] / "scripts" / "pipeline_v2"
+    active_source = "\n".join(
+        path.read_text(encoding="utf-8") for path in active_root.glob("*.py")
+    )
+    assert "api.elections.kalshi.com" not in active_source
+    session = FakeSession([FakeResponse()])
+    injected = client(session, base_url="https://offline-test.invalid")
+    injected.paginate(
+        live_segment(), MetadataCache(tmp_path), cutoff_id="c", run_id="r"
+    )
+    assert session.calls[0]["url"] == "https://offline-test.invalid/trade-api/v2/markets"
+
+
+def test_zero_budget_traverses_later_cached_segment_then_stops_at_first_miss(tmp_path):
+    config = tmp_path / "config.toml"
+    _write_test_config(config)
+    cutoff_payload = {"market_settled_ts": "2025-01-01T00:00:00Z"}
+    cutoff_path = tmp_path / "cutoff.json"
+    cutoff_path.write_text(json.dumps(cutoff_payload), encoding="utf-8")
+    cutoff_id = sha256_json(cutoff_payload)[:20]
+    raw_root = tmp_path / "raw"
+    cache = MetadataCache(raw_root)
+
+    # Segment B has a complete two-page cursor chain before smoke acquisition starts.
+    september = EndpointSegment(
+        "live", LIVE_PATH,
+        datetime(2025, 9, 1, tzinfo=UTC), datetime(2025, 10, 1, tzinfo=UTC),
+        "2025-09",
+    )
+    cached_session = FakeSession(
+        [
+            FakeResponse(
+                200,
+                {
+                    "markets": [market("B1", "2025-09-10T00:00:00Z")],
+                    "cursor": "cached-next",
+                },
+            ),
+            FakeResponse(
+                200,
+                {
+                    "markets": [market("B2", "2025-09-20T00:00:00Z")],
+                    "cursor": "",
+                },
+            ),
+        ]
+    )
+    client(cached_session).paginate(
+        september, cache, cutoff_id=cutoff_id, run_id="setup"
+    )
+
+    args = build_parser().parse_args(
+        [
+            "--start-date", "2025-08-01", "--end-date", "2025-10-31",
+            "--raw-root", str(raw_root),
+            "--manifest", str(tmp_path / "manifest.jsonl"),
+            "--config", str(config), "--cutoff-snapshot", str(cutoff_path),
+            "--limit-pages", "1", "--historical-mode", "skip",
+            "--live-mode", "require",
+        ]
+    )
+    segment_a_page = {
+        "markets": [market("A", "2025-08-10T00:00:00Z")],
+        "cursor": "",
+    }
+    smoke_session = FakeSession([FakeResponse(200, segment_a_page)])
+    assert run(args, session=smoke_session) == metadata_cli.SMOKE_INCOMPLETE_EXIT
+    market_calls = [call for call in smoke_session.calls if call["url"].endswith("/markets")]
+    assert len(market_calls) == 1
+
+    manifest_records = [
+        json.loads(line) for line in Path(args.manifest).read_text().splitlines()
+    ]
+    assert [record["cache_status"] for record in manifest_records] == [
+        "published", "hit", "hit"
+    ]
+    assert [record["month"] for record in manifest_records] == [
+        "2025-08", "2025-09", "2025-09"
+    ]
+    assert all(
+        record["intentionally_incomplete_due_to_page_limit"]
+        for record in manifest_records
+    )
+    assert not (raw_root / "2025-10" / "live_pages").exists()
+    assert not (raw_root / "run_commits").exists()
+    assert not (raw_root / ".staging").exists()
+    assert not list(raw_root.glob("20??-??/settled_markets_*.jsonl"))
+
+    # Removing the bound reuses A and both B pages, then fetches only C's miss.
+    args.limit_pages = None
+    segment_c_page = {
+        "markets": [market("C", "2025-10-10T00:00:00Z")],
+        "cursor": "",
+    }
+    resume_session = FakeSession([FakeResponse(200, segment_c_page)])
+    assert run(args, session=resume_session) == 0
+    resumed_market_calls = [
+        call for call in resume_session.calls if call["url"].endswith("/markets")
+    ]
+    assert len(resumed_market_calls) == 1
+    assert "cursor" not in resumed_market_calls[0]["params"]
+    assert len(list((raw_root / "run_commits").glob("*.json"))) == 1

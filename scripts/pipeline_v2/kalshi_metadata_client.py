@@ -30,6 +30,7 @@ from scripts.pipeline_v2.kalshi_metadata_planner import (
 
 RETRYABLE_STATUSES = {429, 500, 502, 503, 504}
 NONRETRYABLE_STATUSES = {400, 401, 403, 404, 422}
+KALSHI_PRODUCTION_BASE_URL = "https://external-api.kalshi.com"
 
 
 class MetadataClientError(RuntimeError):
@@ -96,6 +97,9 @@ class ChainResult:
     manifest_records: list[dict[str, Any]] = field(default_factory=list)
     complete: bool = False
     intentionally_incomplete_due_to_page_limit: bool = False
+    pages_used: int = 0
+    market_page_requests: int = 0
+    stopped_at_uncached_page_due_to_limit: bool = False
 
 
 @dataclass(frozen=True)
@@ -111,7 +115,7 @@ class KalshiMetadataClient:
         self,
         session: Any,
         *,
-        base_url: str = "https://api.elections.kalshi.com",
+        base_url: str = KALSHI_PRODUCTION_BASE_URL,
         timeout_seconds: float = 45.0,
         max_retries: int = 5,
         backoff_base_seconds: float = 1.0,
@@ -350,6 +354,7 @@ class KalshiMetadataClient:
         cursor: str | None = None
         seen_response_cursors: set[str] = set()
         page_number = 1
+        market_page_requests = 0
 
         def emit(record: dict[str, Any]) -> None:
             result.manifest_records.append(record)
@@ -357,10 +362,6 @@ class KalshiMetadataClient:
                 manifest_sink(record)
 
         while True:
-            if limit_pages is not None and page_number > limit_pages:
-                result.intentionally_incomplete_due_to_page_limit = True
-                break
-
             params = segment_params(
                 segment,
                 page_size=self.page_size,
@@ -372,7 +373,16 @@ class KalshiMetadataClient:
                 segment, params, page_number, cursor, cutoff_id
             )
             path = cache.page_path(segment, cutoff_id, page_number, rid, cursor)
+            if (
+                limit_pages is not None
+                and not path.exists()
+                and market_page_requests >= limit_pages
+            ):
+                result.intentionally_incomplete_due_to_page_limit = True
+                result.stopped_at_uncached_page_due_to_limit = True
+                break
             self.counters.logical_pages += 1
+            result.pages_used += 1
             cache_status = "miss"
             response_payload: dict[str, Any] | None = None
             response_sha = None
@@ -420,6 +430,8 @@ class KalshiMetadataClient:
                 break
             else:
                 acquisition_status = "fetched"
+                market_page_requests += 1
+                result.market_page_requests += 1
                 try:
                     (
                         response_payload,
@@ -487,7 +499,8 @@ class KalshiMetadataClient:
 
             terminal = next_cursor is None
             limited_after_this_page = bool(
-                next_cursor and limit_pages is not None and page_number >= limit_pages
+                limit_pages is not None
+                and (terminal or market_page_requests >= limit_pages)
             )
             result.markets.extend(markets)
             provenance = {
@@ -540,10 +553,10 @@ class KalshiMetadataClient:
                 )
             )
             if terminal:
+                if limit_pages is not None:
+                    result.intentionally_incomplete_due_to_page_limit = True
+                    break
                 result.complete = True
-                break
-            if limited_after_this_page:
-                result.intentionally_incomplete_due_to_page_limit = True
                 break
             cursor = next_cursor
             page_number += 1
