@@ -212,6 +212,41 @@ metadata projection; it does not copy outcome-dependent raw-page hashes into
 the frozen research identity. `event_tickers.csv` contains only
 `event_ticker`, `contract_count`, and `first_open_time`.
 
+## Phase 9B-A: Kalshi event candidate evidence
+
+Run the event-metadata acquisition in module form:
+
+```console
+python -m scripts.pipeline_v2.pull_kalshi_event_metadata \
+  --event-tickers outputs/v2/event_tickers.csv \
+  --output-root data/raw/kalshi/event_metadata \
+  --config configs/pipeline_v2.toml
+```
+
+The stage calls `https://external-api.kalshi.com/trade-api/v2/events` in
+deterministic batches of at most 200 tickers, with nested markets disabled and
+milestones enabled. It follows cursors, preserves immutable raw responses,
+supports cache-first resume, and uses a final acquisition commit as the
+transaction boundary. Missing requested events remain explicit and prevent
+the report from claiming a complete universe. Supplying `--limit-events`
+records that the run was limited; actual truncation also makes the universe
+incomplete. Dry-run performs no requests and writes nothing.
+
+Event tickers must use uppercase alphanumeric groups separated by single
+hyphens or periods. Leading, trailing, and internal whitespace is rejected
+without repair. Tickers are validated before sorting, limiting, batching, or
+comma serialization. HTTP redirects are disabled and every 3xx response is rejected;
+production requests remain fixed to the documented `external-api.kalshi.com`
+endpoint.
+
+The normalized outputs are `event_metadata.csv`, `event_milestones.csv`,
+`event_source_provenance.jsonl`, and `event_metadata_report.json`. API
+`strike_date`, milestone dates, titles, categories, and settlement-source
+references are candidate evidence only. They are not verification and do not
+select an anchor. Results, settlement values and times, and market close or
+expiration times remain quarantined. The Phase 9A
+`apply_anchor_verification` handoff is still mandatory before eligibility.
+
 ## Planned stages
 
 ### 1. Ex-ante occurrence anchors
