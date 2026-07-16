@@ -247,6 +247,40 @@ select an anchor. Results, settlement values and times, and market close or
 expiration times remain quarantined. The Phase 9A
 `apply_anchor_verification` handoff is still mandatory before eligibility.
 
+## Phase 9B-B: family anchor-evidence review
+
+Build deterministic review artifacts in module form:
+
+```console
+python -m scripts.pipeline_v2.build_kalshi_anchor_evidence \
+  --market-metadata outputs/v2/market_universe/market_metadata.csv \
+  --event-metadata data/raw/kalshi/event_metadata/event_metadata.csv \
+  --event-milestones data/raw/kalshi/event_metadata/event_milestones.csv \
+  --output-root outputs/v2/anchor_evidence \
+  --config configs/pipeline_v2.toml
+```
+
+The review flow is:
+
+```text
+market_metadata.csv + event_metadata.csv + event_milestones.csv
+→ anchor_evidence.csv
+→ anchor_family_review.csv
+→ human or separately approved review
+→ anchor_verification_decisions.csv
+→ apply_anchor_verification
+```
+
+Candidate evidence is not verification, and API timestamp presence is not
+verification. Only market `occurrence_datetime`, event `strike_date`, and
+milestone `milestone_start_date` may become candidates. Date-only strike
+evidence remains date-only and is never converted to midnight or assigned a
+timezone. Update timestamps, milestone end dates, market open/close/expiration
+times, settlement metadata, and outcomes are not anchor candidates. The
+generated decisions template leaves every composite family at `needs_review`
+with all verified fields blank, so the explicit Phase 9A verification handoff
+remains mandatory.
+
 ## Planned stages
 
 ### 1. Ex-ante occurrence anchors
