@@ -360,6 +360,12 @@ request counts, and restartable without redownloading completed data. Date
 partitioning and dry-run or metadata-only modes should be supported where
 practical.
 
+The settled-metadata client treats timeouts, connection failures, truncated
+chunked bodies, and content-decoding failures as transport retries under the
+configured retry and backoff limits. A page is published atomically only after
+the complete response body has decoded and passed schema validation; failed
+partial bodies never advance a cursor or become cache hits.
+
 ### 7. Family-level analysis
 
 Contracts belonging to one event family are not independent. Calibration,

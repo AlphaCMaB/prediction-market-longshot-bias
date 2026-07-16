@@ -11,7 +11,15 @@ import time
 from typing import Any, Callable, Mapping
 
 from requests.exceptions import ConnectionError as RequestsConnectionError
+from requests.exceptions import ContentDecodingError as RequestsContentDecodingError
+from requests.exceptions import ChunkedEncodingError as RequestsChunkedEncodingError
 from requests.exceptions import Timeout as RequestsTimeout
+from urllib3.exceptions import (
+    DecodeError as Urllib3DecodeError,
+    IncompleteRead as Urllib3IncompleteRead,
+    ProtocolError as Urllib3ProtocolError,
+    ReadTimeoutError as Urllib3ReadTimeoutError,
+)
 
 from scripts.pipeline_v2.kalshi_metadata_cache import (
     CacheError,
@@ -30,7 +38,20 @@ from scripts.pipeline_v2.kalshi_metadata_planner import (
 
 RETRYABLE_STATUSES = {429, 500, 502, 503, 504}
 NONRETRYABLE_STATUSES = {400, 401, 403, 404, 422}
+REDIRECT_STATUSES = {300, 301, 302, 303, 304, 305, 306, 307, 308}
 KALSHI_PRODUCTION_BASE_URL = "https://external-api.kalshi.com"
+RETRYABLE_TRANSPORT_EXCEPTIONS = (
+    TimeoutError,
+    ConnectionError,
+    RequestsTimeout,
+    RequestsConnectionError,
+    RequestsChunkedEncodingError,
+    RequestsContentDecodingError,
+    Urllib3ProtocolError,
+    Urllib3IncompleteRead,
+    Urllib3DecodeError,
+    Urllib3ReadTimeoutError,
+)
 
 
 class MetadataClientError(RuntimeError):
@@ -42,10 +63,24 @@ def sanitize_error_message(error: BaseException | str) -> str:
     message = str(error)[:500]
     message = re.sub(r"(?i)bearer\s+[^\s,;]+", "Bearer [REDACTED]", message)
     return re.sub(
-        r"(?i)(authorization|cookie|api[-_ ]?key|token|secret)\s*[:=]\s*[^\s,;]+",
+        r"(?i)(authorization|cookie|api[-_ ]?key|token|secret|signature|"
+        r"signed[-_ ]?value|credential|password)\s*[:=]\s*[^\s,;]+",
         r"\1=[REDACTED]",
         message,
     )
+
+
+def retryable_transport_error(error: BaseException) -> bool:
+    """Recognize requests/urllib3 transport failures through wrapper chains."""
+    seen: set[int] = set()
+    current: BaseException | None = error
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if isinstance(current, RETRYABLE_TRANSPORT_EXCEPTIONS):
+            return True
+        next_error = current.__cause__ or current.__context__
+        current = next_error if isinstance(next_error, BaseException) else None
+    return False
 
 
 class RequestFailure(MetadataClientError):
@@ -174,6 +209,22 @@ class KalshiMetadataClient:
         rate_limits = 0
         status: int | None = None
 
+        def retry_or_raise_transport(exc: BaseException, attempt: int) -> None:
+            nonlocal retries
+            self._last_request_at = self.monotonic()
+            if attempt > self.max_retries:
+                raise RequestFailure(
+                    f"retry limit reached after {type(exc).__name__}: {exc}",
+                    attempts=attempt,
+                    retries=retries,
+                    rate_limits=rate_limits,
+                    last_status=status,
+                    error_type=type(exc).__name__,
+                ) from exc
+            retries += 1
+            self.counters.retries += 1
+            self._backoff(retries)
+
         for attempt in range(1, self.max_retries + 2):
             self._throttle()
             self.counters.actual_http_attempts += 1
@@ -182,32 +233,21 @@ class KalshiMetadataClient:
                     f"{self.base_url}{endpoint_path}",
                     params=dict(params),
                     timeout=self.timeout_seconds,
+                    allow_redirects=False,
                 )
-            except (TimeoutError, ConnectionError, RequestsTimeout, RequestsConnectionError) as exc:
-                self._last_request_at = self.monotonic()
-                if attempt > self.max_retries:
+            except Exception as exc:
+                if not retryable_transport_error(exc):
+                    self._last_request_at = self.monotonic()
                     raise RequestFailure(
-                        f"retry limit reached after {type(exc).__name__}: {exc}",
+                        exc,
                         attempts=attempt,
                         retries=retries,
                         rate_limits=rate_limits,
                         last_status=status,
                         error_type=type(exc).__name__,
                     ) from exc
-                retries += 1
-                self.counters.retries += 1
-                self._backoff(retries)
+                retry_or_raise_transport(exc, attempt)
                 continue
-            except Exception as exc:
-                self._last_request_at = self.monotonic()
-                raise RequestFailure(
-                    exc,
-                    attempts=attempt,
-                    retries=retries,
-                    rate_limits=rate_limits,
-                    last_status=status,
-                    error_type=type(exc).__name__,
-                ) from exc
 
             self._last_request_at = self.monotonic()
             payload: Any = None
@@ -215,6 +255,9 @@ class KalshiMetadataClient:
             try:
                 payload = response.json()
             except Exception as exc:
+                if retryable_transport_error(exc):
+                    retry_or_raise_transport(exc, attempt)
+                    continue
                 json_error = exc
             else:
                 # Security screening precedes every status, retry, and schema branch.
@@ -248,6 +291,15 @@ class KalshiMetadataClient:
                 self.counters.retries += 1
                 self._backoff(retries)
                 continue
+            if status in REDIRECT_STATUSES:
+                raise RequestFailure(
+                    f"redirect HTTP {status} rejected",
+                    attempts=attempt,
+                    retries=retries,
+                    rate_limits=rate_limits,
+                    last_status=status,
+                    error_type="RedirectError",
+                )
             if status in NONRETRYABLE_STATUSES or status >= 400:
                 raise RequestFailure(
                     f"nonretryable HTTP {status}",

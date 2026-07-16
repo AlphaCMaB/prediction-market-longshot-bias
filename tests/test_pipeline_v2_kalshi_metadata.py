@@ -11,6 +11,13 @@ import sys
 import os
 
 import pytest
+from requests.exceptions import (
+    ChunkedEncodingError,
+    ConnectionError as RequestsConnectionError,
+    ContentDecodingError,
+    Timeout as RequestsTimeout,
+)
+from urllib3.exceptions import IncompleteRead, ProtocolError
 
 from scripts.pipeline_v2.kalshi_metadata_cache import (
     CacheError,
@@ -83,14 +90,26 @@ class MalformedJsonResponse(FakeResponse):
         raise ValueError("malformed JSON")
 
 
+class JsonFailureResponse(FakeResponse):
+    def __init__(self, error):
+        super().__init__(status_code=200)
+        self.error = error
+
+    def json(self):
+        raise self.error
+
+
 class FakeSession:
     def __init__(self, responses=()):
         self.responses = list(responses)
         self.calls = []
         self.headers = {}
 
-    def get(self, url, *, params, timeout):
-        self.calls.append({"url": url, "params": dict(params), "timeout": timeout})
+    def get(self, url, *, params, timeout, allow_redirects=False):
+        self.calls.append({
+            "url": url, "params": dict(params), "timeout": timeout,
+            "allow_redirects": allow_redirects,
+        })
         if not self.responses:
             raise AssertionError("unexpected HTTP request")
         result = self.responses.pop(0)
@@ -703,6 +722,190 @@ def test_timeout_and_connection_errors_are_retried(transport_error, tmp_path):
     active = client(session)
     assert active.paginate(live_segment(), MetadataCache(tmp_path), cutoff_id="c", run_id="r").complete
     assert len(session.calls) == 2 and active.counters.retries == 1
+
+
+def test_chunked_response_then_success_has_exact_accounting_and_one_page(tmp_path):
+    cache = MetadataCache(tmp_path / "raw")
+    session = FakeSession([
+        ChunkedEncodingError("Response ended prematurely"),
+        FakeResponse(payload={"markets": [{"ticker": "A"}], "cursor": ""}),
+    ])
+    active = client(session)
+    manifest = []
+    result = active.paginate(
+        live_segment(), cache, cutoff_id="c", run_id="r", manifest_sink=manifest.append
+    )
+    assert result.complete
+    assert len(session.calls) == 2
+    assert active.counters.actual_http_attempts == 2
+    assert active.counters.retries == 1
+    assert active.counters.rate_limit_responses == 0
+    assert len(manifest) == 1
+    assert manifest[0]["http_attempt_count"] == manifest[0]["actual_request_count"] == 2
+    assert manifest[0]["retry_count"] == 1
+    assert manifest[0]["rate_limit_count"] == 0
+    assert manifest[0]["cache_status"] == "published"
+    assert manifest[0]["terminal_page"] is True
+    assert len(list((tmp_path / "raw").rglob("*.json"))) == 1
+
+
+@pytest.mark.parametrize(
+    "transport_error",
+    [
+        RequestsConnectionError("connection"),
+        RequestsTimeout("timeout"),
+        ContentDecodingError("decode"),
+        ProtocolError("connection broken", IncompleteRead(1, 2)),
+    ],
+)
+def test_requests_and_urllib3_transport_failures_retry_then_succeed(
+    transport_error, tmp_path
+):
+    session = FakeSession([
+        transport_error,
+        FakeResponse(payload={"markets": [{"ticker": "A"}], "cursor": ""}),
+    ])
+    active = client(session)
+    result = active.paginate(
+        live_segment(), MetadataCache(tmp_path), cutoff_id="c", run_id="r"
+    )
+    assert result.complete
+    assert len(session.calls) == 2
+    assert active.counters.actual_http_attempts == 2
+    assert active.counters.retries == 1
+
+
+def test_wrapped_urllib3_premature_read_is_retried(tmp_path):
+    wrapped = RuntimeError("safe wrapper")
+    wrapped.__cause__ = ProtocolError("connection broken", IncompleteRead(1, 2))
+    session = FakeSession([
+        wrapped,
+        FakeResponse(payload={"markets": [{"ticker": "A"}], "cursor": ""}),
+    ])
+    active = client(session)
+    assert active.paginate(
+        live_segment(), MetadataCache(tmp_path), cutoff_id="c", run_id="r"
+    ).complete
+    assert len(session.calls) == 2 and active.counters.retries == 1
+
+
+def test_chunked_failure_during_json_body_consumption_retries(tmp_path):
+    session = FakeSession([
+        JsonFailureResponse(ChunkedEncodingError("Response ended prematurely")),
+        FakeResponse(payload={"markets": [{"ticker": "A"}], "cursor": ""}),
+    ])
+    active = client(session)
+    assert active.paginate(
+        live_segment(), MetadataCache(tmp_path), cutoff_id="c", run_id="r"
+    ).complete
+    assert len(session.calls) == 2 and active.counters.retries == 1
+
+
+def test_repeated_chunked_failure_has_sanitized_manifest_and_no_page(tmp_path):
+    secret = "SIGNED-SECRET-VALUE"
+    message = f"Response ended prematurely authorization={secret}"
+    session = FakeSession([
+        ChunkedEncodingError(message),
+        ChunkedEncodingError(message),
+        ChunkedEncodingError(message),
+    ])
+    active = client(session, max_retries=2)
+    manifest = []
+    cache = MetadataCache(tmp_path / "raw")
+    with pytest.raises(RequestFailure) as caught:
+        active.paginate(
+            live_segment(), cache, cutoff_id="c", run_id="r",
+            manifest_sink=manifest.append,
+        )
+    assert len(session.calls) == 3
+    assert caught.value.attempts == 3
+    assert caught.value.retries == 2
+    assert caught.value.error_type == "ChunkedEncodingError"
+    assert secret not in str(caught.value)
+    assert len(manifest) == 1
+    assert manifest[0]["http_attempt_count"] == 3
+    assert manifest[0]["retry_count"] == 2
+    assert manifest[0]["error_type"] == "ChunkedEncodingError"
+    assert secret not in json.dumps(manifest)
+    assert not list((tmp_path / "raw").rglob("*.json"))
+
+
+def test_failed_partial_body_is_not_cached_and_resume_requests_same_page(tmp_path):
+    cache = MetadataCache(tmp_path / "raw")
+    failed = client(FakeSession([ChunkedEncodingError("Response ended prematurely")]),
+                    max_retries=0)
+    with pytest.raises(RequestFailure):
+        failed.paginate(live_segment(), cache, cutoff_id="c", run_id="r")
+    assert not list((tmp_path / "raw").rglob("*.json"))
+    resumed_session = FakeSession([
+        FakeResponse(payload={"markets": [{"ticker": "A"}], "cursor": ""})
+    ])
+    resumed = client(resumed_session)
+    assert resumed.paginate(
+        live_segment(), cache, cutoff_id="c", run_id="r"
+    ).complete
+    assert len(resumed_session.calls) == 1
+    assert len(list((tmp_path / "raw").rglob("*.json"))) == 1
+
+
+def test_resume_reuses_prior_pages_and_requests_only_failed_next_page(tmp_path):
+    cache = MetadataCache(tmp_path / "resume")
+    first_session = FakeSession([
+        FakeResponse(payload={"markets": [{"ticker": "A"}], "cursor": "next"})
+    ])
+    first = client(first_session).paginate(
+        live_segment(), cache, cutoff_id="c", run_id="r", limit_pages=1
+    )
+    assert first.intentionally_incomplete_due_to_page_limit
+    assert len(first_session.calls) == 1
+
+    failed_manifest = []
+    failed_session = FakeSession([ChunkedEncodingError("Response ended prematurely")])
+    with pytest.raises(RequestFailure):
+        client(failed_session, max_retries=0).paginate(
+            live_segment(), cache, cutoff_id="c", run_id="r",
+            manifest_sink=failed_manifest.append,
+        )
+    assert len(failed_session.calls) == 1
+    assert [record["cache_status"] for record in failed_manifest] == ["hit", "error"]
+    assert failed_manifest[-1]["page_number"] == 2
+
+    resume_manifest = []
+    resumed_session = FakeSession([
+        FakeResponse(payload={"markets": [{"ticker": "B"}], "cursor": ""})
+    ])
+    resumed = client(resumed_session).paginate(
+        live_segment(), cache, cutoff_id="c", run_id="r",
+        manifest_sink=resume_manifest.append,
+    )
+    assert resumed.complete
+    assert len(resumed_session.calls) == 1
+    assert [record["cache_status"] for record in resume_manifest] == ["hit", "published"]
+    assert [record["page_number"] for record in resume_manifest] == [1, 2]
+    assert [market["ticker"] for market in resumed.markets] == ["A", "B"]
+
+    uninterrupted_cache = MetadataCache(tmp_path / "uninterrupted")
+    uninterrupted = client(FakeSession([
+        FakeResponse(payload={"markets": [{"ticker": "A"}], "cursor": "next"}),
+        FakeResponse(payload={"markets": [{"ticker": "B"}], "cursor": ""}),
+    ])).paginate(
+        live_segment(), uninterrupted_cache, cutoff_id="c", run_id="r"
+    )
+    assert resumed.markets == uninterrupted.markets
+    assert [
+        record.payload for record in resumed.fetched_records
+    ] == [record.payload for record in uninterrupted.fetched_records]
+
+
+@pytest.mark.parametrize("status", [301, 302, 307, 308, 400, 401, 403, 404, 422])
+def test_redirects_and_nonretryable_4xx_are_not_retried(status, tmp_path):
+    session = FakeSession([FakeResponse(status), FakeResponse()])
+    with pytest.raises(RequestFailure):
+        client(session).paginate(
+            live_segment(), MetadataCache(tmp_path), cutoff_id="c", run_id="r"
+        )
+    assert len(session.calls) == 1
+    assert session.calls[0]["allow_redirects"] is False
 
 
 @pytest.mark.parametrize("status", [429, 500, 502, 503, 504])
