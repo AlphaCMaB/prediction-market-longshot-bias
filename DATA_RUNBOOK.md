@@ -277,8 +277,35 @@ guarded root. They are ignored generated data and must never be committed.
 Every successful partition is independently resumable. Any committed missing
 event makes the scope explicitly incomplete and blocks final publication.
 
+The collection endpoint may omit valid requested identifiers. Phase 10C
+recovers each omission through the documented single-event endpoint and then
+queries related milestones for the same ticker. These fallbacks are bounded,
+compressed, hashed, and committed like collection pages. Never interpret a
+collection omission as evidence that the Phase 10B event should be dropped.
+
 Final research outputs are compressed `event_metadata.csv.gz`,
 `event_milestones.csv.gz`, and `event_source_provenance.jsonl.gz`. They contain
 no outcome fields and do not verify anchors. Do not expose Phase 10B
 `market_outcomes.csv.gz` or raw event responses to downstream research-feature
 construction.
+
+### Phase 10C smoke checkpoint — 2026-07-18
+
+- Corrected smoke scope: `a2034bb331b27ef433702458`.
+- Events: 200 requested, 200 retrieved, 6 collection omissions recovered,
+  zero missing.
+- Requests: 13 logical/successful HTTP attempts (1 collection, 6 exact event,
+  6 related milestone), zero retries and rate limits.
+- Milestone associations: 114.
+- Compressed raw pages: 25,502 bytes; compressed partition artifacts: 27,836
+  bytes.
+- Merge ID: `2b75ffc9269f451fed90b82d`.
+- Event metadata SHA-256:
+  `ab53de4207c7152f73a9e03e44f1c683587c779694bb8e04301824c8757a07d1`.
+- Event milestones SHA-256:
+  `29c152810ab8409eddeb6860a0d8d2351360e0b0068365abf6ce6f80edbc2a91`.
+- Event provenance SHA-256:
+  `34233bcd5b6dc673a3f651b37d923fbef4de3976288779d15cd7869fe0c9175d`.
+- Merge commit SHA-256:
+  `840766f4e8e0792714e8ea6a6ff306d07fe1ab51aec86c728ba036163b01d0ea`.
+- No-network resume made no request and reproduced the same hashes.

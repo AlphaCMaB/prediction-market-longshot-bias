@@ -144,22 +144,43 @@ Phase 10C implementation completed offline on 2026-07-18.
   and provenance outputs. Any missing event, duplicate behavior change,
   cross-partition conflict, cursor problem, schema change, or incomplete
   partition blocks final publication.
-- Offline acceptance: 627 tests passed before the documentation handoff;
-  targeted event acceptance contains 87 passing tests. Compilation, pyflakes,
+- Offline acceptance: 636 tests passed after the collection-fallback fix.
+  Compilation, pyflakes,
   Black formatting, and `git diff --check` passed.
+
+Phase 10C production preflight and bounded smoke passed on 2026-07-18.
+
+- Production source audit: 427,090 total and unique events, zero malformed
+  tickers, zero duplicates, sorted input, and exact pinned SHA-256 match.
+- Production plan: 86 deterministic partitions; 2,136 minimum collection
+  requests; 27,762 estimated total requests using the observed 3% exact
+  fallback rate.
+- Projected additional storage: 1,145,832,448 bytes, producing a projected
+  4,794,373,826-byte namespace and retaining 16,207,182,848 bytes above the
+  80 GiB free-space floor at preflight time.
+- The first immutable smoke scope correctly stopped incomplete at 194/200 and
+  identified six valid collection omissions. No final universe was published.
+- The corrected scope retrieved 200/200 events through one collection request,
+  six single-event fallbacks, and six related-milestone requests: 13 successful
+  attempts, zero retries, and zero rate limits.
+- Corrected smoke output: 200 event rows, 114 milestone associations, zero
+  missing events, duplicates, or conflicts; 25,502 compressed raw-page bytes
+  and 27,836 compressed partition-artifact bytes.
+- Smoke merge ID: `2b75ffc9269f451fed90b82d`; merge commit SHA-256:
+  `840766f4e8e0792714e8ea6a6ff306d07fe1ab51aec86c728ba036163b01d0ea`.
+- A no-network resume reused the committed scope and reproduced all output
+  hashes without publishing another partition. Recursive normalized-field
+  inspection found no quarantined key.
 
 ## Critical path
 
-1. Commit and push the reviewed Phase 10C implementation.
-2. Run the pinned, read-only production preflight and evaluate the request and
-   storage envelope against the hard guards.
-3. Run one separately scoped smoke of at most 200 events and validate raw-page
-   compression, resume, output hashes, missing-event behavior, and accounting.
-4. If the smoke and refreshed production preflight pass, acquire and merge the
+1. Acquire and merge the
    full event universe under independently committed partitions.
-5. Build anchor evidence without automatically verifying any timestamp.
-6. Conduct the separate review/verification handoff.
-7. Construct horizons and targets, acquire pre-target prices, freeze sample
+2. Validate the final compressed event and milestone universes and stop before
+   anchor verification.
+3. Build anchor evidence without automatically verifying any timestamp.
+4. Conduct the separate review/verification handoff.
+5. Construct horizons and targets, acquire pre-target prices, freeze sample
    membership, and merge outcomes last.
 
 ## Current resource state

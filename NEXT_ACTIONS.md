@@ -22,20 +22,15 @@ separate and quarantined.
 
 ## Phase 10C — exact next autonomous phase
 
-Implementation and offline acceptance are complete. The exact continuation is:
+Implementation, production preflight, corrected 200-event smoke, immutable
+commit validation, recursive quarantine inspection, and no-network resume all
+pass. The exact continuation is:
 
-1. Commit and push only the Phase 10C source, tests, configuration, and project
-   documentation.
-2. Run the pinned production preflight with no network or writes. Require zero
-   malformed/duplicate source tickers and estimates within both hard guards.
-3. Run a separate `--limit-events 200 --partition-events 200` smoke scope.
-4. Validate its immutable raw gzip page, terminal cursor, normalized research
-   projection, partition commit, resume with zero redownloads, final compressed
-   merge, hashes, missing-event count, and actual disk accounting.
-5. Re-run the full production preflight using actual smoke bytes as an empirical
-   reasonableness check. If it remains safe, run `--continue-all` for the full
-   427,090-event scope.
-6. Validate every event partition and the final merge. Stop after event metadata
+1. Run `--continue-all` for production scope
+   `6de9f91508597d5343bfe745` under the shared 5 GiB/80 GiB guards.
+2. Stop immediately on any missing event, duplicate/conflict, schema/cursor
+   change, failed partition, storage-estimate anomaly, or test failure.
+3. Validate all 86 event partitions and the final compressed merge. Stop after event metadata
    validation; do not begin anchor verification and do not expose quarantined
    outcomes to research-feature stages.
 
