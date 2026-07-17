@@ -322,7 +322,18 @@ def test_collection_omission_uses_single_event_and_milestone_fallback(tmp_path):
         budget=budget,
         session=Session(
             [
-                {"events": [event("A")], "cursor": ""},
+                {
+                    "events": [event("A")],
+                    "milestones": [
+                        {
+                            "id": "M-B",
+                            "title": "Start",
+                            "related_event_tickers": ["B"],
+                            "last_updated_ts": "0001-01-01T00:00:00Z",
+                        }
+                    ],
+                    "cursor": "",
+                },
                 {"event": event("B", result="yes"), "markets": []},
                 {
                     "milestones": [
@@ -330,6 +341,7 @@ def test_collection_omission_uses_single_event_and_milestone_fallback(tmp_path):
                             "id": "M-B",
                             "title": "Start",
                             "related_event_tickers": ["B"],
+                            "last_updated_ts": "2026-01-01T00:00:00Z",
                         }
                     ],
                     "cursor": "",
@@ -342,6 +354,7 @@ def test_collection_omission_uses_single_event_and_milestone_fallback(tmp_path):
     assert result["collection_omission_count"] == 1
     assert result["single_event_fallback_count"] == 1
     assert result["related_milestone_fallback_request_count"] == 1
+    assert result["milestone_timestamp_variant_count"] == 1
     assert result["logical_request_count"] == 3
     merge = merge_completed_scope(
         raw_root=raw_root, definition=definition, budget=budget
@@ -350,6 +363,16 @@ def test_collection_omission_uses_single_event_and_milestone_fallback(tmp_path):
     assert merge["retrieved_event_count"] == 2
     assert merge["collection_omission_count"] == 1
     assert merge["milestone_association_count"] == 1
+    milestone_output = (
+        raw_root
+        / EVENT_NAMESPACE
+        / "merged_event_universes"
+        / merge["merge_id"]
+        / "event_milestones.csv.gz"
+    )
+    with gzip.open(milestone_output, "rt", newline="", encoding="utf-8") as handle:
+        milestone_rows = list(csv.DictReader(handle))
+    assert milestone_rows[0]["milestone_last_updated_ts"] == "2026-01-01T00:00:00Z"
 
 
 def test_multiple_partitions_are_independent_contiguous_and_deterministic(tmp_path):

@@ -190,6 +190,24 @@ until a successful corrected smoke provides a sharper storage and request
 check. Exact fallback preserves the Phase 10B event universe; silently dropping
 collection omissions is prohibited.
 
+## 2026-07-18 — Reconcile milestone freshness markers without changing evidence
+
+Status: accepted operational correction
+
+Production stopped in the uncommitted fourth partition when one milestone ID
+had two projections. Raw-page comparison showed every research and anchor
+candidate field was identical; only `last_updated_ts` differed. Collection
+responses supplied the sentinel `0001-01-01T00:00:00Z`, while the documented
+related-milestone fallback supplied the real 2026 update timestamp.
+
+Decision: exclude only source freshness markers (`last_updated_ts` and its
+legacy alias) from milestone conflict identity, count every timestamp variant,
+and retain the lexically latest RFC3339 timestamp deterministically. Title,
+category, type, start/end dates, details, source identifiers, and event
+associations remain conflict-critical and still fail closed. This resolution
+uses neither outcomes nor anchor verification and permits all validated event
+partitions and uncommitted raw pages to be reused.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:

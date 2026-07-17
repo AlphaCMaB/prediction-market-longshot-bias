@@ -327,6 +327,22 @@ def _artifact_reference(kind: str, path: Path) -> dict[str, Any]:
     }
 
 
+def _milestone_conflict_projection(milestone: Mapping[str, Any]) -> dict[str, Any]:
+    """Ignore source freshness markers while preserving all research evidence."""
+    projected = research_milestone_projection(milestone)
+    return {
+        key: value
+        for key, value in projected.items()
+        if key not in {"last_updated_ts", "updated_time"}
+    }
+
+
+def _milestone_row_conflict_projection(row: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        key: value for key, value in row.items() if key != "milestone_last_updated_ts"
+    }
+
+
 def _publish_budgeted(budget: StorageBudget, path: Path, content: bytes) -> None:
     budget.check_publication(path, content)
     publish_immutable_bytes(path, content)
@@ -702,9 +718,11 @@ def acquire_next_partition(
     sources: dict[str, list[dict[str, Any]]] = {}
     milestone_variants: dict[tuple[str, str, str], dict[bytes, dict[str, Any]]] = {}
     milestone_definitions: dict[str, bytes] = {}
+    milestone_full_variants: dict[str, set[bytes]] = {}
     page_records: list[dict[str, Any]] = []
     duplicate_equivalent = 0
     collection_omission_count = 0
+    milestone_timestamp_variant_count = 0
     cache_hits = 0
     fetched_requests = 0
 
@@ -737,6 +755,7 @@ def acquire_next_partition(
         events: Sequence[Mapping[str, Any]],
         allowed: set[str],
     ) -> None:
+        nonlocal milestone_timestamp_variant_count
         milestone_rows, _ = collect_milestones(payload, events)
         raw_milestones = list(payload.get("milestones", []) or [])
         for event in events:
@@ -747,7 +766,8 @@ def acquire_next_partition(
             ).strip()
             if not identifier:
                 raise EventAcquisitionError("milestone object lacks id")
-            projected = canonical_json(research_milestone_projection(milestone))
+            projected = canonical_json(_milestone_conflict_projection(milestone))
+            full_projection = canonical_json(research_milestone_projection(milestone))
             if (
                 identifier in milestone_definitions
                 and milestone_definitions[identifier] != projected
@@ -756,6 +776,10 @@ def acquire_next_partition(
                     f"conflicting duplicate milestone {identifier!r}"
                 )
             milestone_definitions[identifier] = projected
+            full_variants = milestone_full_variants.setdefault(identifier, set())
+            if full_variants and full_projection not in full_variants:
+                milestone_timestamp_variant_count += 1
+            full_variants.add(full_projection)
         for row in milestone_rows:
             if row["event_ticker"] not in allowed:
                 continue
@@ -1067,7 +1091,15 @@ def acquire_next_partition(
             f"conflicting duplicate events: {', '.join(conflicts)}"
         )
     milestone_conflicts = sorted(
-        key for key, values in milestone_variants.items() if len(values) > 1
+        key
+        for key, values in milestone_variants.items()
+        if len(
+            {
+                canonical_json(_milestone_row_conflict_projection(row))
+                for row in values.values()
+            }
+        )
+        > 1
     )
     if milestone_conflicts:
         raise EventAcquisitionError("conflicting milestone associations")
@@ -1078,7 +1110,13 @@ def acquire_next_partition(
         for ticker in retrieved
     ]
     milestone_rows = [
-        next(iter(milestone_variants[key].values()))
+        max(
+            milestone_variants[key].values(),
+            key=lambda row: (
+                str(row.get("milestone_last_updated_ts") or ""),
+                canonical_json(row),
+            ),
+        )
         for key in sorted(milestone_variants)
     ]
     provenance_rows = []
@@ -1120,6 +1158,7 @@ def acquire_next_partition(
             item.get("request_kind") == "related_milestone_fallback"
             for item in page_records
         ),
+        "milestone_timestamp_variant_count": milestone_timestamp_variant_count,
         "duplicate_equivalent_event_count": duplicate_equivalent,
         "conflicting_duplicate_event_count": 0,
         "milestone_association_count": len(milestone_rows),
@@ -1153,6 +1192,9 @@ def acquire_next_partition(
         "single_event_fallback_count": normalization["single_event_fallback_count"],
         "related_milestone_fallback_request_count": normalization[
             "related_milestone_fallback_request_count"
+        ],
+        "milestone_timestamp_variant_count": normalization[
+            "milestone_timestamp_variant_count"
         ],
         "first_event_ticker": tickers[0] if tickers else None,
         "last_event_ticker": tickers[-1] if tickers else None,
@@ -1221,6 +1263,9 @@ def acquire_next_partition(
         "single_event_fallback_count": normalization["single_event_fallback_count"],
         "related_milestone_fallback_request_count": normalization[
             "related_milestone_fallback_request_count"
+        ],
+        "milestone_timestamp_variant_count": normalization[
+            "milestone_timestamp_variant_count"
         ],
         "network_request_count": client.network_request_count,
         "logical_request_count": len(page_records),
@@ -1397,7 +1442,12 @@ def merge_completed_scope(
                     {
                         field: row.get(field, "")
                         for field in MILESTONE_FIELDS
-                        if field not in {"event_ticker", "association_type"}
+                        if field
+                        not in {
+                            "event_ticker",
+                            "association_type",
+                            "milestone_last_updated_ts",
+                        }
                     }
                 )
                 identifier = row["milestone_id"]
