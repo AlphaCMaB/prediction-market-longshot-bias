@@ -699,12 +699,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-raw-bytes", type=int)
     parser.add_argument("--min-free-bytes", type=int)
     parser.add_argument("--preflight", action="store_true")
-    parser.add_argument(
+    continuation = parser.add_mutually_exclusive_group()
+    continuation.add_argument(
         "--continue-segment",
         action="store_true",
         help=(
             "continue independently committed partitions until the current "
             "segment reaches a terminal cursor"
+        ),
+    )
+    continuation.add_argument(
+        "--continue-all-segments",
+        action="store_true",
+        help=(
+            "continue independently committed partitions through every "
+            "remaining segment"
         ),
     )
     parser.add_argument(
@@ -714,7 +723,12 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def run_current_segment(args: argparse.Namespace, *, session: Any | None = None) -> int:
+def run_current_segment(
+    args: argparse.Namespace,
+    *,
+    session: Any | None = None,
+    continue_all_segments: bool = False,
+) -> int:
     """Continue one segment while avoiding repeated full-chain decompression.
 
     The existing chain is fully validated once, every new commit is validated
@@ -762,13 +776,27 @@ def run_current_segment(args: argparse.Namespace, *, session: Any | None = None)
         )
         if chain and chain[-1].get("archive_complete"):
             load_partition_chain(Path(args.raw_root), target_id)
-            return 0
+            if not continue_all_segments:
+                return 0
+            target, _ = _select_next_segment(
+                Path(args.raw_root),
+                segments,
+                cutoff_id,
+                validated_commit_paths,
+            )
+            if target is None:
+                return 0
+            target_id = segment_id(target, cutoff_id)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     try:
         args = build_parser().parse_args(argv)
-        return run_current_segment(args) if args.continue_segment else run(args)
+        if args.continue_segment or args.continue_all_segments:
+            return run_current_segment(
+                args, continue_all_segments=args.continue_all_segments
+            )
+        return run(args)
     except (ValueError, CacheError, ResourceLimitError, RuntimeError) as exc:
         print(
             json.dumps(

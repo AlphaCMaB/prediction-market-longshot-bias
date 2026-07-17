@@ -320,6 +320,34 @@ def test_continue_segment_commits_until_terminal_and_stops_before_next_segment(
     assert chain[-1]["archive_complete"] is True
 
 
+def test_continue_all_segments_reuses_validation_across_segment_boundaries(
+    tmp_path, capsys
+):
+    cutoff = tmp_path / "cutoff.json"
+    cutoff.write_text('{"market_settled_ts":"2025-08-15T00:00:00Z"}\n')
+    args = acquisition_args(tmp_path, cutoff, "--continue-all-segments")
+    historical = market(
+        "HIST-1", updated="2025-08-15T01:00:00Z", result="yes", title="history"
+    )
+    live = market("LIVE-1", updated="2025-08-15T02:00:00Z", result="no", title="live")
+    session = FakeSession(
+        [
+            FakeResponse({"markets": [historical], "cursor": ""}),
+            FakeResponse({"markets": [live], "cursor": ""}),
+        ]
+    )
+
+    assert run_current_segment(args, session=session, continue_all_segments=True) == 0
+    assert len(session.calls) == 2
+    assert "/historical/markets" in session.calls[0]["url"]
+    assert session.calls[1]["url"].endswith("/markets")
+    assert "min_settled_ts" in session.calls[1]["params"]
+    outputs = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    commit_outputs = [item for item in outputs if item.get("partition_committed")]
+    assert len(commit_outputs) == 2
+    assert all(item["archive_complete"] for item in commit_outputs)
+
+
 def test_merge_reports_incomplete_and_publishes_no_final_universe(tmp_path, capsys):
     cutoff = write_cutoff(tmp_path)
     args = acquisition_args(tmp_path, cutoff)

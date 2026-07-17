@@ -164,5 +164,10 @@ each subsequent 25-page partition independently, checks cursor continuity after
 every commit, and performs a fresh full-chain validation at the terminal cursor.
 It stops before beginning the next segment.
 
+After a segment milestone has been reviewed, `--continue-all-segments` may be
+used instead. It retains the validated immutable-commit set in one process,
+while still performing a fresh full-chain validation whenever each segment
+reaches its terminal cursor.
+
 These dates describe the provisional acquisition envelope, not a change to the
 frozen analysis window.
