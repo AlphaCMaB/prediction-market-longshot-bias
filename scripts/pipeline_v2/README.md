@@ -15,9 +15,53 @@ python -m scripts.pipeline_v2.build_horizon_manifest --help
 python -m scripts.pipeline_v2.build_price_target_manifest --help
 python -m scripts.pipeline_v2.extract_kalshi_candlesticks --help
 python -m scripts.pipeline_v2.pull_kalshi_settled_metadata --help
+python -m scripts.pipeline_v2.pull_kalshi_partitioned_metadata --help
+python -m scripts.pipeline_v2.merge_kalshi_metadata_partitions --help
 python -m scripts.pipeline_v2.prepare_kalshi_market_universe --help
 python -m scripts.pipeline_v2.apply_anchor_verification --help
 ```
+
+> **Safety notice:** `pull_kalshi_settled_metadata` is the legacy transaction
+> implementation. Do not use it for an unbounded historical production run.
+> Kalshi's historical-markets endpoint has no settlement-date parameters, so a
+> nominal date envelope scans the complete historical archive. New historical
+> work must use `pull_kalshi_partitioned_metadata`. The legacy command now
+> rejects an unbounded historical run unless its compatibility-only opt-in is
+> supplied explicitly; smoke-limited historical calls remain available.
+
+Inspect the next bounded partition without network or file writes by pinning a
+cutoff snapshot:
+
+```bash
+python -m scripts.pipeline_v2.pull_kalshi_partitioned_metadata \
+  --start-date 2025-05-01 \
+  --end-date 2026-07-16 \
+  --raw-root data/pipeline_v2/market_acquisition/partitioned \
+  --cutoff-snapshot /path/to/pinned-cutoff.json \
+  --preflight
+```
+
+Each non-preflight invocation acquires at most one configured cursor partition.
+Raw pages use deterministic gzip, every publication is guarded by the 5 GiB
+namespace ceiling and 80 GiB free-space floor, and metadata/outcomes are
+normalized into separate artifacts before the partition commit is published.
+The commit is the unit of resume. Historical filtering is local; live monthly
+requests also carry server-side settlement bounds.
+
+After every planned segment has a committed terminal cursor, merge with:
+
+```bash
+python -m scripts.pipeline_v2.merge_kalshi_metadata_partitions \
+  --start-date 2025-05-01 \
+  --end-date 2026-07-16 \
+  --raw-root data/pipeline_v2/market_acquisition/partitioned \
+  --cutoff-snapshot /path/to/pinned-cutoff.json
+```
+
+The merge fails closed with an immutable incomplete report until every chain is
+terminal and reject-free. Selection among duplicate metadata variants uses only
+outcome-free metadata and `updated_time`; outcomes remain quarantined and are
+never used to select a variant.
 
 Direct path execution such as `python scripts/pipeline_v2/<stage>.py` is not a
 supported invocation style. The stages use repository-root package imports and

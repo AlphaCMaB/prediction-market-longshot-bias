@@ -287,6 +287,9 @@ def _canonical_effective_configuration(
         "resume": bool(args.resume),
         "historical_mode": str(args.historical_mode),
         "live_mode": str(args.live_mode),
+        "legacy_unbounded_historical_opt_in": bool(
+            getattr(args, "allow_legacy_unbounded_historical", False)
+        ),
         "limit_pages": int(args.limit_pages) if args.limit_pages is not None else None,
         "requested_start_utc": format_utc(interval.start),
         "requested_end_utc_exclusive": format_utc(interval.end),
@@ -384,6 +387,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cutoff-snapshot")
     parser.add_argument("--historical-mode", choices=("auto", "require", "skip"), default="auto")
     parser.add_argument("--live-mode", choices=("auto", "require", "skip"), default="auto")
+    parser.add_argument(
+        "--allow-legacy-unbounded-historical",
+        action="store_true",
+        help=(
+            "explicitly opt into the legacy full historical archive scan; "
+            "production use is unsafe and the partitioned command is required"
+        ),
+    )
     parser.add_argument("--user-agent", default="prediction-market-longshot-bias/metadata-v2")
     return parser
 
@@ -473,6 +484,16 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
         live_mode=args.live_mode,
     )
     _validate_endpoint_coverage_plan(months, cutoff, segments)
+    if (
+        any(segment.endpoint_tier == "historical" for segment in segments)
+        and args.limit_pages is None
+        and not getattr(args, "allow_legacy_unbounded_historical", False)
+    ):
+        raise ValueError(
+            "legacy unbounded historical acquisition is disabled; use "
+            "pull_kalshi_partitioned_metadata (or explicitly opt in only for "
+            "compatibility testing)"
+        )
     estimate = estimate_requests(segments)
     cache_hits_known = sum(
         1

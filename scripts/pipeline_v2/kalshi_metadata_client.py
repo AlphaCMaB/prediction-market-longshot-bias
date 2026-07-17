@@ -135,6 +135,9 @@ class ChainResult:
     pages_used: int = 0
     market_page_requests: int = 0
     stopped_at_uncached_page_due_to_limit: bool = False
+    partition_complete: bool = False
+    partition_boundary_reached: bool = False
+    next_cursor: str | None = None
 
 
 @dataclass(frozen=True)
@@ -398,14 +401,21 @@ class KalshiMetadataClient:
         resume: bool = True,
         dry_run: bool = False,
         limit_pages: int | None = None,
+        start_cursor: str | None = None,
+        start_page_number: int = 1,
+        partition_page_limit: int | None = None,
         mve_filter: str = "exclude",
         manifest_sink: Callable[[Mapping[str, Any]], None] | None = None,
     ) -> ChainResult:
         """Consume one endpoint chain, reusing immutable cached pages."""
         result = ChainResult()
-        cursor: str | None = None
+        if start_page_number <= 0:
+            raise ValueError("start_page_number must be positive")
+        if partition_page_limit is not None and partition_page_limit <= 0:
+            raise ValueError("partition_page_limit must be positive")
+        cursor: str | None = start_cursor
         seen_response_cursors: set[str] = set()
-        page_number = 1
+        page_number = start_page_number
         market_page_requests = 0
 
         def emit(record: dict[str, Any]) -> None:
@@ -414,6 +424,11 @@ class KalshiMetadataClient:
                 manifest_sink(record)
 
         while True:
+            if partition_page_limit is not None and result.pages_used >= partition_page_limit:
+                result.partition_complete = True
+                result.partition_boundary_reached = True
+                result.next_cursor = cursor
+                break
             params = segment_params(
                 segment,
                 page_size=self.page_size,
@@ -550,6 +565,11 @@ class KalshiMetadataClient:
                 seen_response_cursors.add(next_cursor)
 
             terminal = next_cursor is None
+            partition_boundary_after_page = bool(
+                partition_page_limit is not None
+                and result.pages_used >= partition_page_limit
+                and not terminal
+            )
             limited_after_this_page = bool(
                 limit_pages is not None
                 and (terminal or market_page_requests >= limit_pages)
@@ -602,13 +622,21 @@ class KalshiMetadataClient:
                     response_sha=response_sha,
                     terminal=terminal,
                     incomplete=limited_after_this_page,
+                    partition_boundary=partition_boundary_after_page,
                 )
             )
             if terminal:
+                result.next_cursor = None
                 if limit_pages is not None:
                     result.intentionally_incomplete_due_to_page_limit = True
                     break
                 result.complete = True
+                result.partition_complete = True
+                break
+            if partition_boundary_after_page:
+                result.partition_complete = True
+                result.partition_boundary_reached = True
+                result.next_cursor = next_cursor
                 break
             cursor = next_cursor
             page_number += 1
@@ -637,6 +665,7 @@ class KalshiMetadataClient:
         response_sha: str | None,
         terminal: bool,
         incomplete: bool,
+        partition_boundary: bool = False,
         error: Exception | None = None,
     ) -> dict[str, Any]:
         return {
@@ -670,4 +699,5 @@ class KalshiMetadataClient:
             "sanitized_error_message": sanitize_error_message(error) if error else None,
             "terminal_page": terminal,
             "intentionally_incomplete_due_to_page_limit": incomplete,
+            "bounded_partition_boundary": partition_boundary,
         }

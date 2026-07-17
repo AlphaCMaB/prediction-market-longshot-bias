@@ -1472,6 +1472,7 @@ def test_identical_duplicate_pages_persist_both_sources_deterministically(tmp_pa
 
 def test_identical_historical_live_overlap_persists_both_tiers(tmp_path):
     args = _live_cli_args(tmp_path)
+    args.allow_legacy_unbounded_historical = True
     Path(args.cutoff_snapshot).write_text(
         '{"market_settled_ts":"2025-08-15T00:00:00Z"}', encoding="utf-8"
     )
@@ -1488,6 +1489,15 @@ def test_identical_historical_live_overlap_persists_both_tiers(tmp_path):
     assert {source["endpoint_tier"] for source in entry["source_associations"]} == {
         "historical", "live"
     }
+
+
+def test_legacy_unbounded_historical_run_is_disabled_by_default(tmp_path):
+    args = _live_cli_args(tmp_path)
+    Path(args.cutoff_snapshot).write_text(
+        '{"market_settled_ts":"2026-01-01T00:00:00Z"}', encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="partitioned"):
+        run(args, session=FakeSession())
 
 
 def test_resolved_conflict_provenance_marks_winner_and_all_variants(tmp_path):
