@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import json
 from pathlib import Path
 
 import pytest
@@ -71,6 +70,7 @@ def test_input_normalization_validation_and_batching(tmp_path):
     " A", "A ", " A ", "\tA", "A\t", "\nA", "A\n", "A\r", "A B", " \t ",
     "A,B", "A?B", "A&B", "A=B", "A#B", "A%B", "A/B", "A\\B",
     "-A", "A-", "A--B", ".A", "A.", "A..B", "lowercase",
+    "A()", "A(B", "A)B(", "A(lowercase)", "A(B-C)", "(A)",
 ])
 def test_invalid_ticker_syntax_is_rejected_without_repair(ticker):
     with pytest.raises(ValueError, match="event ticker"):
@@ -88,7 +88,10 @@ def test_invalid_ticker_file_causes_zero_network_requests(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "ticker", ["A", "KXBTC", "KXBTC-26JUL", "KXFED-26JUL-T4.50", "ABC-123-YES"]
+    "ticker", [
+        "A", "KXBTC", "KXBTC-26JUL", "KXFED-26JUL-T4.50", "ABC-123-YES",
+        "KXCITIESWEATHER-24DEC13(AUS)(CHI)(DEN)",
+    ]
 )
 def test_valid_ticker_grammar(ticker):
     assert validate_event_ticker(ticker) == ticker

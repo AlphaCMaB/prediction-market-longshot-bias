@@ -25,7 +25,6 @@ from scripts.pipeline_v2.kalshi_event_metadata_client import (
     KalshiEventMetadataClient,
 )
 from scripts.pipeline_v2.kalshi_metadata_cache import (
-    CacheError,
     SensitiveResponseError,
     append_manifest,
     canonical_json,
@@ -60,7 +59,9 @@ FORBIDDEN_NORMALIZED_KEYS = frozenset({
 SET_LIKE_NORMALIZED_KEYS = frozenset({
     "relatedeventtickers", "primaryeventtickers", "milestonesourceids", "sourceids",
 })
-EVENT_TICKER_PATTERN = re.compile(r"^[A-Z0-9]+(?:[.-][A-Z0-9]+)*$")
+EVENT_TICKER_PATTERN = re.compile(
+    r"^[A-Z0-9]+(?:[.-][A-Z0-9]+)*(?:\([A-Z0-9]+\))*$"
+)
 
 
 class EventAcquisitionError(RuntimeError):
@@ -107,7 +108,8 @@ def validate_event_ticker(value: Any) -> str:
     if EVENT_TICKER_PATTERN.fullmatch(value) is None:
         raise ValueError(
             f"invalid event ticker {value!r}; expected uppercase alphanumeric groups "
-            "separated by hyphens or periods"
+            "separated by hyphens or periods, optionally followed by "
+            "parenthesized uppercase alphanumeric tokens"
         )
     return value
 
@@ -417,7 +419,6 @@ def acquire(
         backoff_cap_seconds=settings["backoff_cap_seconds"],
     )
     manifest_path = root / "manifest.jsonl"
-    raw_dir = root / "raw_pages"
     expected_first_pages = [
         _page_path(root, request_identity(request_parameters(batch, settings["page_size"])))
         for batch in batches

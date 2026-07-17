@@ -146,6 +146,23 @@ audit evidence, but their hashes do not enter normalized research features.
 Strike and milestone dates remain candidate evidence only. Phase 10C neither
 runs anchor verification nor changes any verification status.
 
+## 2026-07-18 — Preserve authenticated parenthesized event tickers
+
+Status: accepted compatibility finding
+
+The first production preflight stopped before network or writes because the
+legacy event-ticker validator rejected 43 authenticated Phase 10B rows. All 43
+belong to `KXCITIESWEATHER-24DEC13` and use balanced parenthesized uppercase
+alphanumeric city tokens. The source contained no other unrecognized
+characters, no duplicate tickers, and no ordering failures.
+
+Decision: accept zero or more balanced `(TOKEN)` suffixes in addition to the
+existing uppercase alphanumeric, hyphen, and period grammar. Commas,
+whitespace, unbalanced parentheses, empty tokens, punctuation inside tokens,
+and lowercase remain invalid. This preserves source identities exactly and is
+an API compatibility correction, not a methodology or sample-membership
+choice.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:
