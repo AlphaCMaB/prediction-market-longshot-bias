@@ -388,6 +388,70 @@ def test_merge_reports_incomplete_and_publishes_no_final_universe(tmp_path, caps
     assert not (tmp_path / "raw" / "merged_universes").exists()
 
 
+def test_streaming_merge_publishes_compressed_quarantined_universes(tmp_path, capsys):
+    cutoff = write_cutoff(tmp_path)
+    args = acquisition_args(tmp_path, cutoff)
+    record = market(
+        "MKT-STREAM",
+        updated="2025-08-15T01:00:00Z",
+        result="yes",
+        title="streamed",
+    )
+    assert (
+        run(
+            args,
+            session=FakeSession([FakeResponse({"markets": [record], "cursor": ""})]),
+        )
+        == 0
+    )
+    capsys.readouterr()
+    merge_args = build_merge_parser().parse_args(
+        [
+            "--start-date",
+            "2025-08-01",
+            "--end-date",
+            "2025-08-31",
+            "--raw-root",
+            str(tmp_path / "raw"),
+            "--cutoff-snapshot",
+            str(cutoff),
+            "--config",
+            str(CONFIG),
+            "--max-raw-bytes",
+            str(100 * 1024**2),
+            "--min-free-bytes",
+            "0",
+            "--streaming-threshold",
+            "0",
+        ]
+    )
+
+    assert run_merge(merge_args) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["streaming_compressed_merge"] is True
+    assert report["ticker_audit"]["duplicate_tickers"] == 0
+    commit = json.loads(Path(report["merge_commit"]).read_text())
+    metadata_path = Path(
+        next(
+            item["path"]
+            for item in commit["artifacts"]
+            if item["kind"] == "market_metadata.csv.gz"
+        )
+    )
+    outcomes_path = Path(
+        next(
+            item["path"]
+            for item in commit["artifacts"]
+            if item["kind"] == "market_outcomes.csv.gz"
+        )
+    )
+    metadata_text = gzip.decompress(metadata_path.read_bytes()).decode()
+    outcomes_text = gzip.decompress(outcomes_path.read_bytes()).decode()
+    assert "MKT-STREAM" in metadata_text
+    assert "result" not in metadata_text.splitlines()[0]
+    assert "yes" in outcomes_text
+
+
 def test_partition_commit_validation_detects_compressed_page_tampering(
     tmp_path, capsys
 ):

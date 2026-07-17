@@ -4,13 +4,22 @@ from __future__ import annotations
 
 import argparse
 from collections import defaultdict
+import csv
+import gzip
 import hashlib
+import io
 import json
+import os
 from pathlib import Path
+import shutil
+import subprocess
 import sys
+import tempfile
 from typing import Any, Mapping, Sequence
+import uuid
+import zlib
 
-from scripts.common.time_utils import parse_iso_utc
+from scripts.common.time_utils import format_iso_utc, parse_iso_utc
 from scripts.pipeline_v2.kalshi_metadata_cache import (
     CacheError,
     MetadataCache,
@@ -52,6 +61,14 @@ from scripts.pipeline_v2.pull_kalshi_settled_metadata import (
 INCOMPLETE_EXIT = 3
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024**2), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def _valid_merge_commit(path: Path) -> bool:
     try:
         record = json.loads(path.read_text(encoding="utf-8"))
@@ -69,10 +86,17 @@ def _valid_merge_commit(path: Path) -> bool:
         return False
     for artifact in artifacts:
         artifact_path = Path(str(artifact.get("path") or ""))
-        if not artifact_path.is_file() or _sha256(
-            artifact_path.read_bytes()
-        ) != artifact.get("sha256"):
+        if not artifact_path.is_file() or _sha256_file(artifact_path) != artifact.get(
+            "sha256"
+        ):
             return False
+        if artifact.get("compression") == "gzip":
+            try:
+                with gzip.open(artifact_path, "rb") as handle:
+                    while handle.read(1024**2):
+                        pass
+            except Exception:
+                return False
     reports = [item for item in artifacts if item.get("kind") == "merge_report.json"]
     if len(reports) != 1:
         return False
@@ -91,6 +115,147 @@ def _artifact(commit: Mapping[str, Any], kind: str) -> Path:
     if not path.is_file() or _sha256(path.read_bytes()) != matches[0].get("sha256"):
         raise CacheError(f"partition {kind} artifact is missing or corrupt")
     return path
+
+
+def _ticker_audit(
+    chains: Sequence[Sequence[Mapping[str, Any]]], budget: StorageBudget
+) -> dict[str, Any]:
+    expected_rows = sum(
+        int(commit.get("normalization_summary", {}).get("in_range_record_count", 0))
+        for chain in chains
+        for commit in chain
+    )
+    estimated_temporary_bytes = expected_rows * 128
+    budget.check_additional(estimated_temporary_bytes)
+    with tempfile.TemporaryDirectory(
+        prefix="kalshi-ticker-audit.", dir="/private/tmp"
+    ) as temporary:
+        temporary_path = Path(temporary)
+        unsorted_path = temporary_path / "tickers.txt"
+        sorted_path = temporary_path / "tickers.sorted.txt"
+        input_rows = 0
+        with unsorted_path.open("wb") as handle:
+            for chain in chains:
+                for commit in chain:
+                    for wrapper in _read_gzip_jsonl(_artifact(commit, "metadata")):
+                        metadata = wrapper.get("metadata")
+                        digest = str(wrapper.get("metadata_sha256") or "")
+                        if (
+                            not isinstance(metadata, dict)
+                            or sha256_json(metadata) != digest
+                        ):
+                            raise CacheError("normalized metadata hash mismatch")
+                        ticker = str(metadata.get("ticker") or "").strip()
+                        if not ticker or "\n" in ticker or "\r" in ticker:
+                            raise CacheError(
+                                "normalized metadata has an invalid ticker"
+                            )
+                        handle.write(ticker.encode("utf-8") + b"\n")
+                        input_rows += 1
+        if input_rows != expected_rows:
+            raise CacheError(
+                "ticker audit row count does not match partition summaries"
+            )
+        environment = dict(os.environ)
+        environment.update({"LC_ALL": "C", "TMPDIR": temporary})
+        try:
+            subprocess.run(
+                ["sort", str(unsorted_path), "-o", str(sorted_path)],
+                check=True,
+                env=environment,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+            )
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise CacheError("exact ticker sort audit failed") from exc
+
+        unique_tickers = 0
+        duplicate_tickers = 0
+        excess_rows = 0
+        maximum_occurrences = 0
+        previous: bytes | None = None
+        occurrences = 0
+        sorted_digest = hashlib.sha256()
+        with sorted_path.open("rb") as handle:
+            for line in handle:
+                sorted_digest.update(line)
+                ticker = line.rstrip(b"\n")
+                if ticker == previous:
+                    occurrences += 1
+                    continue
+                if previous is not None:
+                    unique_tickers += 1
+                    if occurrences > 1:
+                        duplicate_tickers += 1
+                        excess_rows += occurrences - 1
+                        maximum_occurrences = max(maximum_occurrences, occurrences)
+                previous = ticker
+                occurrences = 1
+        if previous is not None:
+            unique_tickers += 1
+            if occurrences > 1:
+                duplicate_tickers += 1
+                excess_rows += occurrences - 1
+                maximum_occurrences = max(maximum_occurrences, occurrences)
+    return {
+        "input_rows": input_rows,
+        "unique_tickers": unique_tickers,
+        "duplicate_tickers": duplicate_tickers,
+        "excess_rows": excess_rows,
+        "maximum_occurrences": maximum_occurrences,
+        "sorted_ticker_sha256": sorted_digest.hexdigest(),
+        "temporary_byte_estimate": estimated_temporary_bytes,
+    }
+
+
+class _BudgetedGzipSink:
+    def __init__(self, path: Path, budget: StorageBudget):
+        self.path = path
+        self.budget = budget
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.handle = self.path.open("xb")
+        self.compressor = zlib.compressobj(9, zlib.DEFLATED, 31)
+        self.digest = hashlib.sha256()
+        self.bytes_written = 0
+
+    def _write_compressed(self, content: bytes) -> None:
+        if not content:
+            return
+        self.budget.check_additional(len(content))
+        self.handle.write(content)
+        self.digest.update(content)
+        self.bytes_written += len(content)
+
+    def write(self, content: bytes) -> None:
+        self._write_compressed(self.compressor.compress(content))
+
+    def close(self) -> dict[str, Any]:
+        self._write_compressed(self.compressor.flush())
+        self.handle.flush()
+        os.fsync(self.handle.fileno())
+        self.handle.close()
+        return {
+            "path": str(self.path),
+            "sha256": self.digest.hexdigest(),
+            "bytes": self.bytes_written,
+            "compression": "gzip",
+        }
+
+
+def _csv_chunk(
+    rows: Sequence[Mapping[str, Any]],
+    fields: tuple[str, ...],
+    *,
+    include_header: bool,
+) -> bytes:
+    stream = io.StringIO(newline="")
+    writer = csv.DictWriter(
+        stream, fieldnames=fields, lineterminator="\n", extrasaction="ignore"
+    )
+    if include_header:
+        writer.writeheader()
+    writer.writerows(rows)
+    return stream.getvalue().encode("utf-8")
 
 
 def _publish_report(
@@ -229,6 +394,241 @@ def _merge_rows(
     return selected_metadata, selected_outcomes, selected_provenance
 
 
+def _stream_unique_merge(
+    *,
+    raw_root: Path,
+    budget: StorageBudget,
+    chains: Sequence[Sequence[Mapping[str, Any]]],
+    state: Sequence[Mapping[str, Any]],
+    audit: Mapping[str, Any],
+    args: argparse.Namespace,
+    cutoff_payload: Mapping[str, Any],
+) -> dict[str, Any]:
+    if audit["duplicate_tickers"] or audit["excess_rows"]:
+        raise ConsolidationConflict(
+            "streaming merge requires the exact zero-duplicate ticker audit"
+        )
+    work_dir = raw_root / "merge_work" / uuid.uuid4().hex
+    metadata_sink = _BudgetedGzipSink(work_dir / "market_metadata.csv.gz", budget)
+    outcomes_sink = _BudgetedGzipSink(work_dir / "market_outcomes.csv.gz", budget)
+    event_state: dict[str, tuple[int, Any | None]] = {}
+    events_sink: _BudgetedGzipSink | None = None
+    processed = 0
+    first_chunk = True
+    partition_provenance = []
+    try:
+        for chain in chains:
+            for commit in chain:
+                metadata_by_key: dict[tuple[str, str], dict[str, Any]] = {}
+                for wrapper in _read_gzip_jsonl(_artifact(commit, "metadata")):
+                    metadata = wrapper.get("metadata")
+                    digest = str(wrapper.get("metadata_sha256") or "")
+                    if (
+                        not isinstance(metadata, dict)
+                        or sha256_json(metadata) != digest
+                    ):
+                        raise CacheError("normalized metadata hash mismatch")
+                    ticker = str(metadata.get("ticker") or "").strip()
+                    key = (ticker, digest)
+                    if not ticker or key in metadata_by_key:
+                        raise ConsolidationConflict(
+                            "duplicate metadata key inside a committed partition"
+                        )
+                    metadata_by_key[key] = dict(metadata)
+
+                outcomes_by_key: dict[tuple[str, str], dict[str, Any]] = {}
+                for wrapper in _read_gzip_jsonl(_artifact(commit, "outcomes")):
+                    outcome = wrapper.get("outcome")
+                    digest = str(wrapper.get("metadata_sha256") or "")
+                    if not isinstance(outcome, dict):
+                        raise CacheError("normalized outcome is malformed")
+                    ticker = str(outcome.get("ticker") or "").strip()
+                    key = (ticker, digest)
+                    if key in outcomes_by_key:
+                        raise ConsolidationConflict(
+                            "multiple outcomes for one metadata key"
+                        )
+                    outcomes_by_key[key] = dict(outcome)
+
+                provenance_keys: set[tuple[str, str]] = set()
+                provenance_artifact = _artifact(commit, "provenance")
+                for row in _read_gzip_jsonl(provenance_artifact):
+                    key = (
+                        str(row.get("ticker") or "").strip(),
+                        str(row.get("metadata_sha256") or ""),
+                    )
+                    if key in provenance_keys:
+                        raise ConsolidationConflict(
+                            "multiple provenance rows for one metadata key"
+                        )
+                    provenance_keys.add(key)
+                keys = set(metadata_by_key)
+                if set(outcomes_by_key) != keys or provenance_keys != keys:
+                    raise CacheError(
+                        "partition outcome/provenance coverage differs from metadata"
+                    )
+
+                ordered_keys = sorted(keys, key=lambda item: (item[0], item[1]))
+                metadata_rows = [metadata_by_key[key] for key in ordered_keys]
+                outcome_rows = [outcomes_by_key[key] for key in ordered_keys]
+                metadata_sink.write(
+                    _csv_chunk(
+                        metadata_rows,
+                        METADATA_FIELDS,
+                        include_header=first_chunk,
+                    )
+                )
+                outcomes_sink.write(
+                    _csv_chunk(
+                        outcome_rows,
+                        OUTCOME_FIELDS,
+                        include_header=first_chunk,
+                    )
+                )
+                first_chunk = False
+                processed += len(metadata_rows)
+                for metadata in metadata_rows:
+                    event = str(metadata.get("event_ticker") or "").strip()
+                    if not event:
+                        continue
+                    opened = parse_iso_utc(metadata.get("open_time"))
+                    count, earliest = event_state.get(event, (0, None))
+                    if opened is not None and (earliest is None or opened < earliest):
+                        earliest = opened
+                    event_state[event] = (count + 1, earliest)
+
+                provenance_entry = next(
+                    item
+                    for item in commit["artifacts"]
+                    if item.get("kind") == "provenance"
+                )
+                partition_provenance.append(
+                    {
+                        "partition_commit": commit["_commit_path"],
+                        "partition_commit_sha256": _sha256(
+                            Path(commit["_commit_path"]).read_bytes()
+                        ),
+                        "provenance_artifact": provenance_entry,
+                    }
+                )
+
+        if processed != audit["input_rows"]:
+            raise CacheError("streaming merge count differs from exact ticker audit")
+        metadata_reference = metadata_sink.close()
+        outcomes_reference = outcomes_sink.close()
+
+        events_sink = _BudgetedGzipSink(work_dir / "event_tickers.csv.gz", budget)
+        event_rows = []
+        for event in sorted(event_state):
+            count, earliest = event_state[event]
+            event_rows.append(
+                {
+                    "event_ticker": event,
+                    "contract_count": count,
+                    "first_open_time": (
+                        format_iso_utc(earliest) if earliest is not None else ""
+                    ),
+                }
+            )
+            if len(event_rows) == 10_000:
+                events_sink.write(
+                    _csv_chunk(
+                        event_rows,
+                        EVENT_FIELDS,
+                        include_header=events_sink.bytes_written == 0,
+                    )
+                )
+                event_rows.clear()
+        if event_rows or not event_state:
+            events_sink.write(
+                _csv_chunk(
+                    event_rows,
+                    EVENT_FIELDS,
+                    include_header=events_sink.bytes_written == 0,
+                )
+            )
+        events_reference = events_sink.close()
+
+        provenance_manifest = {
+            "schema_version": SCHEMA_VERSION,
+            "resolution": "zero_duplicate_identity_preserves_partition_provenance",
+            "ticker_audit": dict(audit),
+            "partition_provenance": partition_provenance,
+        }
+        provenance_content = canonical_json(provenance_manifest) + b"\n"
+        provenance_path = work_dir / "source_provenance_manifest.json"
+        _publish_budgeted(budget, provenance_path, provenance_content)
+        provenance_reference = {
+            "path": str(provenance_path),
+            "sha256": _sha256(provenance_content),
+            "bytes": len(provenance_content),
+            "compression": "none",
+        }
+
+        merge_identity = {
+            "schema_version": SCHEMA_VERSION,
+            "requested_range": {
+                "start_date": args.start_date,
+                "end_date": args.end_date,
+            },
+            "cutoff_snapshot_id": sha256_json(cutoff_payload)[:20],
+            "partition_commits": [
+                commit["_commit_path"] for chain in chains for commit in chain
+            ],
+            "ticker_audit": dict(audit),
+            "metadata_sha256": metadata_reference["sha256"],
+            "outcomes_sha256": outcomes_reference["sha256"],
+            "events_sha256": events_reference["sha256"],
+            "provenance_sha256": provenance_reference["sha256"],
+            "streaming_compressed_merge": True,
+        }
+        merge_id = hashlib.sha256(canonical_json(merge_identity)).hexdigest()[:24]
+        output_dir = raw_root / "merged_universes" / merge_id
+        artifact_specs = [
+            ("market_metadata.csv.gz", metadata_reference),
+            ("market_outcomes.csv.gz", outcomes_reference),
+            ("event_tickers.csv.gz", events_reference),
+            ("source_provenance_manifest.json", provenance_reference),
+        ]
+        artifacts = []
+        for kind, reference in artifact_specs:
+            source = Path(reference["path"])
+            destination = output_dir / kind
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            if destination.exists():
+                if _sha256_file(destination) != reference["sha256"]:
+                    raise CacheError("conflicting immutable merge artifact")
+                source.unlink()
+            else:
+                os.replace(source, destination)
+            artifacts.append(
+                {
+                    "kind": kind,
+                    "path": str(destination),
+                    "sha256": reference["sha256"],
+                    "bytes": reference["bytes"],
+                    "compression": reference["compression"],
+                }
+            )
+        work_dir.rmdir()
+        return {
+            "merge_identity": merge_identity,
+            "merge_id": merge_id,
+            "artifacts": artifacts,
+            "contract_count": processed,
+            "event_count": len(event_state),
+            "ticker_audit": dict(audit),
+            "segment_state": list(state),
+        }
+    except Exception:
+        for sink in (metadata_sink, outcomes_sink, events_sink):
+            if sink is not None and not sink.handle.closed:
+                sink.handle.close()
+        if work_dir.exists():
+            shutil.rmtree(work_dir)
+        raise
+
+
 def run(args: argparse.Namespace) -> int:
     interval = normalize_inclusive_dates(args.start_date, args.end_date)
     cutoff_payload = MetadataCache.load_cutoff_snapshot(args.cutoff_snapshot)
@@ -262,6 +662,69 @@ def run(args: argparse.Namespace) -> int:
         path = _publish_report(raw_root, budget, report)
         print(json.dumps({**report, "report": str(path)}, sort_keys=True))
         return INCOMPLETE_EXIT
+
+    input_rows = sum(
+        int(commit.get("normalization_summary", {}).get("in_range_record_count", 0))
+        for chain in chains
+        for commit in chain
+    )
+    if input_rows >= args.streaming_threshold:
+        audit = _ticker_audit(chains, budget)
+        if audit["duplicate_tickers"]:
+            raise ConsolidationConflict(
+                "exact ticker audit found duplicates; streaming merge stopped"
+            )
+        streamed = _stream_unique_merge(
+            raw_root=raw_root,
+            budget=budget,
+            chains=chains,
+            state=state,
+            audit=audit,
+            args=args,
+            cutoff_payload=cutoff_payload,
+        )
+        report = {
+            "schema_version": SCHEMA_VERSION,
+            "merge_complete": True,
+            "final_universe_published": True,
+            "merge_id": streamed["merge_id"],
+            "contract_count": streamed["contract_count"],
+            "event_count": streamed["event_count"],
+            "segment_state": state,
+            "ticker_audit": audit,
+            "duplicate_ticker_count": 0,
+            "metadata_conflict_count": 0,
+            "outcome_quarantine_enabled": True,
+            "outcomes_merged_into_metadata": False,
+            "streaming_compressed_merge": True,
+            "row_provenance_preserved_in_partition_artifacts": True,
+            "artifacts": streamed["artifacts"],
+        }
+        report_content = canonical_json(report) + b"\n"
+        report_path = (
+            raw_root / "merged_universes" / streamed["merge_id"] / "merge_report.json"
+        )
+        _publish_budgeted(budget, report_path, report_content)
+        artifacts = streamed["artifacts"] + [
+            {
+                "kind": "merge_report.json",
+                "path": str(report_path),
+                "sha256": _sha256(report_content),
+                "bytes": len(report_content),
+                "compression": "none",
+            }
+        ]
+        commit = {
+            **streamed["merge_identity"],
+            "merge_id": streamed["merge_id"],
+            "artifacts": artifacts,
+        }
+        commit_path = raw_root / "merge_commits" / f"merge_{streamed['merge_id']}.json"
+        _publish_budgeted(budget, commit_path, canonical_json(commit) + b"\n")
+        if not _valid_merge_commit(commit_path):
+            raise CacheError("published streaming merge commit failed final validation")
+        print(json.dumps({**report, "merge_commit": str(commit_path)}, sort_keys=True))
+        return 0
 
     metadata, outcomes, provenance = _merge_rows(chains)
     events = _event_rows(metadata)
@@ -344,6 +807,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--max-raw-bytes", type=int)
     parser.add_argument("--min-free-bytes", type=int)
+    parser.add_argument("--streaming-threshold", type=int, default=1_000_000)
     return parser
 
 
