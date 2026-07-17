@@ -198,6 +198,7 @@ def test_bounded_partitions_commit_resume_normalize_and_merge_without_outcome_se
     first_output = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
     assert first_output[-1]["archive_complete"] is False
     assert len(first_session.calls) == 1
+    assert len(list((tmp_path / "raw" / "cutoff_snapshots").glob("cutoff_*.json"))) == 1
 
     cutoff_id = sha256_json({"market_settled_ts": "2026-01-01T00:00:00Z"})[:20]
     segment = EndpointSegment(

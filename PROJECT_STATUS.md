@@ -84,6 +84,9 @@ provisional acquisition envelope
 - Incomplete merge: exited with status 3, wrote an immutable incomplete report,
   and published no final universe.
 - Guards: 256 MiB smoke ceiling and 80 GiB free-space floor remained intact.
+- Smoke-review finding fixed: actual runs using an externally pinned cutoff now
+  publish a validated immutable copy inside the guarded acquisition root;
+  read-only preflight remains write-free. The full 614-test suite passed again.
 
 Smoke artifacts are retained for audit under
 `/private/tmp/kalshi-partitioned-smoke.IVGaQL`; no validated data was deleted.

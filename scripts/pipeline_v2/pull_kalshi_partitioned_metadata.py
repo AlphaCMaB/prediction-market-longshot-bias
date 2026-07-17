@@ -475,6 +475,13 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
             args.cutoff_snapshot
         )
         cutoff_id = sha256_json(cutoff_payload)[:20]
+        if not args.preflight:
+            cutoff_cache = CompressedPartitionCache(
+                raw_root, partition_id="cutoff", budget=budget
+            )
+            stored_cutoff_id, _ = cutoff_cache.store_cutoff_snapshot(cutoff_payload)
+            if stored_cutoff_id != cutoff_id:
+                raise CacheError("stored cutoff identity mismatch")
     else:
         cutoff_payload = client.fetch_cutoff()
         cutoff_cache = CompressedPartitionCache(

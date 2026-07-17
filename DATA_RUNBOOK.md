@@ -43,6 +43,8 @@ network operation and must be counted separately.
 ## Partition lifecycle
 
 1. Resolve and pin a cutoff snapshot.
+   Actual acquisition publishes a validated immutable copy inside the guarded
+   raw root; preflight validates the external snapshot without writing.
 2. Determine the first uncommitted partition from validated commits only.
 3. Fetch at most the configured page count, reusing valid compressed cache pages.
 4. Before each raw-page publication, check both the raw-byte budget and minimum
