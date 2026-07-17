@@ -1,6 +1,6 @@
 # Data Runbook
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 
 ## Non-negotiable safety limits
 
@@ -309,3 +309,40 @@ construction.
 - Merge commit SHA-256:
   `840766f4e8e0792714e8ea6a6ff306d07fe1ab51aec86c728ba036163b01d0ea`.
 - No-network resume made no request and reproduced the same hashes.
+
+### Phase 10C production checkpoint — 2026-07-18
+
+- Scope: `6de9f91508597d5343bfe745`; merge:
+  `69f1b1277bdfdbd530834fe6`.
+- Partitions/events: 86; 427,090 requested and retrieved; zero missing,
+  malformed, duplicate, rejected, or conflicting events.
+- Requests: 2,768 logical/successful attempts; zero retries and rate limits.
+  Exact-event plus related-milestone fallback recovered all 316 collection
+  omissions.
+- Milestone associations: 208,598; zero merged duplicates or conflicts.
+- Compressed sizes: 96,133,690 raw-page bytes; 113,609,192 partition-artifact
+  bytes; 110,500,035 final-artifact bytes.
+- Final files under
+  `event_metadata_acquisition/merged_event_universes/69f1b1277bdfdbd530834fe6/`:
+  - `event_metadata.csv.gz` — 9,651,125 bytes; SHA-256
+    `ef97e0093234e7b963f739d7ddd435691b5f8580e6551f398754d1b95807f3bf`.
+  - `event_milestones.csv.gz` — 79,753,923 bytes; SHA-256
+    `96f6c754f8ffbb0c9aa1d12e1a1cdf953079b773de419dc5e90917673334ab82`.
+  - `event_source_provenance.jsonl.gz` — 21,094,129 bytes; SHA-256
+    `6d6c9bb646abf9963e8f9ca978c681ef1db07b455114aa3e83a27f417c4671f0`.
+  - `merge_report.json` — 858 bytes; SHA-256
+    `7e80509ca3f03d184343672f5d008913677edfdd11d7266216ac9eff2d959774`.
+  - `merge_commit.json` — 24,946 bytes; SHA-256
+    `b2294aeac4c28217cce52358d31f257169e88e2d0d217cf3cb12757fbdd8eb43`.
+- Shared guarded namespace: 3,972,267,951 bytes of 5 GiB. Free filesystem:
+  101,689,225,216 bytes, 15,789,879,296 bytes above the 80 GiB floor.
+
+All generated files in this checkpoint remain ignored and local. A complete
+no-network resume must return scope complete, reproduce merge
+`69f1b1277bdfdbd530834fe6`, issue zero requests, and leave all file sizes and
+modification times unchanged.
+
+Only the three compressed final research artifacts may feed Phase 10D
+candidate anchor-evidence construction. Preserve timestamps as unverified
+candidate evidence, do not invoke anchor verification, and do not read raw
+responses or quarantined market outcomes into research metadata.

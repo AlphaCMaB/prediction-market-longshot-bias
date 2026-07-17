@@ -91,7 +91,7 @@ provisional acquisition envelope
 Smoke artifacts are retained for audit under
 `/private/tmp/kalshi-partitioned-smoke.IVGaQL`; no validated data was deleted.
 
-## Current phase
+## Validated production universes
 
 Phase 10B completed on 2026-07-17 and remains immutable.
 
@@ -172,21 +172,51 @@ Phase 10C production preflight and bounded smoke passed on 2026-07-18.
   hashes without publishing another partition. Recursive normalized-field
   inspection found no quarantined key.
 
+Phase 10C production acquisition completed on 2026-07-18.
+
+- Production scope `6de9f91508597d5343bfe745` contains 86 independently
+  validated partitions covering all 427,090 Phase 10B event tickers.
+- Requests: 2,768 logical and successful HTTP attempts, zero retries and zero
+  rate limits. The collection endpoint omitted 316 requested events; all 316
+  were recovered through exact-event and related-milestone requests.
+- Completeness: 427,090 requested, retrieved, normalized, and provenanced;
+  zero malformed, rejected, missing, duplicate, or conflicting events.
+- Milestones: 208,598 deterministic event-milestone associations, zero
+  duplicate or conflicting merged rows. Eight source-freshness timestamp
+  variants were reconciled under the accepted timestamp-only rule.
+- Production merge: complete and published as
+  `69f1b1277bdfdbd530834fe6`. It contains no normalized outcome field, does not
+  merge Phase 10B outcomes, and verifies no anchor.
+- Compressed production bytes: 96,133,690 raw pages; 113,609,192 partition
+  artifacts; 110,500,035 final merge artifacts.
+- Final hashes: event metadata
+  `ef97e0093234e7b963f739d7ddd435691b5f8580e6551f398754d1b95807f3bf`,
+  event milestones
+  `96f6c754f8ffbb0c9aa1d12e1a1cdf953079b773de419dc5e90917673334ab82`,
+  provenance
+  `6d6c9bb646abf9963e8f9ca978c681ef1db07b455114aa3e83a27f417c4671f0`,
+  and merge commit
+  `b2294aeac4c28217cce52358d31f257169e88e2d0d217cf3cb12757fbdd8eb43`.
+- Final no-network resume made zero requests and left every acquisition file
+  unchanged. Recursive inspection of all final normalized JSON projections
+  found zero forbidden outcome paths.
+- Final acceptance: 636 tests passed. Compilation, scoped pyflakes, Black,
+  and `git diff --check` passed; the acceptance review found no remaining
+  Phase 10C issue.
+
 ## Critical path
 
-1. Acquire and merge the
-   full event universe under independently committed partitions.
-2. Validate the final compressed event and milestone universes and stop before
-   anchor verification.
-3. Build anchor evidence without automatically verifying any timestamp.
-4. Conduct the separate review/verification handoff.
-5. Construct horizons and targets, acquire pre-target prices, freeze sample
+1. Build anchor evidence from the validated outcome-free market and event
+   universes without automatically verifying any timestamp.
+2. Conduct the separate review/verification handoff.
+3. Construct horizons and targets, acquire pre-target prices, freeze sample
    membership, and merge outcomes last.
 
 ## Current resource state
 
 - Repository size: approximately 608 MiB.
-- Available filesystem space: approximately 96.5 GiB at Phase 10B completion.
+- Available filesystem space: 101,689,225,216 bytes (94.71 GiB) after Phase
+  10C final validation, 15,789,879,296 bytes above the safety floor.
 - Safety floor: stop before available space falls below 80 GiB.
 - Default raw acquisition budget: at most 5 GiB; any larger production run
   requires explicit approval.
@@ -196,3 +226,5 @@ Phase 10C production preflight and bounded smoke passed on 2026-07-18.
 - Phase 10A-S network requests: two; smoke data: 339,295 bytes in `/private/tmp`.
 - Phase 10B final: 11,269 successful market-page requests, 3,648,491,736
   guarded bytes, 454 valid partition commits, and one valid final merge commit.
+- Shared guarded namespace after Phase 10C: 3,972,267,951 bytes (3.70 GiB) of
+  the 5 GiB ceiling. Phase 10C contributes 323,776,215 file bytes locally.

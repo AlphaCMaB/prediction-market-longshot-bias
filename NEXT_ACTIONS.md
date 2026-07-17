@@ -20,19 +20,24 @@ All historical and live segments are terminal. The validated merge contains
 9,861,209 outcome-free market rows and 427,090 event tickers. Outcomes remain
 separate and quarantined.
 
-## Phase 10C — exact next autonomous phase
+## Phase 10C — completed
 
-Implementation, production preflight, corrected 200-event smoke, immutable
-commit validation, recursive quarantine inspection, and no-network resume all
-pass. The exact continuation is:
+Implementation, production preflight, corrected 200-event smoke, all 86
+production partitions, and the deterministic final merge are complete.
+Production retrieved all 427,090 events and published 208,598 milestone
+associations with zero missing events or merge conflicts. Final no-network
+resume, recursive quarantine inspection, hashes, disk accounting, and the
+636-test acceptance suite pass.
 
-1. Run `--continue-all` for production scope
-   `6de9f91508597d5343bfe745` under the shared 5 GiB/80 GiB guards.
-2. Stop immediately on any missing event, duplicate/conflict, schema/cursor
-   change, failed partition, storage-estimate anomaly, or test failure.
-3. Validate all 86 event partitions and the final compressed merge. Stop after event metadata
-   validation; do not begin anchor verification and do not expose quarantined
-   outcomes to research-feature stages.
+## Phase 10D — exact next autonomous phase
+
+1. Construct candidate anchor evidence from the outcome-free Phase 10B market
+   metadata and Phase 10C event/milestone metadata.
+2. Preserve every timestamp as `needs_review`; do not automatically mark any
+   candidate as verified.
+3. Produce the separate human review/verification handoff before building
+   horizons, targets, or prices. Keep quarantined outcomes unavailable until
+   sample membership and research features are frozen.
 
 ## Approval gates
 

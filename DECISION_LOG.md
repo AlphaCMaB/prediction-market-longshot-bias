@@ -208,6 +208,25 @@ associations remain conflict-critical and still fail closed. This resolution
 uses neither outcomes nor anchor verification and permits all validated event
 partitions and uncommitted raw pages to be reused.
 
+## 2026-07-18 — Accept the complete partitioned event universe
+
+Status: accepted production checkpoint
+
+The production scope completed all 86 deterministic partitions and retrieved
+all 427,090 authenticated Phase 10B event tickers. Kalshi collection responses
+omitted 316 requested identifiers; the already accepted exact-event and
+related-milestone fallback recovered every omission. There were no missing,
+duplicate, or conflicting event rows, no merge conflicts, and no request
+retries or rate limits.
+
+Decision: freeze event merge `69f1b1277bdfdbd530834fe6` as the Phase 10C
+production input to candidate anchor-evidence construction. Its compressed
+event metadata, milestone associations, and provenance are eligible research
+inputs; raw responses and Phase 10B outcomes are not. The merge neither
+verifies an anchor nor changes `StudyRules` or the analysis window. Any future
+replacement requires a new auditable scope and merge identity; Phase 10B and
+this validated Phase 10C checkpoint remain immutable.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:
