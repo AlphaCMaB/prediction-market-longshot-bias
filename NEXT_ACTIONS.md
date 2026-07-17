@@ -8,16 +8,25 @@ All architecture, safety, normalization, merge, reporting, and validation work
 is implemented. Acceptance result: 614 tests passed with no production data or
 network requests.
 
-## Phase 10A-S — next autonomous phase
+## Phase 10A-S — completed
 
-1. Run a one-page network smoke test into a temporary directory with a small
-   explicit byte ceiling and the 80 GiB free-space floor.
-2. Review smoke artifacts, compressed size per page, request counts, date-range
-   selectivity, commit validity, outcome quarantine, and free-space/budget
-   margins.
-3. Begin production acquisition one partition at a time only if projected usage
-   stays within 5 GiB and free space remains above 80 GiB.
-4. Do not begin event metadata acquisition or anchor review until a manageable,
+The bounded smoke test passed with 2 requests, 0 retries, 80,059 compressed raw
+bytes, 1,000 in-range rows, 0 rejects, a valid nonterminal partition commit,
+correct resume state, and a fail-closed incomplete merge.
+
+## Phase 10B — next autonomous phase
+
+1. Run and record the production preflight for the provisional settlement
+   envelope `[2025-05-01, 2026-07-17)`.
+2. Acquire one configured 25-page partition under the 5 GiB namespace ceiling
+   and 80 GiB free-space floor.
+3. Review actual bytes/page, in-range/out-of-range counts, retries, partition
+   commit validity, and remaining disk margins.
+4. Continue one partition at a time while guards and empirical projections
+   remain safe; stop automatically at either guard.
+5. When every historical and live segment is terminal, run the deterministic
+   merge and validate the final quarantined universe.
+6. Do not begin event metadata acquisition or anchor review until a manageable,
    validated market universe exists.
 
 ## Approval gates

@@ -66,24 +66,44 @@ inspection, formatting checks for new modules, and `git diff --check` passed.
 No network acquisition was run in this phase and the acquisition directory
 remained empty.
 
+## Phase 10A-S completed
+
+The one-page bounded network smoke test passed on 2026-07-17 using the
+provisional acquisition envelope
+`[2025-05-01T00:00:00Z, 2026-07-17T00:00:00Z)`.
+
+- Cutoff: `2026-05-18T00:00:00Z`.
+- Requests: 2 successful (1 cutoff + 1 historical page), 0 retries.
+- Rows: 1,000 input, 1,000 in range, 0 outside, 0 rejected.
+- Raw page: 2,373,973 bytes uncompressed; 80,059 bytes gzip.
+- Entire smoke root after reports: 339,295 bytes (356 KiB on disk).
+- Partition commit: valid and nonterminal; resume preflight advanced to
+  partition index 1 with the committed cursor hash.
+- Quarantine: 1,000 metadata rows and 1,000 outcome rows; metadata contained no
+  `result` or settlement-value field.
+- Incomplete merge: exited with status 3, wrote an immutable incomplete report,
+  and published no final universe.
+- Guards: 256 MiB smoke ceiling and 80 GiB free-space floor remained intact.
+
+Smoke artifacts are retained for audit under
+`/private/tmp/kalshi-partitioned-smoke.IVGaQL`; no validated data was deleted.
+
 ## Current phase
 
-Phase 10A-S: one-page bounded network smoke test and artifact review.
+Phase 10B: guarded production acquisition, one independently committed
+partition at a time.
 
 ## Critical path
 
-1. Run one small, explicitly bounded network smoke test.
-2. Review actual compression, request accounting, local date selectivity,
-   partition validation, and resume state.
-3. Acquire the required market universe partition by partition under the 5 GiB
+1. Acquire the required market universe partition by partition under the 5 GiB
    raw-data ceiling and 80 GiB free-space floor.
-4. Validate the complete partition chain and deterministic merged universe.
-5. Acquire event metadata for the resulting event-ticker universe.
-6. Build anchor evidence and conduct the separate review/verification handoff.
-7. Construct horizons and targets, acquire pre-target prices, freeze sample
+2. Validate the complete partition chain and deterministic merged universe.
+3. Acquire event metadata for the resulting event-ticker universe.
+4. Build anchor evidence and conduct the separate review/verification handoff.
+5. Construct horizons and targets, acquire pre-target prices, freeze sample
    membership, and merge outcomes last.
 
-## Resource state after Phase 10A-R
+## Current resource state
 
 - Repository size: approximately 608 MiB.
 - Available filesystem space: approximately 104 GiB.
@@ -93,3 +113,4 @@ Phase 10A-S: one-page bounded network smoke test and artifact review.
 - Phase 10A-R network requests: zero.
 - Phase 10A-R acquisition data generated: zero bytes in the project acquisition
   directory; tests used temporary directories only.
+- Phase 10A-S network requests: two; smoke data: 339,295 bytes in `/private/tmp`.

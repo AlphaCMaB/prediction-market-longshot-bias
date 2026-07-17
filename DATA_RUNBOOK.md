@@ -106,3 +106,12 @@ Raw pruning is not part of the normal lifecycle. Any future pruning workflow
 must first validate acquisition commits and normalized-output hashes, identify
 exact targets, and obtain explicit confirmation.
 
+## Accepted smoke baseline — 2026-07-17
+
+The first bounded live smoke used one historical page plus one cutoff request.
+It observed 2,373,973 uncompressed page bytes and 80,059 gzip bytes for 1,000
+rows, with zero retries and zero normalization rejects. The full smoke namespace
+was 339,295 bytes after partition artifacts, commit, run-state report, and
+incomplete-merge report. These values are empirical planning inputs only; the
+historical endpoint still provides no total-page estimate and every production
+write remains subject to the hard guards.
