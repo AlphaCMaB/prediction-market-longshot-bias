@@ -53,6 +53,25 @@ state explicitly. Deterministic merge may inspect committed partial data but
 must not publish or label a final complete universe while the chain is
 incomplete.
 
+## 2026-07-17 — The million-row scale is empirically in-range
+
+Status: accepted acquisition finding
+
+The guarded production cursor chain passed the old failure point and committed
+1,150 historical pages containing 1,150,000 rows. Immediate local validation
+classified every row as inside the provisional acquisition envelope and found
+no rejects. Pagination used 46 contiguous committed cursor partitions with
+zero retries or cursor-integrity errors. A direct cross-partition audit found
+1,150,000 distinct tickers and zero repeated tickers.
+
+Finding: the earlier ~906,000-row scale was not created by duplicate pagination
+or repeated market tickers, and it cannot be dismissed as entirely out-of-range
+data. At least 1.15 million distinct tickers in the current historical traversal
+genuinely satisfy the provisional settlement envelope. The endpoint still
+lacks server-side date filters, the archive remains nonterminal, and this
+acquisition finding does not change the frozen analysis window or define the
+eventual analysis sample.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:

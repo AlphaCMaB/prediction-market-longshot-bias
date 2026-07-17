@@ -16,14 +16,14 @@ correct resume state, and a fail-closed incomplete merge.
 
 ## Phase 10B — next autonomous phase
 
-1. Run and record the production preflight for the provisional settlement
-   envelope `[2025-05-01, 2026-07-17)`.
-2. Acquire one configured 25-page partition under the 5 GiB namespace ceiling
-   and 80 GiB free-space floor.
-3. Review actual bytes/page, in-range/out-of-range counts, retries, partition
-   commit validity, and remaining disk margins.
-4. Continue one partition at a time while guards and empirical projections
-   remain safe; stop automatically at either guard.
+1. Resume historical acquisition at validated partition index 46 and cursor
+   hash `99041db10ae82785`.
+2. Continue one 25-page commit at a time while the 5 GiB namespace ceiling and
+   80 GiB free-space floor remain safe; stop automatically at either guard.
+3. Record the first out-of-envelope row if/when encountered; do not infer API
+   ordering or stop before the terminal cursor.
+4. After the historical terminal, acquire each server-filtered live monthly
+   segment through its terminal cursor.
 5. When every historical and live segment is terminal, run the deterministic
    merge and validate the final quarantined universe.
 6. Do not begin event metadata acquisition or anchor review until a manageable,

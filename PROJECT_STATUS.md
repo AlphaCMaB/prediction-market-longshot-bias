@@ -94,7 +94,34 @@ Smoke artifacts are retained for audit under
 ## Current phase
 
 Phase 10B: guarded production acquisition, one independently committed
-partition at a time.
+partition at a time. In progress.
+
+Production milestone on 2026-07-17:
+
+- Historical partitions committed: 46 (partition indices 0 through 45).
+- Historical pages/rows committed: 1,150 pages / 1,150,000 rows.
+- Cross-partition ticker audit: 1,150,000 distinct tickers; 0 repeated
+  tickers.
+- Local settlement-envelope validation: 1,150,000 in range, 0 outside, 0
+  invalid/rejected.
+- Transport: 1,150 successful market-page requests, 0 retries, 0 rate limits.
+- Historical cursor: nonterminal; next partition index 46, cursor hash
+  `99041db10ae82785`.
+- Guarded namespace: 385,259,604 bytes (371 MiB on disk), about 7.2% of the
+  5 GiB ceiling.
+- Free space: approximately 102 GiB, with 23,887,155,200 bytes above the 80 GiB
+  floor at the validated preflight.
+- Merge status: explicitly incomplete; report
+  `merge_report_e979dbe437453cfe3ea49a97.json`; no final universe published.
+- The batch was stopped during read-only commit validation before the next
+  network request. A subsequent preflight validated all 46 commits and the
+  exact resume cursor.
+
+This establishes that the old ~906,000-row scale was not caused by duplicated
+pages or repeated market tickers: the current cursor chain passed 906 pages,
+and 1,150,000 distinct tickers are inside the provisional settlement envelope.
+It does not change the fact that historical date filtering is client-side, and
+the archive must still reach a terminal cursor before the universe is complete.
 
 ## Critical path
 
@@ -109,7 +136,8 @@ partition at a time.
 ## Current resource state
 
 - Repository size: approximately 608 MiB.
-- Available filesystem space: approximately 104 GiB.
+- Available filesystem space: approximately 102 GiB at the Phase 10B
+  checkpoint.
 - Safety floor: stop before available space falls below 80 GiB.
 - Default raw acquisition budget: at most 5 GiB; any larger production run
   requires explicit approval.
@@ -117,3 +145,5 @@ partition at a time.
 - Phase 10A-R acquisition data generated: zero bytes in the project acquisition
   directory; tests used temporary directories only.
 - Phase 10A-S network requests: two; smoke data: 339,295 bytes in `/private/tmp`.
+- Phase 10B to current milestone: 1,150 successful market-page requests,
+  385,259,604 guarded bytes, 46 valid commits, no final merged universe yet.

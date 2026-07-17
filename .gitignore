@@ -20,6 +20,7 @@ __pycache__/
 # Local generated data
 data/raw/
 data/processed/
+data/pipeline_v2/market_acquisition/
 
 # Python cache
 __pycache__/

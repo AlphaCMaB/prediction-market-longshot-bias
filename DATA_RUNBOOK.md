@@ -117,3 +117,46 @@ was 339,295 bytes after partition artifacts, commit, run-state report, and
 incomplete-merge report. These values are empirical planning inputs only; the
 historical endpoint still provides no total-page estimate and every production
 write remains subject to the hard guards.
+
+## Production resume checkpoint — 2026-07-17
+
+- Raw root: `data/pipeline_v2/market_acquisition/partitioned`.
+- Cutoff snapshot: `cutoff_443dd48c9d69f40b3cc5.json`.
+- Cutoff: `2026-05-18T00:00:00Z`.
+- Historical segment: `e7df4bc51bed4e45b26204a5`.
+- Valid commits: 46; next partition index: 46.
+- Next cursor hash: `99041db10ae82785`.
+- Committed rows: 1,150,000 in range; 0 outside; 0 rejected.
+- Distinct ticker audit: 1,150,000; repeated tickers: 0.
+- Namespace bytes: 385,259,604 of 5,368,709,120.
+- Historical traversal: incomplete/nonterminal.
+- Final merge: prohibited until all historical and live segments are terminal.
+
+Resume with the standard partitioned acquisition command and the cutoff copy
+inside the raw root. The runner validates the full committed chain before any
+new request and starts from the recorded end cursor; never supply a cursor
+manually.
+
+Read-only resume preflight:
+
+```bash
+python -m scripts.pipeline_v2.pull_kalshi_partitioned_metadata \
+  --start-date 2025-05-01 \
+  --end-date 2026-07-16 \
+  --raw-root data/pipeline_v2/market_acquisition/partitioned \
+  --cutoff-snapshot data/pipeline_v2/market_acquisition/partitioned/cutoff_snapshots/cutoff_443dd48c9d69f40b3cc5.json \
+  --preflight
+```
+
+Acquire exactly the next configured partition after the preflight passes:
+
+```bash
+python -m scripts.pipeline_v2.pull_kalshi_partitioned_metadata \
+  --start-date 2025-05-01 \
+  --end-date 2026-07-16 \
+  --raw-root data/pipeline_v2/market_acquisition/partitioned \
+  --cutoff-snapshot data/pipeline_v2/market_acquisition/partitioned/cutoff_snapshots/cutoff_443dd48c9d69f40b3cc5.json
+```
+
+These dates describe the provisional acquisition envelope, not a change to the
+frozen analysis window.
