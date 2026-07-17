@@ -141,7 +141,13 @@ def _append_budgeted_manifest(
     append_manifest(path, record)
 
 
-def _valid_partition_commit(path: Path, expected_segment_id: str | None = None) -> bool:
+def _valid_partition_commit(
+    path: Path,
+    expected_segment_id: str | None = None,
+    validated_commit_paths: set[Path] | None = None,
+) -> bool:
+    if validated_commit_paths is not None and path in validated_commit_paths:
+        return path.is_file()
     try:
         record = json.loads(path.read_text(encoding="utf-8"))
     except Exception:
@@ -233,16 +239,22 @@ def _valid_partition_commit(path: Path, expected_segment_id: str | None = None) 
                 gzip.decompress(content)
             except Exception:
                 return False
+    if validated_commit_paths is not None:
+        validated_commit_paths.add(path)
     return True
 
 
 def load_partition_chain(
-    raw_root: Path, segment_identifier: str
+    raw_root: Path,
+    segment_identifier: str,
+    validated_commit_paths: set[Path] | None = None,
 ) -> list[dict[str, Any]]:
     directory = raw_root / "partition_commits" / segment_identifier
     records: list[dict[str, Any]] = []
     for path in sorted(directory.glob("partition_*.json")):
-        if not _valid_partition_commit(path, segment_identifier):
+        if not _valid_partition_commit(
+            path, segment_identifier, validated_commit_paths
+        ):
             raise CacheError(f"invalid partition commit: {path}")
         record = json.loads(path.read_text(encoding="utf-8"))
         record["_commit_path"] = str(path)
@@ -332,12 +344,15 @@ def _planned_segments(interval: Any, cutoff: datetime) -> tuple[EndpointSegment,
 
 
 def _segment_state(
-    raw_root: Path, segments: Sequence[EndpointSegment], cutoff_id: str
+    raw_root: Path,
+    segments: Sequence[EndpointSegment],
+    cutoff_id: str,
+    validated_commit_paths: set[Path] | None = None,
 ) -> list[dict[str, Any]]:
     state = []
     for segment in segments:
         sid = segment_id(segment, cutoff_id)
-        chain = load_partition_chain(raw_root, sid)
+        chain = load_partition_chain(raw_root, sid, validated_commit_paths)
         state.append(
             {
                 **_segment_record(segment),
@@ -354,9 +369,12 @@ def _segment_state(
 
 
 def _select_next_segment(
-    raw_root: Path, segments: Sequence[EndpointSegment], cutoff_id: str
+    raw_root: Path,
+    segments: Sequence[EndpointSegment],
+    cutoff_id: str,
+    validated_commit_paths: set[Path] | None = None,
 ) -> tuple[EndpointSegment | None, list[dict[str, Any]]]:
-    state = _segment_state(raw_root, segments, cutoff_id)
+    state = _segment_state(raw_root, segments, cutoff_id, validated_commit_paths)
     for segment, item in zip(segments, state):
         if not item["archive_complete"]:
             return segment, state
@@ -423,7 +441,12 @@ def _preflight_record(
     }
 
 
-def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
+def run(
+    args: argparse.Namespace,
+    *,
+    session: Any | None = None,
+    validated_commit_paths: set[Path] | None = None,
+) -> int:
     interval = normalize_inclusive_dates(args.start_date, args.end_date)
     metadata_config = load_metadata_config(args.config)
     partition_config = _load_partition_settings(Path(args.config))
@@ -490,7 +513,9 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
         cutoff_id, _ = cutoff_cache.store_cutoff_snapshot(cutoff_payload)
     cutoff = _cutoff_datetime(cutoff_payload)
     segments = _planned_segments(interval, cutoff)
-    segment, state = _select_next_segment(raw_root, segments, cutoff_id)
+    segment, state = _select_next_segment(
+        raw_root, segments, cutoff_id, validated_commit_paths
+    )
     preflight = _preflight_record(
         interval=interval,
         cutoff=cutoff,
@@ -512,7 +537,7 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
         )
 
     sid = segment_id(segment, cutoff_id)
-    chain = load_partition_chain(raw_root, sid)
+    chain = load_partition_chain(raw_root, sid, validated_commit_paths)
     index = len(chain)
     start_cursor = chain[-1].get("end_cursor") if chain else None
     pid = partition_id(sid, index, start_cursor)
@@ -622,10 +647,12 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> int:
     )
     commit_content = canonical_json(commit_record) + b"\n"
     _publish_budgeted(budget, commit_path, commit_content)
-    if not _valid_partition_commit(commit_path, sid):
+    if not _valid_partition_commit(commit_path, sid, validated_commit_paths):
         raise CacheError("published partition commit failed validation")
 
-    updated_state = _segment_state(raw_root, segments, cutoff_id)
+    updated_state = _segment_state(
+        raw_root, segments, cutoff_id, validated_commit_paths
+    )
     run_report = {
         "schema_version": SCHEMA_VERSION,
         "requested_range": commit_record["requested_range"],
@@ -673,15 +700,75 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--min-free-bytes", type=int)
     parser.add_argument("--preflight", action="store_true")
     parser.add_argument(
+        "--continue-segment",
+        action="store_true",
+        help=(
+            "continue independently committed partitions until the current "
+            "segment reaches a terminal cursor"
+        ),
+    )
+    parser.add_argument(
         "--user-agent",
         default="prediction-market-longshot-bias/partitioned-metadata-v1",
     )
     return parser
 
 
+def run_current_segment(args: argparse.Namespace, *, session: Any | None = None) -> int:
+    """Continue one segment while avoiding repeated full-chain decompression.
+
+    The existing chain is fully validated once, every new commit is validated
+    before it joins the in-memory validation set, cursor continuity is checked
+    after each commit, and the completed segment receives a fresh full-chain
+    validation before this function returns.
+    """
+
+    if args.preflight:
+        raise ValueError("--continue-segment cannot be combined with --preflight")
+    if not args.cutoff_snapshot:
+        raise ValueError("--continue-segment requires a pinned --cutoff-snapshot")
+    if session is None:
+        import requests
+
+        session = requests.Session()
+        session.headers.update({"User-Agent": args.user_agent})
+
+    interval = normalize_inclusive_dates(args.start_date, args.end_date)
+    cutoff_payload = CompressedPartitionCache.load_cutoff_snapshot(args.cutoff_snapshot)
+    cutoff_id = sha256_json(cutoff_payload)[:20]
+    segments = _planned_segments(interval, _cutoff_datetime(cutoff_payload))
+    validated_commit_paths: set[Path] = set()
+    target, _ = _select_next_segment(
+        Path(args.raw_root), segments, cutoff_id, validated_commit_paths
+    )
+    if target is None:
+        return run(
+            args,
+            session=session,
+            validated_commit_paths=validated_commit_paths,
+        )
+    target_id = segment_id(target, cutoff_id)
+
+    while True:
+        status = run(
+            args,
+            session=session,
+            validated_commit_paths=validated_commit_paths,
+        )
+        if status != 0:
+            return status
+        chain = load_partition_chain(
+            Path(args.raw_root), target_id, validated_commit_paths
+        )
+        if chain and chain[-1].get("archive_complete"):
+            load_partition_chain(Path(args.raw_root), target_id)
+            return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     try:
-        return run(build_parser().parse_args(argv))
+        args = build_parser().parse_args(argv)
+        return run_current_segment(args) if args.continue_segment else run(args)
     except (ValueError, CacheError, ResourceLimitError, RuntimeError) as exc:
         print(
             json.dumps(

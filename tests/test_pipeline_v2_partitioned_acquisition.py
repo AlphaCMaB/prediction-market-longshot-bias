@@ -28,6 +28,7 @@ from scripts.pipeline_v2.pull_kalshi_partitioned_metadata import (
     build_parser,
     load_partition_chain,
     run,
+    run_current_segment,
     segment_id,
 )
 from scripts.pipeline_v2.kalshi_metadata_cache import sha256_json
@@ -283,6 +284,40 @@ def test_bounded_partitions_commit_resume_normalize_and_merge_without_outcome_se
     assert metadata_rows[0]["title"] == "new"
     assert "result" not in metadata_rows[0]
     assert outcome_rows[0]["result"] == "no"
+
+
+def test_continue_segment_commits_until_terminal_and_stops_before_next_segment(
+    tmp_path, capsys
+):
+    cutoff = write_cutoff(tmp_path)
+    args = acquisition_args(tmp_path, cutoff, "--continue-segment")
+    first = market("MKT-1", updated="2025-08-15T01:00:00Z", result="yes", title="one")
+    second = market("MKT-2", updated="2025-08-15T02:00:00Z", result="no", title="two")
+    session = FakeSession(
+        [
+            FakeResponse({"markets": [first], "cursor": "next-partition"}),
+            FakeResponse({"markets": [second], "cursor": ""}),
+        ]
+    )
+
+    assert run_current_segment(args, session=session) == 0
+    assert len(session.calls) == 2
+    assert session.calls[1]["params"]["cursor"] == "next-partition"
+    outputs = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    commit_outputs = [item for item in outputs if item.get("partition_committed")]
+    assert [item["archive_complete"] for item in commit_outputs] == [False, True]
+
+    cutoff_id = sha256_json({"market_settled_ts": "2026-01-01T00:00:00Z"})[:20]
+    segment = EndpointSegment(
+        "historical",
+        "/trade-api/v2/historical/markets",
+        datetime(2025, 8, 1, tzinfo=timezone.utc),
+        datetime(2025, 9, 1, tzinfo=timezone.utc),
+        None,
+    )
+    chain = load_partition_chain(tmp_path / "raw", segment_id(segment, cutoff_id))
+    assert len(chain) == 2
+    assert chain[-1]["archive_complete"] is True
 
 
 def test_merge_reports_incomplete_and_publishes_no_final_universe(tmp_path, capsys):

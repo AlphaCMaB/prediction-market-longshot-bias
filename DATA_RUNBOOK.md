@@ -155,8 +155,14 @@ python -m scripts.pipeline_v2.pull_kalshi_partitioned_metadata \
   --start-date 2025-05-01 \
   --end-date 2026-07-16 \
   --raw-root data/pipeline_v2/market_acquisition/partitioned \
-  --cutoff-snapshot data/pipeline_v2/market_acquisition/partitioned/cutoff_snapshots/cutoff_443dd48c9d69f40b3cc5.json
+  --cutoff-snapshot data/pipeline_v2/market_acquisition/partitioned/cutoff_snapshots/cutoff_443dd48c9d69f40b3cc5.json \
+  --continue-segment
 ```
+
+`--continue-segment` validates the existing chain once, validates and commits
+each subsequent 25-page partition independently, checks cursor continuity after
+every commit, and performs a fresh full-chain validation at the terminal cursor.
+It stops before beginning the next segment.
 
 These dates describe the provisional acquisition envelope, not a change to the
 frozen analysis window.
