@@ -27,6 +27,7 @@ import zlib
 from scripts.common.io_utils import open_csv_dict_reader
 from scripts.pipeline_v2.kalshi_event_metadata_client import (
     EVENTS_ENDPOINT,
+    MILESTONES_ENDPOINT,
     EventMetadataRequestFailure,
     KalshiEventMetadataClient,
 )
@@ -125,6 +126,15 @@ def _load_settings(path: Path) -> dict[str, Any]:
                 DEFAULT_NORMALIZED_ESTIMATE_PER_EVENT,
             )
         ),
+        "estimated_single_event_fallback_fraction": float(
+            section.get("estimated_single_event_fallback_fraction", 0.03)
+        ),
+        "estimated_fallback_raw_bytes_per_event": int(
+            section.get("estimated_fallback_raw_bytes_per_event", 4096)
+        ),
+        "estimated_milestone_pages_per_fallback": int(
+            section.get("estimated_milestone_pages_per_fallback", 1)
+        ),
         "max_raw_bytes": int(section.get("max_raw_bytes", DEFAULT_MAX_RAW_BYTES)),
         "min_free_bytes": int(section.get("min_free_bytes", DEFAULT_MIN_FREE_BYTES)),
     }
@@ -135,6 +145,8 @@ def _load_settings(path: Path) -> dict[str, Any]:
         "max_pages_per_batch",
         "estimated_compressed_raw_bytes_per_event",
         "estimated_compressed_normalized_bytes_per_event",
+        "estimated_fallback_raw_bytes_per_event",
+        "estimated_milestone_pages_per_fallback",
         "max_raw_bytes",
     )
     if any(values[key] <= 0 for key in positive) or values["min_free_bytes"] < 0:
@@ -143,6 +155,8 @@ def _load_settings(path: Path) -> dict[str, Any]:
         raise ValueError("partition_events must be an exact multiple of batch_size")
     if values["requests_per_second"] <= 0:
         raise ValueError("requests_per_second must be positive")
+    if not 0 <= values["estimated_single_event_fallback_fraction"] <= 1:
+        raise ValueError("estimated_single_event_fallback_fraction must be in [0, 1]")
     return values
 
 
@@ -280,6 +294,8 @@ def _scope_definition(
         "endpoint_path": EVENTS_ENDPOINT,
         "with_nested_markets": False,
         "with_milestones": True,
+        "missing_event_fallback": "single_event_plus_related_milestones_v1",
+        "milestone_page_size": 500,
     }
 
 
@@ -405,7 +421,9 @@ def _valid_partition_commit(
                 with gzip.open(artifact, "rb") as handle:
                     while handle.read(1024**2):
                         pass
-        pages_by_batch: dict[int, list[tuple[dict[str, Any], dict[str, Any]]]] = {}
+        pages_by_chain: dict[
+            tuple[str, int, str], list[tuple[dict[str, Any], dict[str, Any]]]
+        ] = {}
         for page in pages:
             raw = Path(page["path"])
             if not raw.is_file() or _sha256_file(raw) != page["page_file_sha256"]:
@@ -414,6 +432,12 @@ def _valid_partition_commit(
                 return False
             wrapper = json.loads(gzip.decompress(raw.read_bytes()))
             if wrapper.get("compression") != "gzip":
+                return False
+            acquisition = wrapper.get("acquisition")
+            if not isinstance(acquisition, dict) or any(
+                int(acquisition.get(key, -1)) < 0
+                for key in ("http_attempt_count", "retry_count", "rate_limit_count")
+            ):
                 return False
             request = wrapper.get("request")
             if (
@@ -429,10 +453,13 @@ def _valid_partition_commit(
                 not bool(wrapper["response"].get("cursor"))
             ):
                 return False
-            pages_by_batch.setdefault(int(page["batch_number"]), []).append(
-                (page, wrapper)
+            chain_key = (
+                str(page.get("request_kind") or ""),
+                int(page["batch_number"]),
+                str(page.get("fallback_ticker") or ""),
             )
-        for batch_number, batch_pages in pages_by_batch.items():
+            pages_by_chain.setdefault(chain_key, []).append((page, wrapper))
+        for batch_pages in pages_by_chain.values():
             expected_cursor: str | None = None
             for expected_page, (page, wrapper) in enumerate(
                 sorted(batch_pages, key=lambda item: int(item[0]["page_number"])), 1
@@ -513,9 +540,16 @@ def build_preflight(
     remaining = selected - committed
     batch_size = int(settings["batch_size"])
     partition_events = int(settings["partition_events"])
-    raw_projection = remaining * int(
+    batch_raw_projection = remaining * int(
         settings["estimated_compressed_raw_bytes_per_event"]
     )
+    estimated_fallback_events = math.ceil(
+        remaining * float(settings["estimated_single_event_fallback_fraction"])
+    )
+    fallback_raw_projection = estimated_fallback_events * int(
+        settings["estimated_fallback_raw_bytes_per_event"]
+    )
+    raw_projection = batch_raw_projection + fallback_raw_projection
     partition_normalized_projection = remaining * int(
         settings["estimated_compressed_normalized_bytes_per_event"]
     )
@@ -565,6 +599,18 @@ def build_preflight(
             math.ceil(selected / batch_size) if selected else 0
         ),
         "minimum_requests": math.ceil(selected / batch_size) if selected else 0,
+        "estimated_fallback_events": estimated_fallback_events,
+        "estimated_fallback_requests": estimated_fallback_events
+        * (1 + int(settings["estimated_milestone_pages_per_fallback"])),
+        "estimated_total_requests": (
+            math.ceil(remaining / batch_size)
+            + estimated_fallback_events
+            * (1 + int(settings["estimated_milestone_pages_per_fallback"]))
+        ),
+        "maximum_requests": (
+            math.ceil(remaining / batch_size)
+            + remaining * (1 + int(settings["max_pages_per_batch"]))
+        ),
         "remaining_minimum_requests": (
             math.ceil(remaining / batch_size) if remaining else 0
         ),
@@ -572,6 +618,8 @@ def build_preflight(
             math.ceil(selected / partition_events) if selected else 0
         ),
         "committed_partition_count": len(chain),
+        "projected_batch_raw_bytes": batch_raw_projection,
+        "projected_fallback_raw_bytes": fallback_raw_projection,
         "projected_compressed_raw_bytes": raw_projection,
         "projected_partition_normalized_bytes": partition_normalized_projection,
         "projected_final_normalized_bytes": final_normalized_projection,
@@ -656,8 +704,69 @@ def acquire_next_partition(
     milestone_definitions: dict[str, bytes] = {}
     page_records: list[dict[str, Any]] = []
     duplicate_equivalent = 0
+    collection_omission_count = 0
     cache_hits = 0
     fetched_requests = 0
+
+    def ingest_events(
+        events: Iterable[Mapping[str, Any]],
+        allowed: set[str],
+        provenance: Mapping[str, Any],
+    ) -> list[Mapping[str, Any]]:
+        nonlocal duplicate_equivalent
+        materialized = list(events)
+        for event in materialized:
+            ticker = str(event.get("event_ticker") or event.get("ticker") or "").strip()
+            if not ticker:
+                raise EventAcquisitionError(
+                    "malformed event object without event_ticker"
+                )
+            if ticker not in allowed:
+                raise EventAcquisitionError(f"unexpected event ticker {ticker!r}")
+            projected = research_event_projection(event)
+            encoded = canonical_json(projected)
+            variants = event_variants.setdefault(ticker, {})
+            if encoded in variants:
+                duplicate_equivalent += 1
+            variants[encoded] = projected
+            sources.setdefault(ticker, []).append(dict(provenance))
+        return materialized
+
+    def ingest_milestones(
+        payload: Mapping[str, Any],
+        events: Sequence[Mapping[str, Any]],
+        allowed: set[str],
+    ) -> None:
+        milestone_rows, _ = collect_milestones(payload, events)
+        raw_milestones = list(payload.get("milestones", []) or [])
+        for event in events:
+            raw_milestones.extend(event.get("milestones", []) or [])
+        for milestone in raw_milestones:
+            identifier = str(
+                milestone.get("milestone_id") or milestone.get("id") or ""
+            ).strip()
+            if not identifier:
+                raise EventAcquisitionError("milestone object lacks id")
+            projected = canonical_json(research_milestone_projection(milestone))
+            if (
+                identifier in milestone_definitions
+                and milestone_definitions[identifier] != projected
+            ):
+                raise EventAcquisitionError(
+                    f"conflicting duplicate milestone {identifier!r}"
+                )
+            milestone_definitions[identifier] = projected
+        for row in milestone_rows:
+            if row["event_ticker"] not in allowed:
+                continue
+            key = (
+                row["event_ticker"],
+                row["milestone_id"],
+                row["association_type"],
+            )
+            encoded = canonical_json(row)
+            variants = milestone_variants.setdefault(key, {})
+            variants[encoded] = row
 
     batches = make_batches(tickers, int(settings["batch_size"]))
     for batch_number, batch in enumerate(batches, 1):
@@ -680,6 +789,7 @@ def acquire_next_partition(
                 "partition_index": index,
                 "batch_number": batch_number,
                 "page_number": page_number,
+                "request_kind": "batch_events",
                 "endpoint_path": EVENTS_ENDPOINT,
                 "params": dict(sorted(params.items())),
             }
@@ -730,6 +840,7 @@ def acquire_next_partition(
                 "partition_index": index,
                 "batch_number": batch_number,
                 "page_number": page_number,
+                "request_kind": "batch_events",
                 "endpoint_path": EVENTS_ENDPOINT,
                 "request_cursor_hash": sha256_json(cursor or ""),
                 "response_cursor_hash": sha256_json(response_cursor),
@@ -752,53 +863,8 @@ def acquire_next_partition(
                     "cache_status": cache_status,
                 }
             )
-            for event in events:
-                ticker = str(
-                    event.get("event_ticker") or event.get("ticker") or ""
-                ).strip()
-                if not ticker:
-                    raise EventAcquisitionError(
-                        "malformed event object without event_ticker"
-                    )
-                if ticker not in batch_set:
-                    raise EventAcquisitionError(f"unexpected event ticker {ticker!r}")
-                projected = research_event_projection(event)
-                encoded = canonical_json(projected)
-                variants = event_variants.setdefault(ticker, {})
-                if encoded in variants:
-                    duplicate_equivalent += 1
-                variants[encoded] = projected
-                sources.setdefault(ticker, []).append(dict(provenance))
-            milestone_rows, _ = collect_milestones(response, events)
-            raw_milestones = list(response.get("milestones", []) or [])
-            for event in events:
-                raw_milestones.extend(event.get("milestones", []) or [])
-            for milestone in raw_milestones:
-                identifier = str(
-                    milestone.get("milestone_id") or milestone.get("id") or ""
-                ).strip()
-                if not identifier:
-                    raise EventAcquisitionError("milestone object lacks id")
-                projected = canonical_json(research_milestone_projection(milestone))
-                if (
-                    identifier in milestone_definitions
-                    and milestone_definitions[identifier] != projected
-                ):
-                    raise EventAcquisitionError(
-                        f"conflicting duplicate milestone {identifier!r}"
-                    )
-                milestone_definitions[identifier] = projected
-            for row in milestone_rows:
-                if row["event_ticker"] not in batch_set:
-                    continue
-                key = (
-                    row["event_ticker"],
-                    row["milestone_id"],
-                    row["association_type"],
-                )
-                encoded = canonical_json(row)
-                variants = milestone_variants.setdefault(key, {})
-                variants[encoded] = row
+            materialized_events = ingest_events(events, batch_set, provenance)
+            ingest_milestones(response, materialized_events, batch_set)
             if not response_cursor:
                 break
             cursor = response_cursor
@@ -806,6 +872,192 @@ def acquire_next_partition(
             raise EventAcquisitionError(
                 f"event batch {batch_number} exceeded max_pages_per_batch"
             )
+
+        fallback_tickers = sorted(batch_set - set(event_variants))
+        collection_omission_count += len(fallback_tickers)
+        for fallback_ticker in fallback_tickers:
+            fallback_params = {"with_nested_markets": "false"}
+            fallback_endpoint = f"{EVENTS_ENDPOINT}/{fallback_ticker}"
+            fallback_request = {
+                "schema_version": SCHEMA_VERSION,
+                "scope_id": scope_id,
+                "partition_id": pid,
+                "partition_index": index,
+                "batch_number": batch_number,
+                "page_number": 1,
+                "request_kind": "single_event_fallback",
+                "fallback_ticker": fallback_ticker,
+                "endpoint_path": fallback_endpoint,
+                "params": fallback_params,
+            }
+            fallback_request_id = sha256_json(fallback_request)
+            fallback_path = paths["pages"] / (
+                f"fallback_event_{fallback_request_id[:24]}.json.gz"
+            )
+            fallback_wrapper = _load_raw_page(fallback_path, fallback_request)
+            if fallback_wrapper is None:
+                fallback_result = client.request_event(fallback_ticker, fallback_params)
+                fallback_wrapper = _publish_raw_page(
+                    budget,
+                    fallback_path,
+                    fallback_request,
+                    fallback_result.payload,
+                    {
+                        "http_attempt_count": fallback_result.attempts,
+                        "retry_count": fallback_result.retries,
+                        "rate_limit_count": fallback_result.rate_limits,
+                    },
+                )
+                attempts, retries, rate_limits = (
+                    fallback_result.attempts,
+                    fallback_result.retries,
+                    fallback_result.rate_limits,
+                )
+                fetched_requests += 1
+                sleep(1.0 / float(settings["requests_per_second"]))
+                cache_status = "fetched"
+            else:
+                acquisition = fallback_wrapper.get("acquisition", {})
+                attempts = int(acquisition.get("http_attempt_count", 0))
+                retries = int(acquisition.get("retry_count", 0))
+                rate_limits = int(acquisition.get("rate_limit_count", 0))
+                cache_hits += 1
+                cache_status = "hit"
+            fallback_response = fallback_wrapper["response"]
+            fallback_provenance = {
+                "request_identity": fallback_request_id,
+                "partition_index": index,
+                "batch_number": batch_number,
+                "page_number": 1,
+                "request_kind": "single_event_fallback",
+                "endpoint_path": fallback_endpoint,
+                "request_cursor_hash": sha256_json(""),
+                "response_cursor_hash": sha256_json(""),
+                "raw_page_relative_path": fallback_path.relative_to(
+                    raw_root
+                ).as_posix(),
+            }
+            page_records.append(
+                {
+                    **fallback_provenance,
+                    "fallback_ticker": fallback_ticker,
+                    "path": str(fallback_path),
+                    "response_sha256": fallback_wrapper["response_sha256"],
+                    "page_file_sha256": _sha256_file(fallback_path),
+                    "compressed_bytes": fallback_path.stat().st_size,
+                    "row_count": 1,
+                    "terminal_page": True,
+                    "http_attempt_count": attempts,
+                    "retry_count": retries,
+                    "rate_limit_count": rate_limits,
+                    "cache_status": cache_status,
+                }
+            )
+            fallback_event = fallback_response["event"]
+            materialized_events = ingest_events(
+                [fallback_event], batch_set, fallback_provenance
+            )
+            ingest_milestones({"milestones": []}, materialized_events, batch_set)
+
+            milestone_cursor: str | None = None
+            milestone_seen_cursors: set[str] = set()
+            for milestone_page in range(1, int(settings["max_pages_per_batch"]) + 1):
+                if milestone_cursor and milestone_cursor in milestone_seen_cursors:
+                    raise EventAcquisitionError(
+                        f"cursor loop in milestone fallback {fallback_ticker!r}"
+                    )
+                if milestone_cursor:
+                    milestone_seen_cursors.add(milestone_cursor)
+                milestone_params: dict[str, Any] = {
+                    "related_event_ticker": fallback_ticker,
+                    "limit": 500,
+                }
+                if milestone_cursor:
+                    milestone_params["cursor"] = milestone_cursor
+                milestone_request = {
+                    "schema_version": SCHEMA_VERSION,
+                    "scope_id": scope_id,
+                    "partition_id": pid,
+                    "partition_index": index,
+                    "batch_number": batch_number,
+                    "page_number": milestone_page,
+                    "request_kind": "related_milestone_fallback",
+                    "fallback_ticker": fallback_ticker,
+                    "endpoint_path": MILESTONES_ENDPOINT,
+                    "params": dict(sorted(milestone_params.items())),
+                }
+                milestone_request_id = sha256_json(milestone_request)
+                milestone_path = paths["pages"] / (
+                    f"fallback_milestones_{milestone_request_id[:24]}.json.gz"
+                )
+                milestone_wrapper = _load_raw_page(milestone_path, milestone_request)
+                if milestone_wrapper is None:
+                    milestone_result = client.request_milestones(milestone_params)
+                    milestone_wrapper = _publish_raw_page(
+                        budget,
+                        milestone_path,
+                        milestone_request,
+                        milestone_result.payload,
+                        {
+                            "http_attempt_count": milestone_result.attempts,
+                            "retry_count": milestone_result.retries,
+                            "rate_limit_count": milestone_result.rate_limits,
+                        },
+                    )
+                    attempts, retries, rate_limits = (
+                        milestone_result.attempts,
+                        milestone_result.retries,
+                        milestone_result.rate_limits,
+                    )
+                    fetched_requests += 1
+                    sleep(1.0 / float(settings["requests_per_second"]))
+                    cache_status = "fetched"
+                else:
+                    acquisition = milestone_wrapper.get("acquisition", {})
+                    attempts = int(acquisition.get("http_attempt_count", 0))
+                    retries = int(acquisition.get("retry_count", 0))
+                    rate_limits = int(acquisition.get("rate_limit_count", 0))
+                    cache_hits += 1
+                    cache_status = "hit"
+                milestone_response = milestone_wrapper["response"]
+                response_cursor = str(milestone_response.get("cursor") or "")
+                milestone_provenance = {
+                    "request_identity": milestone_request_id,
+                    "partition_index": index,
+                    "batch_number": batch_number,
+                    "page_number": milestone_page,
+                    "request_kind": "related_milestone_fallback",
+                    "endpoint_path": MILESTONES_ENDPOINT,
+                    "request_cursor_hash": sha256_json(milestone_cursor or ""),
+                    "response_cursor_hash": sha256_json(response_cursor),
+                    "raw_page_relative_path": milestone_path.relative_to(
+                        raw_root
+                    ).as_posix(),
+                }
+                page_records.append(
+                    {
+                        **milestone_provenance,
+                        "fallback_ticker": fallback_ticker,
+                        "path": str(milestone_path),
+                        "response_sha256": milestone_wrapper["response_sha256"],
+                        "page_file_sha256": _sha256_file(milestone_path),
+                        "compressed_bytes": milestone_path.stat().st_size,
+                        "row_count": len(milestone_response["milestones"]),
+                        "terminal_page": not bool(response_cursor),
+                        "http_attempt_count": attempts,
+                        "retry_count": retries,
+                        "rate_limit_count": rate_limits,
+                        "cache_status": cache_status,
+                    }
+                )
+                ingest_milestones(milestone_response, [], batch_set)
+                if not response_cursor:
+                    break
+                milestone_cursor = response_cursor
+            else:
+                raise EventAcquisitionError(
+                    f"milestone fallback {fallback_ticker!r} exceeded page limit"
+                )
 
     conflicts = sorted(
         ticker for ticker, values in event_variants.items() if len(values) > 1
@@ -860,6 +1112,14 @@ def acquire_next_partition(
         "retrieved_event_count": len(retrieved),
         "missing_event_count": len(missing),
         "missing_event_tickers": missing,
+        "collection_omission_count": collection_omission_count,
+        "single_event_fallback_count": sum(
+            item.get("request_kind") == "single_event_fallback" for item in page_records
+        ),
+        "related_milestone_fallback_request_count": sum(
+            item.get("request_kind") == "related_milestone_fallback"
+            for item in page_records
+        ),
         "duplicate_equivalent_event_count": duplicate_equivalent,
         "conflicting_duplicate_event_count": 0,
         "milestone_association_count": len(milestone_rows),
@@ -889,6 +1149,11 @@ def acquire_next_partition(
         "requested_event_count": len(tickers),
         "retrieved_event_count": len(retrieved),
         "missing_event_count": len(missing),
+        "collection_omission_count": collection_omission_count,
+        "single_event_fallback_count": normalization["single_event_fallback_count"],
+        "related_milestone_fallback_request_count": normalization[
+            "related_milestone_fallback_request_count"
+        ],
         "first_event_ticker": tickers[0] if tickers else None,
         "last_event_ticker": tickers[-1] if tickers else None,
         "ticker_sha256": sha256_json(list(tickers)),
@@ -952,6 +1217,11 @@ def acquire_next_partition(
         "requested_event_count": len(tickers),
         "retrieved_event_count": len(retrieved),
         "missing_event_count": len(missing),
+        "collection_omission_count": collection_omission_count,
+        "single_event_fallback_count": normalization["single_event_fallback_count"],
+        "related_milestone_fallback_request_count": normalization[
+            "related_milestone_fallback_request_count"
+        ],
         "network_request_count": client.network_request_count,
         "logical_request_count": len(page_records),
         "cache_hit_count": cache_hits,
@@ -1174,6 +1444,16 @@ def merge_completed_scope(
             "retrieved_event_count": event_count,
             "missing_event_count": 0,
             "partition_count": len(chain),
+            "collection_omission_count": sum(
+                int(item.get("collection_omission_count", 0)) for item in chain
+            ),
+            "single_event_fallback_count": sum(
+                int(item.get("single_event_fallback_count", 0)) for item in chain
+            ),
+            "related_milestone_fallback_request_count": sum(
+                int(item.get("related_milestone_fallback_request_count", 0))
+                for item in chain
+            ),
             "logical_request_count": sum(len(item["source_pages"]) for item in chain),
             "successful_http_attempt_count": sum(
                 int(page["http_attempt_count"])

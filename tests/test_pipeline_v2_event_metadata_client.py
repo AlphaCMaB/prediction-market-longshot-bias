@@ -4,6 +4,7 @@ import pytest
 
 from scripts.pipeline_v2.kalshi_event_metadata_client import (
     EVENTS_ENDPOINT,
+    MILESTONES_ENDPOINT,
     PRODUCTION_BASE_URL,
     EventMetadataClientError,
     EventMetadataResponseError,
@@ -92,6 +93,29 @@ def test_malformed_json_and_schema_fail_once():
     with pytest.raises(EventMetadataClientError):
         KalshiEventMetadataClient(session).request_events({})
     assert len(session.calls) == 1
+
+
+def test_single_event_and_milestone_fallback_contracts():
+    session = Session([
+        Response(200, {"event": {"event_ticker": "A(B)"}, "markets": []}),
+        Response(200, {"milestones": [], "cursor": ""}),
+    ])
+    client = KalshiEventMetadataClient(session)
+    assert client.request_event("A(B)", {"with_nested_markets": "false"}).payload[
+        "event"
+    ]["event_ticker"] == "A(B)"
+    client.request_milestones({"related_event_ticker": "A(B)", "limit": 500})
+    assert session.calls[0][0].endswith("/events/A(B)")
+    assert session.calls[1][0].endswith(MILESTONES_ENDPOINT)
+
+
+def test_single_event_ticker_mismatch_and_milestone_schema_fail_closed():
+    mismatch = Session([Response(200, {"event": {"event_ticker": "B"}})])
+    with pytest.raises(EventMetadataResponseError, match="ticker mismatch"):
+        KalshiEventMetadataClient(mismatch).request_event("A", {})
+    malformed = Session([Response(200, {"milestones": {}, "cursor": ""})])
+    with pytest.raises(EventMetadataResponseError, match="milestones object list"):
+        KalshiEventMetadataClient(malformed).request_milestones({})
     session = Session([Response(200, {"unexpected": []})])
     with pytest.raises(EventMetadataResponseError):
         KalshiEventMetadataClient(session).request_events({})

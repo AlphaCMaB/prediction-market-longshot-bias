@@ -72,6 +72,9 @@ timeout_seconds = 1
 requests_per_second = 1000
 estimated_compressed_raw_bytes_per_event = 100
 estimated_compressed_normalized_bytes_per_event = 50
+estimated_single_event_fallback_fraction = 0.0
+estimated_fallback_raw_bytes_per_event = 100
+estimated_milestone_pages_per_fallback = 1
 max_raw_bytes = 104857600
 min_free_bytes = 0
 """
@@ -309,7 +312,7 @@ def test_partition_conflict_and_tampering_fail_closed(tmp_path):
         load_partition_chain(clean_root, _scope_id(definition))
 
 
-def test_missing_event_is_explicit_and_blocks_final_publication(tmp_path):
+def test_collection_omission_uses_single_event_and_milestone_fallback(tmp_path):
     source, settings, definition, raw_root, budget = setup_scope(tmp_path)
     result = acquire_next_partition(
         event_tickers_path=source,
@@ -317,16 +320,36 @@ def test_missing_event_is_explicit_and_blocks_final_publication(tmp_path):
         settings=settings,
         definition=definition,
         budget=budget,
-        session=Session([{"events": [event("A")], "cursor": ""}]),
+        session=Session(
+            [
+                {"events": [event("A")], "cursor": ""},
+                {"event": event("B", result="yes"), "markets": []},
+                {
+                    "milestones": [
+                        {
+                            "id": "M-B",
+                            "title": "Start",
+                            "related_event_tickers": ["B"],
+                        }
+                    ],
+                    "cursor": "",
+                },
+            ]
+        ),
         sleep=lambda _: None,
     )
-    assert result["missing_event_count"] == 1
+    assert result["missing_event_count"] == 0
+    assert result["collection_omission_count"] == 1
+    assert result["single_event_fallback_count"] == 1
+    assert result["related_milestone_fallback_request_count"] == 1
+    assert result["logical_request_count"] == 3
     merge = merge_completed_scope(
         raw_root=raw_root, definition=definition, budget=budget
     )
-    assert merge["merge_complete"] is False
-    assert merge["reason"] == "missing_events"
-    assert not (raw_root / EVENT_NAMESPACE / "merged_event_universes").exists()
+    assert merge["merge_complete"] is True
+    assert merge["retrieved_event_count"] == 2
+    assert merge["collection_omission_count"] == 1
+    assert merge["milestone_association_count"] == 1
 
 
 def test_multiple_partitions_are_independent_contiguous_and_deterministic(tmp_path):

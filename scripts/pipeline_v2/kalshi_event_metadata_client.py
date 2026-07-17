@@ -7,12 +7,14 @@ import json
 import random
 import time
 from typing import Any, Callable, Mapping
+from urllib.parse import quote
 
-from scripts.pipeline_v2.kalshi_metadata_cache import SensitiveResponseError, reject_sensitive_response
+from scripts.pipeline_v2.kalshi_metadata_cache import reject_sensitive_response
 
 
 PRODUCTION_BASE_URL = "https://external-api.kalshi.com"
 EVENTS_ENDPOINT = "/trade-api/v2/events"
+MILESTONES_ENDPOINT = "/trade-api/v2/milestones"
 RETRIABLE_STATUSES = frozenset({429, 500, 502, 503, 504})
 
 
@@ -79,7 +81,7 @@ class KalshiEventMetadataClient:
         )
         self.sleep(ceiling * (0.5 + 0.5 * self.random_value()))
 
-    def request_events(self, params: Mapping[str, Any]) -> RequestResult:
+    def _request_json(self, url: str, params: Mapping[str, Any]) -> RequestResult:
         attempts = retries = rate_limits = 0
         last_status = 0
         while True:
@@ -87,7 +89,7 @@ class KalshiEventMetadataClient:
             self.network_request_count += 1
             try:
                 response = self.session.get(
-                    self.events_url,
+                    url,
                     params=dict(params),
                     timeout=self.timeout_seconds,
                     allow_redirects=False,
@@ -143,11 +145,40 @@ class KalshiEventMetadataClient:
                     retries=retries, rate_limits=rate_limits, status_code=last_status,
                 )
             if not isinstance(payload, dict):
-                raise EventMetadataResponseError("event response must be a JSON object")
-            events = payload.get("events")
-            if not isinstance(events, list) or any(not isinstance(item, dict) for item in events):
-                raise EventMetadataResponseError("event response requires an events object list")
-            cursor = payload.get("cursor", "")
-            if cursor is not None and not isinstance(cursor, str):
-                raise EventMetadataResponseError("event response cursor must be a string")
+                raise EventMetadataResponseError("metadata response must be a JSON object")
             return RequestResult(payload, attempts, retries, rate_limits, last_status)
+
+    def request_events(self, params: Mapping[str, Any]) -> RequestResult:
+        result = self._request_json(self.events_url, params)
+        events = result.payload.get("events")
+        if not isinstance(events, list) or any(not isinstance(item, dict) for item in events):
+            raise EventMetadataResponseError("event response requires an events object list")
+        cursor = result.payload.get("cursor", "")
+        if cursor is not None and not isinstance(cursor, str):
+            raise EventMetadataResponseError("event response cursor must be a string")
+        return result
+
+    def request_event(self, ticker: str, params: Mapping[str, Any]) -> RequestResult:
+        encoded = quote(ticker, safe="-.()")
+        result = self._request_json(f"{self.events_url}/{encoded}", params)
+        event = result.payload.get("event")
+        if not isinstance(event, dict):
+            raise EventMetadataResponseError("single-event response requires an event object")
+        returned = str(event.get("event_ticker") or event.get("ticker") or "")
+        if returned != ticker:
+            raise EventMetadataResponseError("single-event response ticker mismatch")
+        return result
+
+    def request_milestones(self, params: Mapping[str, Any]) -> RequestResult:
+        result = self._request_json(self.base_url + MILESTONES_ENDPOINT, params)
+        milestones = result.payload.get("milestones")
+        if not isinstance(milestones, list) or any(
+            not isinstance(item, dict) for item in milestones
+        ):
+            raise EventMetadataResponseError(
+                "milestone response requires a milestones object list"
+            )
+        cursor = result.payload.get("cursor", "")
+        if cursor is not None and not isinstance(cursor, str):
+            raise EventMetadataResponseError("milestone response cursor must be a string")
+        return result

@@ -163,6 +163,33 @@ and lowercase remain invalid. This preserves source identities exactly and is
 an API compatibility correction, not a methodology or sample-membership
 choice.
 
+## 2026-07-18 — Recover collection omissions through documented exact routes
+
+Status: accepted operational correction
+
+The first 200-event network smoke committed an incomplete partition after the
+collection request returned 194 requested events and omitted six. All six were
+then retrieved successfully through the documented single-event endpoint. A
+six-ticker collection retry still returned none, and the documented
+multivariate endpoint returned none for their series. The omission is
+therefore an endpoint collection behavior, not a nonexistent identifier,
+historical cutoff, request-size, or multivariate-routing issue.
+
+Decision: retain the efficient collection request, then deterministically fetch
+each omitted requested ticker through `GET /events/{event_ticker}` and query
+`GET /milestones?related_event_ticker=...` for its milestone evidence. Both
+fallback responses receive the same immutable gzip, cursor, hash, budget,
+quarantine, provenance, and commit protections as collection pages. The
+fallback strategy is part of the acquisition scope identity, so the original
+incomplete smoke remains immutable and cannot be confused with the corrected
+scope.
+
+Preflight now reports minimum, empirical estimated, and worst-case request
+counts. Its empirical estimate uses the observed 3% collection-omission rate
+until a successful corrected smoke provides a sharper storage and request
+check. Exact fallback preserves the Phase 10B event universe; silently dropping
+collection omissions is prohibited.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:
