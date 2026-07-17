@@ -258,6 +258,27 @@ the frozen research identity. `event_tickers.csv` contains only
 
 ## Phase 9B-A: Kalshi event candidate evidence
 
+For the Phase 10C production universe, use the bounded compressed implementation:
+
+```console
+python -m scripts.pipeline_v2.pull_kalshi_partitioned_event_metadata \
+  --event-tickers data/pipeline_v2/market_acquisition/partitioned/merged_universes/6f8aa42abec876d3aa1f6336/event_tickers.csv.gz \
+  --raw-root data/pipeline_v2/market_acquisition/partitioned \
+  --expected-merge-id 6f8aa42abec876d3aa1f6336 \
+  --expected-event-ticker-sha256 544b5464f7afa01d8d9fa4148db1a6fee07a5fbf6265554db314c771b818cc45 \
+  --preflight
+```
+
+The production path streams gzip input, uses independently committed event
+partitions, stores immutable gzip raw pages, applies recursive outcome
+quarantine before normalized publication, and produces only compressed final
+universes. Preflight is network-free and write-free. Limited runs have distinct
+scope identities, and incomplete or missing-event scopes cannot publish a final
+universe. See `DATA_RUNBOOK.md` for smoke and continuation commands.
+
+The original single-run interface below remains for bounded tests and legacy
+small acquisitions; it is not the Phase 10C production path.
+
 Run the event-metadata acquisition in module form:
 
 ```console

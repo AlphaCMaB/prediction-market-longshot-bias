@@ -102,6 +102,50 @@ losslessly anchored in the 454 partition commits and is referenced by a compact
 final provenance manifest. This changes storage mechanics only; it does not use
 outcomes to select metadata or alter the study methodology.
 
+## 2026-07-18 — Event metadata uses source-indexed bounded partitions
+
+Status: accepted operational decision
+
+The production event universe is the authenticated, sorted
+`event_tickers.csv.gz` artifact from Phase 10B. Phase 10C partitions that
+ordered universe into deterministic 5,000-event slices, each containing
+25 request batches of at most 200 tickers. The partition identity binds the
+Phase 10B source hash, scope, offset, ticker digest, and effective request
+configuration. A limited smoke has a separate scope identity and cannot be
+mistaken for completion of the production universe.
+
+Each partition independently publishes immutable compressed raw responses,
+outcome-quarantined normalized event and milestone rows, research provenance,
+a request manifest, a normalization report, and a validated commit. Cached
+pages are reusable evidence, but only a commit advances the source offset.
+
+## 2026-07-18 — Reserve partition and final-merge storage in preflight
+
+Status: accepted safety decision
+
+The 5 GiB ceiling applies to the shared generated namespace, including the
+immutable Phase 10B data. Event preflight therefore measures current bytes at
+the Phase 10B raw root and reserves estimated space for remaining compressed
+raw pages, remaining normalized partition artifacts, and the final compressed
+event-universe merge. The same root retains the 80 GiB minimum-free-space
+guard for every actual publication.
+
+This intentionally reserves both required normalized representations:
+independently auditable partition outputs and the deterministic final research
+universe. A preflight that omits the final copy is not sufficient authority for
+network acquisition.
+
+## 2026-07-18 — Event timestamps remain unverified candidate evidence
+
+Status: reaffirmed frozen methodology
+
+Recursive research projection removes outcome, result, settlement, close, and
+expiration fields at every nesting depth before event or milestone metadata is
+published for research use. Immutable raw responses may retain those fields as
+audit evidence, but their hashes do not enter normalized research features.
+Strike and milestone dates remain candidate evidence only. Phase 10C neither
+runs anchor verification nor changes any verification status.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:

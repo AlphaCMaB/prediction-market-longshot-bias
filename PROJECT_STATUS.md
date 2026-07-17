@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 Branch: `methodology-v2-clean`
 
 ## Research objective
@@ -93,7 +93,7 @@ Smoke artifacts are retained for audit under
 
 ## Current phase
 
-Phase 10B completed on 2026-07-17.
+Phase 10B completed on 2026-07-17 and remains immutable.
 
 - Acquisition completeness: all four segments terminal and fully validated.
 - Historical: 352 partitions, 8,778 requests/pages, 8,777,951 input records;
@@ -119,14 +119,47 @@ Phase 10B completed on 2026-07-17.
 No anchor timestamp was verified or changed, and the frozen analysis window and
 `StudyRules` fingerprint remain unchanged.
 
+Phase 10C implementation completed offline on 2026-07-18.
+
+- The compressed Phase 10B event-ticker artifact was revalidated at SHA-256
+  `544b5464f7afa01d8d9fa4148db1a6fee07a5fbf6265554db314c771b818cc45`.
+- Shared CSV input now streams plain or gzip files without materializing the
+  427,090-row source universe.
+- Event acquisition now uses deterministic 5,000-event partitions composed of
+  batches of at most 200 tickers, immutable gzip raw pages, bounded cursor
+  traversal within each batch, and independent validated partition commits.
+- Resume reuses raw pages only after request/response hashes and cursor
+  transitions validate. It never treats an uncommitted page as completion.
+- Read-only preflight reports source totals, unique and malformed tickers,
+  duplicates, batches, minimum requests, partitions, raw and normalized
+  storage estimates, total namespace size, and free-space margin.
+- Preflight accounts for the existing Phase 10B namespace plus both partition
+  artifacts and the final compressed merge; actual publications retain the
+  5 GiB namespace ceiling and 80 GiB free-space floor.
+- Normalized event and milestone artifacts apply the recursive research
+  projection before publication. Outcomes remain confined to immutable raw
+  evidence, timestamps remain unverified candidate evidence, and no anchor
+  verification is invoked.
+- Complete scopes receive deterministic compressed event metadata, milestone,
+  and provenance outputs. Any missing event, duplicate behavior change,
+  cross-partition conflict, cursor problem, schema change, or incomplete
+  partition blocks final publication.
+- Offline acceptance: 627 tests passed before the documentation handoff;
+  targeted event acceptance contains 87 passing tests. Compilation, pyflakes,
+  Black formatting, and `git diff --check` passed.
+
 ## Critical path
 
-1. Add streaming gzip input support and bounded planning for the 427,090-row
-   event-ticker universe.
-2. Acquire event metadata under a separately preflighted storage/request plan.
-3. Build anchor evidence without automatically verifying any timestamp.
-4. Conduct the separate review/verification handoff.
-5. Construct horizons and targets, acquire pre-target prices, freeze sample
+1. Commit and push the reviewed Phase 10C implementation.
+2. Run the pinned, read-only production preflight and evaluate the request and
+   storage envelope against the hard guards.
+3. Run one separately scoped smoke of at most 200 events and validate raw-page
+   compression, resume, output hashes, missing-event behavior, and accounting.
+4. If the smoke and refreshed production preflight pass, acquire and merge the
+   full event universe under independently committed partitions.
+5. Build anchor evidence without automatically verifying any timestamp.
+6. Conduct the separate review/verification handoff.
+7. Construct horizons and targets, acquire pre-target prices, freeze sample
    membership, and merge outcomes last.
 
 ## Current resource state

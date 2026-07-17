@@ -1,6 +1,6 @@
 # Next Actions
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 
 ## Phase 10A-R — completed
 
@@ -22,15 +22,22 @@ separate and quarantined.
 
 ## Phase 10C — exact next autonomous phase
 
-1. Extend the shared CSV reader to stream `.csv.gz` inputs without materializing
-   the 427,090-row event universe unnecessarily.
-2. Add a bounded event-metadata preflight covering requests, estimated bytes,
-   maximum namespace size, minimum free disk, resumability, and incomplete-run
-   reporting.
-3. Run offline tests and a small bounded event-metadata smoke before production.
-4. Acquire event metadata only after that acceptance passes.
-5. Stop after event metadata validation; do not begin anchor verification and
-   do not expose the quarantined outcome artifact to research-feature stages.
+Implementation and offline acceptance are complete. The exact continuation is:
+
+1. Commit and push only the Phase 10C source, tests, configuration, and project
+   documentation.
+2. Run the pinned production preflight with no network or writes. Require zero
+   malformed/duplicate source tickers and estimates within both hard guards.
+3. Run a separate `--limit-events 200 --partition-events 200` smoke scope.
+4. Validate its immutable raw gzip page, terminal cursor, normalized research
+   projection, partition commit, resume with zero redownloads, final compressed
+   merge, hashes, missing-event count, and actual disk accounting.
+5. Re-run the full production preflight using actual smoke bytes as an empirical
+   reasonableness check. If it remains safe, run `--continue-all` for the full
+   427,090-event scope.
+6. Validate every event partition and the final merge. Stop after event metadata
+   validation; do not begin anchor verification and do not expose quarantined
+   outcomes to research-feature stages.
 
 ## Approval gates
 

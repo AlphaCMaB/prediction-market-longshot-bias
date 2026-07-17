@@ -215,3 +215,70 @@ Final merge artifacts under
 Only `market_metadata.csv.gz` and `event_tickers.csv.gz` may feed the next
 research stages. `market_outcomes.csv.gz` remains quarantined until sample
 membership and research features are frozen. No anchor verification was run.
+
+## Phase 10C: partitioned event metadata
+
+Pinned inputs:
+
+```text
+merge ID: 6f8aa42abec876d3aa1f6336
+event-ticker SHA-256: 544b5464f7afa01d8d9fa4148db1a6fee07a5fbf6265554db314c771b818cc45
+event count: 427090
+```
+
+Run the read-only production preflight first:
+
+```console
+python -m scripts.pipeline_v2.pull_kalshi_partitioned_event_metadata \
+  --event-tickers data/pipeline_v2/market_acquisition/partitioned/merged_universes/6f8aa42abec876d3aa1f6336/event_tickers.csv.gz \
+  --raw-root data/pipeline_v2/market_acquisition/partitioned \
+  --expected-merge-id 6f8aa42abec876d3aa1f6336 \
+  --expected-event-ticker-sha256 544b5464f7afa01d8d9fa4148db1a6fee07a5fbf6265554db314c771b818cc45 \
+  --config configs/pipeline_v2.toml \
+  --preflight
+```
+
+Preflight performs no request and writes nothing. Require
+`ready_for_network=true`, zero malformed tickers, zero duplicates, a sorted
+source, a projected namespace below 5 GiB, and projected free space above
+80 GiB.
+
+The bounded smoke is a separate deterministic scope:
+
+```console
+python -m scripts.pipeline_v2.pull_kalshi_partitioned_event_metadata \
+  --event-tickers data/pipeline_v2/market_acquisition/partitioned/merged_universes/6f8aa42abec876d3aa1f6336/event_tickers.csv.gz \
+  --raw-root data/pipeline_v2/market_acquisition/partitioned \
+  --expected-merge-id 6f8aa42abec876d3aa1f6336 \
+  --expected-event-ticker-sha256 544b5464f7afa01d8d9fa4148db1a6fee07a5fbf6265554db314c771b818cc45 \
+  --config configs/pipeline_v2.toml \
+  --limit-events 200 \
+  --partition-events 200 \
+  --continue-all
+```
+
+After validating smoke hashes, resume behavior, missing-event count, schema,
+compression, quarantine, and disk accounting, re-run the full preflight. The
+full production command differs only by omitting both limit arguments:
+
+```console
+python -m scripts.pipeline_v2.pull_kalshi_partitioned_event_metadata \
+  --event-tickers data/pipeline_v2/market_acquisition/partitioned/merged_universes/6f8aa42abec876d3aa1f6336/event_tickers.csv.gz \
+  --raw-root data/pipeline_v2/market_acquisition/partitioned \
+  --expected-merge-id 6f8aa42abec876d3aa1f6336 \
+  --expected-event-ticker-sha256 544b5464f7afa01d8d9fa4148db1a6fee07a5fbf6265554db314c771b818cc45 \
+  --config configs/pipeline_v2.toml \
+  --continue-all
+```
+
+Raw pages, normalized partition artifacts, commits, run reports, and final
+event universes live under `event_metadata_acquisition/` inside the shared
+guarded root. They are ignored generated data and must never be committed.
+Every successful partition is independently resumable. Any committed missing
+event makes the scope explicitly incomplete and blocks final publication.
+
+Final research outputs are compressed `event_metadata.csv.gz`,
+`event_milestones.csv.gz`, and `event_source_provenance.jsonl.gz`. They contain
+no outcome fields and do not verify anchors. Do not expose Phase 10B
+`market_outcomes.csv.gz` or raw event responses to downstream research-feature
+construction.
