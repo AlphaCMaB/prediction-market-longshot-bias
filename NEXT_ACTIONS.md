@@ -14,20 +14,23 @@ The bounded smoke test passed with 2 requests, 0 retries, 80,059 compressed raw
 bytes, 1,000 in-range rows, 0 rejects, a valid nonterminal partition commit,
 correct resume state, and a fail-closed incomplete merge.
 
-## Phase 10B — next autonomous phase
+## Phase 10B — completed
 
-1. Resume historical acquisition at validated partition index 46 and cursor
-   hash `99041db10ae82785`.
-2. Continue one 25-page commit at a time while the 5 GiB namespace ceiling and
-   80 GiB free-space floor remain safe; stop automatically at either guard.
-3. Record the first out-of-envelope row if/when encountered; do not infer API
-   ordering or stop before the terminal cursor.
-4. After the historical terminal, acquire each server-filtered live monthly
-   segment through its terminal cursor.
-5. When every historical and live segment is terminal, run the deterministic
-   merge and validate the final quarantined universe.
-6. Do not begin event metadata acquisition or anchor review until a manageable,
-   validated market universe exists.
+All historical and live segments are terminal. The validated merge contains
+9,861,209 outcome-free market rows and 427,090 event tickers. Outcomes remain
+separate and quarantined.
+
+## Phase 10C — exact next autonomous phase
+
+1. Extend the shared CSV reader to stream `.csv.gz` inputs without materializing
+   the 427,090-row event universe unnecessarily.
+2. Add a bounded event-metadata preflight covering requests, estimated bytes,
+   maximum namespace size, minimum free disk, resumability, and incomplete-run
+   reporting.
+3. Run offline tests and a small bounded event-metadata smoke before production.
+4. Acquire event metadata only after that acceptance passes.
+5. Stop after event metadata validation; do not begin anchor verification and
+   do not expose the quarantined outcome artifact to research-feature stages.
 
 ## Approval gates
 

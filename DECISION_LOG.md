@@ -72,6 +72,36 @@ lacks server-side date filters, the archive remains nonterminal, and this
 acquisition finding does not change the frozen analysis window or define the
 eventual analysis sample.
 
+## 2026-07-17 — Historical traversal must reach the terminal cursor
+
+Status: accepted acquisition finding
+
+The complete historical chain contained 8,777,951 records. Although the first
+millions were almost entirely inside the provisional settlement envelope,
+later partitions contained mostly out-of-range rows while still intermittently
+containing valid in-range records. The terminal result was 7,370,758 in-range
+and 1,407,193 out-of-range records.
+
+Decision: do not infer a safe early-stop boundary from settlement timestamps or
+page position. Historical completion requires the server's terminal cursor.
+
+## 2026-07-17 — Use the exact-audited compressed streaming merge at scale
+
+Status: accepted operational decision
+
+The complete acquisition produced 9,861,209 in-range rows. Materializing the
+legacy merge in memory and publishing uncompressed copies could not be safely
+guaranteed under the 5 GiB namespace ceiling. The production fast path therefore
+performs an exact external ticker audit, requires zero duplicates, streams each
+validated partition in deterministic order, and publishes gzip artifacts under
+the same byte and free-space guards.
+
+The exact audit found 9,861,209 distinct tickers, zero duplicates, and zero
+conflicts. Because selection was unnecessary, row provenance remains
+losslessly anchored in the 454 partition commits and is referenced by a compact
+final provenance manifest. This changes storage mechanics only; it does not use
+outcomes to select metadata or alter the study methodology.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:

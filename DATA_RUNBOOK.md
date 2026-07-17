@@ -118,7 +118,7 @@ incomplete-merge report. These values are empirical planning inputs only; the
 historical endpoint still provides no total-page estimate and every production
 write remains subject to the hard guards.
 
-## Production resume checkpoint — 2026-07-17
+## Superseded production resume checkpoint — 2026-07-17
 
 - Raw root: `data/pipeline_v2/market_acquisition/partitioned`.
 - Cutoff snapshot: `cutoff_443dd48c9d69f40b3cc5.json`.
@@ -171,3 +171,47 @@ reaches its terminal cursor.
 
 These dates describe the provisional acquisition envelope, not a change to the
 frozen analysis window.
+
+## Phase 10B final production record — 2026-07-17
+
+- Raw root: `data/pipeline_v2/market_acquisition/partitioned`.
+- All segments terminal: historical, 2026-05 live, 2026-06 live, 2026-07 live.
+- Partitions: 454 total (352 historical, 102 live).
+- Requests/pages: 11,269 total (8,778 historical, 2,491 live).
+- HTTP attempts: 11,269; retries: 0; rate limits: 0.
+- Input records: 11,268,402.
+- In range: 9,861,209; outside envelope: 1,407,193; rejected: 0.
+- Exact ticker audit: 9,861,209 unique, 0 duplicate, 0 conflict.
+- Merge ID: `6f8aa42abec876d3aa1f6336`.
+- Final contracts: 9,861,209; final event tickers: 427,090.
+- Namespace bytes: 3,648,491,736 of 5,368,709,120.
+- Free bytes: 103,643,897,856; margin above floor: 17,744,551,936.
+
+Terminal partition identities:
+
+- Historical: `4d899e360a6bff3d0bdb8845`, commit SHA-256
+  `33d1e06188abd9d17fea53a0b43269d6fc09855c0c17d646897fa45bc1fec117`.
+- Live 2026-05: `46e1601cee2d86fb2d6f1ce0`, commit SHA-256
+  `b1ec6b4e0dc9d20c0884ecca297204d2d49eb93659c783373342e44fb1f8a869`.
+- Live 2026-06: `46cc8749dd9e7ee262cd29f8`, commit SHA-256
+  `9b53d24f6b4934969662ba3f76d7b84cfbbd33ab6db71f9b1f427a8ddb4c296f`.
+- Live 2026-07: `c28c77f8dc02617a3cdd9fdf`, commit SHA-256
+  `e2b1592636a994dfe1a85740a5980457d655453a3cfb0072487ca5ddbf3c253c`.
+
+Final merge artifacts under
+`merged_universes/6f8aa42abec876d3aa1f6336/`:
+
+- `market_metadata.csv.gz`: 291,422,056 bytes; SHA-256
+  `7acd4b59afc1ee0d952396cecb062e4216259c0ff4cb4893d5a8e00c50e26c44`.
+- `market_outcomes.csv.gz`: 43,574,176 bytes; SHA-256
+  `2114fd25b79627c9c36d716485382548b3812108007c5990bf2f384ca82cc451`.
+- `event_tickers.csv.gz`: 2,636,443 bytes; SHA-256
+  `544b5464f7afa01d8d9fa4148db1a6fee07a5fbf6265554db314c771b818cc45`.
+- `source_provenance_manifest.json`: 256,720 bytes; SHA-256
+  `1194e1e4a9dfb528d5b5177ba9f41b35add45ae620af6ca97ea9f63031d18530`.
+- Merge commit SHA-256:
+  `aeaaafd5fcff3fbc649bd6ca250d2613bf947453045d9ca371a2f4c24c35d3b4`.
+
+Only `market_metadata.csv.gz` and `event_tickers.csv.gz` may feed the next
+research stages. `market_outcomes.csv.gz` remains quarantined until sample
+membership and research features are frozen. No anchor verification was run.
