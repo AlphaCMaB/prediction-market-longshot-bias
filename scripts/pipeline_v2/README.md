@@ -389,6 +389,13 @@ deterministic rule may be applied until the packet is reviewed, weighted
 approval and disagreement diagnostics are computed, and the project owner
 explicitly approves the rule.
 
+`build_phase_10e_first_review` performs the recommendation-only AI pass over
+the approved 450-case packet. It emits a complete first-review CSV, a compact
+report, a 165-case human-review subset, and a matching uncertainty/disagreement
+queue. Every output remains `needs_review`; the command cannot promote a rule
+or verify an anchor. The exact production invocation and hashes are recorded in
+`DATA_RUNBOOK.md`.
+
 ## Planned stages
 
 ### 1. Ex-ante occurrence anchors

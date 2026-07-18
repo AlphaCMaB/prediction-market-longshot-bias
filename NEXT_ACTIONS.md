@@ -37,15 +37,17 @@ rows remain `needs_review`; verified fields are blank, zero anchors were
 verified, and zero outcomes were read. All four required outputs passed
 deterministic rerun, quarantine, schema, hash, and storage validation.
 
-## Phase 10E — design checkpoint complete; approval pending
+## Phase 10E — AI first review complete; human audit pending
 
 The outcome-blind pattern analysis, proposed tiers, reproducible 450-family
 audit sample, human-readable packet, blank exact-schema decision template, and
-primary pilot plan are complete. PR1 and PR2 are proposals, not approved rules.
+primary pilot plan are complete. The recommendation-only AI first review covers
+all 450 cases, but PR1 and PR2 remain proposals, not approved rules.
 
-1. Review the 150 sampled families in each tier without outcome or price access.
-2. Independently double-review 50 families per tier and calculate weighted
-   approval, disagreement, and failure-mode rates.
+1. Independently review the 165-case compact human subset without outcomes,
+   post-event information, or post-anchor prices.
+2. Calculate human approval, AI-human disagreement, and confirmed
+   false-positive rates. Keep AI-only estimates clearly separate.
 3. Request explicit approval, modification, or rejection of each proposed rule.
 4. Do not apply decisions, construct horizons, acquire prices, or access outcomes
    until that approval is recorded.

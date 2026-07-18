@@ -2,7 +2,8 @@
 
 ## Status and approval boundary
 
-Phase 10E has completed the design and sampling checkpoint only. It has not
+Phase 10E has completed the design, sampling, and recommendation-only AI first
+review checkpoints. It has not
 verified an anchor, applied a verification rule, constructed a horizon price,
 read an outcome, or estimated favorite–longshot bias. The labels below are
 proposed audit tiers, not eligibility decisions. Both proposed deterministic
@@ -80,24 +81,29 @@ At the worst-case 50% approval rate, 150 observations give an approximate 95%
 margin of ±8.0 percentage points per tier before finite-population and design-
 effect adjustments. Independently double-reviewing 50 cases per tier gives a
 worst-case disagreement-rate margin of approximately ±13.86 points. Approval
-and disagreement rates are currently **[TO BE MEASURED AFTER REVIEW]**; no
-defensible estimate exists before decisions are recorded.
+and disagreement rates remain **[TO BE MEASURED AFTER HUMAN REVIEW]**. The AI
+first review is available as a separate diagnostic: PR1 received 86 rule-case,
+60 uncertainty, and four rejection recommendations; PR2 received 135, 13, and
+two, respectively. Weighted AI rule-case recommendation rates are 50.10% and
+92.34%, but these are not rule-approval estimates.
 
-Planning assumptions are two minutes per Tier 1 family, three per Tier 2
-family, and six per Tier 3 family. One review pass is approximately 27.5 hours.
-The recommended 50-per-tier independent second review adds 9.17 hours, for an
-estimated total of 36.67 reviewer-hours.
+The compact independent human subset contains 165 unique cases: 50
+deterministically sampled from Tier 1, 50 from Tier 2, all low-confidence,
+rejected, and ambiguity-flagged Tier 1–2 cases, plus 10 Tier 3 diagnostics. At
+four minutes per case, the remaining burden is approximately 11 reviewer-hours.
 
 Reviewing the full universe under the same assumptions would require about
 3,413.77 Tier 1 hours, 4,699.85 Tier 2 hours, and 23,068 Tier 3 hours—31,181.62
 hours in total. This impractical burden is the reason to audit scalable rules
 before applying them and to leave Tier 3 quarantined from the initial estimate.
 
-Reviewers must use the exact frozen decision schema and may mark a sampled
-family `verified_manual`, `rejected`, or leave it `needs_review`. Any verified
-row must cite the exact evidence reference and candidate time. Reviewers must
-not consult outcomes, results, settlement values, prices, close/expiration
-times, or other post-event information.
+Audit reviewers record recommendation-only decisions and must leave every
+sampled family at `needs_review`. No reviewer may mark a family
+`verified_automatic` or `verified_manual` during this audit. Reviewers must not
+consult outcomes, results, settlement values, settlement timestamps, prices,
+close/expiration times, or other post-event information. Only after human
+diagnostics and explicit project-owner rule approval may a separate application
+step change verification status.
 
 ## Coverage of the proposed primary pool
 
@@ -176,8 +182,7 @@ observed.
 
 ## Exact path to the first preliminary bias estimate
 
-1. Complete the 450-family outcome-blind audit and independently double-review
-   50 families per tier.
+1. Complete the independent outcome-blind human review of the 165-case subset.
 2. Compute weighted approval rates, disagreement rates, reasons for rejection,
    and category/time-specific false-positive diagnostics.
 3. Present those diagnostics for explicit approval, modification, or rejection
@@ -194,4 +199,4 @@ observed.
    descriptive calibration/return estimates with family-clustered uncertainty
    and explicit category-specific results.
 
-Phase 10E stops at step 1 pending review and project-owner approval.
+Phase 10E stops at step 1 pending human review and project-owner approval.

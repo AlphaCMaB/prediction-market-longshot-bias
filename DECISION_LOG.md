@@ -288,6 +288,26 @@ review identified the failure, the rule was tightened, and that version was
 retained under `phase_10e_design_rejected_v1` rather than deleted. PR1 and PR2
 must not be applied without explicit project-owner approval.
 
+## 2026-07-19 — Complete recommendation-only AI first review
+
+Status: audit evidence recorded; no rule accepted
+
+All 450 deterministic audit cases were reviewed using only the supplied
+outcome-blind candidate evidence, titles, categories, timing context, and
+allowed ex-ante metadata. Every actual verification status remains
+`needs_review`. Tier 1 received 86 rule-case, 60 uncertainty, and four rejection
+recommendations; Tier 2 received 135 rule-case, 13 uncertainty, and two
+rejection recommendations; Tier 3 remains fully quarantined.
+
+Decision: treat these results only as AI first-review diagnostics. The
+inverse-probability-weighted rule-case recommendation rates of 50.10% for PR1
+and 92.34% for PR2 are not approval rates and cannot promote either rule. The
+independent human review must cover deterministic 50-case sets from Tier 1 and
+Tier 2, every low-confidence, rejected, or ambiguity-flagged Tier 1–2 case, and
+10 Tier 3 quarantine diagnostics, for 165 unique cases. Human approval,
+confirmed false-positive, and AI-human disagreement rates must be presented
+before the project owner may approve, modify, or reject either proposed rule.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:

@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-18
+Last updated: 2026-07-19
 Branch: `methodology-v2-clean`
 
 ## Research objective
@@ -252,12 +252,38 @@ Phase 10E outcome-blind audit design reached the approval checkpoint on
   zero anchors were verified, zero horizons were built, and zero network
   requests were made.
 
+The recommendation-only AI first review completed on 2026-07-19 without
+promoting either proposed rule.
+
+- All 450 sampled families were reviewed from the outcome-blind packet. Tier 1
+  produced 86 rule-case recommendations, 60 uncertain human-review referrals,
+  and four rejection recommendations. Tier 2 produced 135 rule-case
+  recommendations, 13 uncertain referrals, and two rejection recommendations.
+  All 150 Tier 3 cases remain quarantined.
+- Confidence was high for 237 cases, medium for 210, and low for three. All 450
+  actual verification statuses remain `needs_review`; these are AI
+  recommendations, not verified anchors or approved-rule decisions.
+- The inverse-probability-weighted AI recommendation rates are 50.10% for PR1
+  and 92.34% for PR2. The corresponding AI uncertainty rates are 49.86% and
+  7.26%; AI rejection rates are 0.04% and 0.40%. Human approval and AI-human
+  disagreement rates remain unobserved.
+- The compact human-review handoff contains 165 cases: deterministic sets of 50
+  from each proposed-rule tier, every low-confidence, rejected, or ambiguity-
+  flagged Tier 1–2 case, and 10 diagnostic Tier 3 cases. Planning burden is 11
+  reviewer-hours at four minutes per case.
+- A deterministic no-write rerun reproduced all four output hashes and
+  modification times. The complete 649-test offline suite, compilation, scoped
+  Black and pyflakes, TOML validation, quarantine checks, and `git diff
+  --check` passed. Repository-wide Black remains a pre-existing baseline
+  failure across 64 files outside this phase's scope.
+
 ## Critical path
 
-1. Complete the 450-family outcome-blind audit and independently double-review
-   the recommended 50 families per tier.
-2. Compute weighted approval/disagreement rates and false-positive diagnostics;
-   obtain explicit approval, modification, or rejection of PR1 and PR2.
+1. Complete the independent human review of the 165-case compact subset without
+   outcomes, post-event information, or post-anchor prices.
+2. Compute human approval, AI-human disagreement, and confirmed false-positive
+   diagnostics; obtain explicit approval, modification, or rejection of PR1
+   and PR2.
 3. Only after approval, apply and validate decisions. Then construct horizons
    and prices, freeze the pilot sample, and merge outcomes last.
 
@@ -283,5 +309,8 @@ Phase 10E outcome-blind audit design reached the approval checkpoint on
 - The canonical Phase 10E design packet adds 1,758,331 bytes. A 1,761,991-byte
   superseded pre-acceptance packet is retained locally as
   `phase_10e_design_rejected_v1`; no validated data was deleted.
-- Shared generated namespace after the Phase 10E design checkpoint:
-  5,135,219,106 bytes, leaving 233,490,014 bytes below the 5 GiB ceiling.
+- The four Phase 10E first-review artifacts add 645,036 bytes. Shared generated
+  namespace after the first-review checkpoint: 5,135,864,142 bytes, leaving
+  232,844,978 bytes below the 5 GiB ceiling.
+- Available filesystem space at first-review validation: 99,051,147,264 bytes
+  (92.25 GiB), 13,151,801,344 bytes above the 80 GiB safety floor.

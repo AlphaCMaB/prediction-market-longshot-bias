@@ -1,6 +1,6 @@
 # Data Runbook
 
-Last updated: 2026-07-18
+Last updated: 2026-07-19
 
 ## Non-negotiable safety limits
 
@@ -457,3 +457,35 @@ without modifying the published directory.
 PR1 and PR2 remain proposed and unapproved. Do not run
 `apply_anchor_verification`, construct horizons, read prices, or access outcomes
 from this checkpoint.
+
+### Phase 10E recommendation-only AI first review — 2026-07-19
+
+The local command reads only the canonical outcome-blind audit packet and makes
+no network request:
+
+```console
+python -m scripts.pipeline_v2.build_phase_10e_first_review \
+  --packet data/pipeline_v2/anchor_evidence/phase_10e_design/phase_10e_audit_review_packet.csv \
+  --output-root data/pipeline_v2/anchor_evidence/phase_10e_first_review \
+  --guard-root data/pipeline_v2 \
+  --expected-packet-sha256 89fc0b28be4365c78558d1aed1d77578d5d379a891c4664bb75e62bb411ed05b
+```
+
+The builder records recommendations only. All 450 verification statuses remain
+`needs_review`, PR1 and PR2 remain `not_approved`, Tier 3 remains quarantined,
+and human and AI-human statistics remain explicitly unavailable until the
+independent review is returned.
+
+- `phase_10e_first_review.csv` — 175,948 bytes; SHA-256
+  `ad993c0470534765cd6264f45600838a0fd160d5a6ddd3fa9d10cdede94578ff`.
+- `phase_10e_first_review_report.json` — 72,301 bytes; SHA-256
+  `3a2b66202df4639135f6b4736afc6cf8acee7cb4f65a1f143ea5d01ab21190a4`.
+- `phase_10e_human_review_subset.csv` — 320,828 bytes; SHA-256
+  `904c5c7b787a6cc573878f7ddcb0d5aa46bc0c29228b1e92cbe8a235563ec1cc`.
+- `phase_10e_disagreement_and_uncertainty_queue.csv` — 75,959 bytes; SHA-256
+  `3653a6ae8b8b4effff15a273492ff8f6c8c49acce4de3fac191933ae1e499bca`.
+
+Total first-review output is 645,036 bytes. The shared generated namespace is
+5,135,864,142 bytes, leaving 232,844,978 bytes below the 5 GiB ceiling. Free
+disk at validation is 99,051,147,264 bytes. A complete rerun must reproduce all
+four hashes without changing file sizes or modification times.
