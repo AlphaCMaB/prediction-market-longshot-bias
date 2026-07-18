@@ -308,6 +308,30 @@ Tier 2, every low-confidence, rejected, or ambiguity-flagged Tier 1–2 case, an
 confirmed false-positive, and AI-human disagreement rates must be presented
 before the project owner may approve, modify, or reject either proposed rule.
 
+## 2026-07-19 — Approve the review workflow but not the proposed rules
+
+Status: implementation approved; PR1 and PR2 not approved
+
+The project owner approved the Phase 10E design and outcome-blind first-review
+implementation, including commits `ee75bb1` and `6473c35`. Human review remains
+incomplete; outcomes and prohibited post-event information remain unopened.
+This approval does not authorize verified anchors, horizons, outcomes, or rule
+application.
+
+Direction: PR1 must exclude recurring short-duration contracts whose one-hour
+horizon can precede market existence, non-exact deadlines/windows, publication
+timing, settlement-language ambiguity, and multiple scheduled-time ambiguity.
+PR2 remains potentially viable but must exclude set, map, or series-level
+markets; endogenous, partial, or conditional subevents; ticker/candidate date
+mismatches; unrelated milestones; and multiple plausible start times. These
+are audit directions, not promoted rule definitions.
+
+Decision: implement a compact local interface over the immutable 165-case
+subset. Human entries remain recommendation-only `needs_review` records. Only
+after the complete human audit produces weighted approval, confirmed false-
+positive, AI-human disagreement, category, and failure-mode diagnostics may the
+project owner separately approve, modify, or reject PR1 and PR2.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:

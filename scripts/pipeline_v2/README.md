@@ -396,6 +396,14 @@ queue. Every output remains `needs_review`; the command cannot promote a rule
 or verify an anchor. The exact production invocation and hashes are recorded in
 `DATA_RUNBOOK.md`.
 
+`review_phase_10e_human` is the local keyboard interface for the 165-case
+independent human subset. It hash-pins both source packets, hides the AI
+recommendation until after human decisions are recorded, atomically autosaves a
+separate recommendation-only CSV, and resumes at the first unfinished case.
+Its completion report calculates weighted human and AI-human diagnostics but
+keeps PR1, PR2, and every anchor unapproved. Run it with `--validate-only` for a
+no-write production preflight.
+
 ## Planned stages
 
 ### 1. Ex-ante occurrence anchors

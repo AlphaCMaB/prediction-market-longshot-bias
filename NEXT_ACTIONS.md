@@ -52,6 +52,17 @@ all 450 cases, but PR1 and PR2 remain proposals, not approved rules.
 4. Do not apply decisions, construct horizons, acquire prices, or access outcomes
    until that approval is recorded.
 
+Start or resume the local review from the repository root:
+
+```console
+python -m scripts.pipeline_v2.review_phase_10e_human
+```
+
+The command hash-validates both source packets and autosaves after every
+completed case. Use `Q` to stop safely; the next invocation resumes at the
+first incomplete case. PR1 must be modified and PR2 must be audited/tightened
+as recorded in `DECISION_LOG.md`; neither rule is approved.
+
 ## Approval gates
 
 Ask the project owner before changing the frozen methodology, deleting any

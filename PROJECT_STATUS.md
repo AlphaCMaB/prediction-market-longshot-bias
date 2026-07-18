@@ -277,6 +277,27 @@ promoting either proposed rule.
   --check` passed. Repository-wide Black remains a pre-existing baseline
   failure across 64 files outside this phase's scope.
 
+The compact local human-review interface is implemented and ready, but the
+human audit has not started.
+
+- The interface verifies both source-packet hashes, displays only safelisted
+  outcome-blind evidence, hides the AI recommendation during the human pass,
+  and accepts keyboard decisions, timing classifications, confidence,
+  standardized ambiguity flags, and concise rationales.
+- Each completed case is atomically autosaved to a separate ignored decisions
+  file. Resume validates the exact saved schema and detects an external file
+  change before writing. The source packets are never modified.
+- Human recommendations project into the frozen eight-column verification
+  schema only as `needs_review`, with blank verified time, source, and timing
+  fields. No production application function is called.
+- A completed 165-case review will calculate two-phase inverse-probability-
+  weighted approval, confirmed false-positive, uncertainty, AI-human
+  disagreement, category, and failure-mode diagnostics separately for PR1 and
+  PR2. The generated report will continue to mark both rules unapproved.
+- Interface acceptance: 10 focused tests and the complete 659-test offline
+  suite passed. Compilation, scoped Black and pyflakes, TOML validation,
+  production packet preflight, and `git diff --check` passed.
+
 ## Critical path
 
 1. Complete the independent human review of the 165-case compact subset without
@@ -314,3 +335,7 @@ promoting either proposed rule.
   232,844,978 bytes below the 5 GiB ceiling.
 - Available filesystem space at first-review validation: 99,051,147,264 bytes
   (92.25 GiB), 13,151,801,344 bytes above the 80 GiB safety floor.
+- Human-interface preflight estimates at most 1,728,512 additional generated
+  bytes for decisions, atomic-save overlap, and the final report. No human
+  decision or report exists yet. Current namespace headroom remains
+  232,844,978 bytes; current free disk is 99,118,981,120 bytes.

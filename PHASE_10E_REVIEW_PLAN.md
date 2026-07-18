@@ -2,8 +2,9 @@
 
 ## Status and approval boundary
 
-Phase 10E has completed the design, sampling, and recommendation-only AI first
-review checkpoints. It has not
+Phase 10E has completed the design, sampling, recommendation-only AI first
+review, and local human-interface checkpoints. The human review remains at
+0/165. The project has not
 verified an anchor, applied a verification rule, constructed a horizon price,
 read an outcome, or estimated favorite–longshot bias. The labels below are
 proposed audit tiers, not eligibility decisions. Both proposed deterministic
@@ -91,6 +92,13 @@ The compact independent human subset contains 165 unique cases: 50
 deterministically sampled from Tier 1, 50 from Tier 2, all low-confidence,
 rejected, and ambiguity-flagged Tier 1–2 cases, plus 10 Tier 3 diagnostics. At
 four minutes per case, the remaining burden is approximately 11 reviewer-hours.
+
+The local interface deliberately does not display the AI recommendation during
+the human pass. It atomically autosaves after every completed case, supports
+safe interruption/resume, and leaves the exact frozen verification projection
+at `needs_review`. PR1 must be modified and PR2 audited/tightened according to
+the exclusions recorded in `DECISION_LOG.md` before either can be considered
+for explicit approval.
 
 Reviewing the full universe under the same assumptions would require about
 3,413.77 Tier 1 hours, 4,699.85 Tier 2 hours, and 23,068 Tier 3 hours—31,181.62
