@@ -346,3 +346,61 @@ Only the three compressed final research artifacts may feed Phase 10D
 candidate anchor-evidence construction. Preserve timestamps as unverified
 candidate evidence, do not invoke anchor verification, and do not read raw
 responses or quarantined market outcomes into research metadata.
+
+## Phase 10D: candidate anchor evidence
+
+The production command is local and performs no network request:
+
+```console
+python -m scripts.pipeline_v2.build_kalshi_anchor_evidence \
+  --market-metadata data/pipeline_v2/market_acquisition/partitioned/merged_universes/6f8aa42abec876d3aa1f6336/market_metadata.csv.gz \
+  --event-metadata data/pipeline_v2/market_acquisition/partitioned/event_metadata_acquisition/merged_event_universes/69f1b1277bdfdbd530834fe6/event_metadata.csv.gz \
+  --event-milestones data/pipeline_v2/market_acquisition/partitioned/event_metadata_acquisition/merged_event_universes/69f1b1277bdfdbd530834fe6/event_milestones.csv.gz \
+  --output-root data/pipeline_v2/anchor_evidence/phase_10d \
+  --guard-root data/pipeline_v2 \
+  --config configs/pipeline_v2.toml \
+  --expected-market-sha256 7acd4b59afc1ee0d952396cecb062e4216259c0ff4cb4893d5a8e00c50e26c44 \
+  --expected-event-sha256 ef97e0093234e7b963f739d7ddd435691b5f8580e6551f398754d1b95807f3bf \
+  --expected-milestone-sha256 96f6c754f8ffbb0c9aa1d12e1a1cdf953079b773de419dc5e90917673334ab82
+```
+
+Add `--dry-run` to compute complete diagnostics, hashes, and exact CSV byte
+estimates without creating the output directory. Production-sized inputs
+require all three pinned hashes. Large market input is streamed into
+family-level sufficient rows so repeated identical occurrence evidence is
+represented once with an explicit support count. Output is written to a
+guarded sibling work directory and the complete four-file directory is
+published atomically. A rerun recomputes every artifact hash and fails on any
+conflict without modifying the published files.
+
+### Phase 10D production checkpoint — 2026-07-19
+
+- Composite families: 427,090; with candidates: 418,591; without candidates:
+  8,499.
+- Candidate rows: 625,923, all `needs_review` and all exact timestamps.
+- Sources: 208,308 market occurrence; 209,017 event strike; 208,598 milestone
+  start.
+- Window diagnostics: 539,109 inside; 8,196 before; 78,618 at or after the
+  frozen half-open window. Date-only/overlapping candidates: zero.
+- Review diagnostics: 198,686 families with multiple distinct exact candidate
+  times; zero multiple-event-ticker families, missing-event families, invalid
+  values, or ignored sentinels.
+- Verification template: 427,090 rows, all `needs_review`; every verified time,
+  source, timing structure, and evidence reference is blank.
+- `anchor_evidence.csv`: 948,679,350 bytes; SHA-256
+  `8bd614d88c139aa02bc5fbfeb12dd9c2287cd98766a7f029d084347b6afd1e10`.
+- `anchor_family_review.csv`: 161,000,334 bytes; SHA-256
+  `794178aced9711498f57b77fd74ff61412185eb4ee5f76aeafc275aa501e0795`.
+- `anchor_verification_decisions_template.csv`: 49,747,044 bytes; SHA-256
+  `4963a7c9af0c923c5c9a24d0985c4e0e463229dd5b6677a3dc3152e08ebe5203`.
+- `anchor_evidence_report.json`: 4,105 bytes; SHA-256
+  `ec9d3e907caf0eb5ae989cdf9805ecce1d5538ab3fe5ea278370a80c7c06508e`.
+- Total Phase 10D bytes: 1,159,430,833. Shared namespace: 5,131,698,784
+  bytes, 237,010,336 bytes below the 5 GiB ceiling. Free disk at validation:
+  95,696,416,768 bytes, 9,797,070,848 bytes above the 80 GiB floor.
+
+Do not edit the generated decisions template in place. Copy it into the
+separately controlled review workflow, preserve the exact composite-family
+schema, and do not consult outcomes. Phase 10D artifacts are evidence and
+review inputs only; they do not authorize anchor verification, horizon-price
+construction, or bias estimation.

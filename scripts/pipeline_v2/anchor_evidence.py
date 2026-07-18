@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 import hashlib
-import json
 import re
 from typing import Any, Iterable, Mapping
 
@@ -19,34 +18,67 @@ EVIDENCE_SCHEMA_VERSION = "1.0"
 DATE_ONLY_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 ANCHOR_EVIDENCE_FIELDS = (
-    "family_id", "family_id_source", "event_ticker", "candidate_id",
-    "candidate_source_type", "candidate_original_value", "candidate_time_utc",
-    "candidate_date", "candidate_precision", "potential_verified_anchor_source",
-    "candidate_title", "evidence_reference", "evidence_context_json",
-    "analysis_window_status", "review_status",
+    "family_id",
+    "family_id_source",
+    "event_ticker",
+    "candidate_id",
+    "candidate_source_type",
+    "candidate_original_value",
+    "candidate_time_utc",
+    "candidate_date",
+    "candidate_precision",
+    "potential_verified_anchor_source",
+    "candidate_title",
+    "evidence_reference",
+    "supporting_source_count",
+    "evidence_context_json",
+    "analysis_window_status",
+    "review_status",
 )
 ANCHOR_FAMILY_REVIEW_FIELDS = (
-    "family_id", "family_id_source", "market_count", "event_tickers_json",
-    "representative_title", "category", "first_market_open_time", "candidate_count",
-    "exact_timestamp_candidate_count", "date_only_candidate_count",
-    "occurrence_candidate_count", "strike_date_candidate_count",
-    "milestone_start_candidate_count", "distinct_exact_candidate_times_json",
-    "has_conflicting_exact_candidate_times", "has_multiple_event_tickers",
-    "missing_event_metadata", "invalid_candidate_value_count",
-    "sentinel_timestamp_count", "review_status", "review_reason",
+    "family_id",
+    "family_id_source",
+    "market_count",
+    "event_tickers_json",
+    "representative_title",
+    "category",
+    "first_market_open_time",
+    "candidate_count",
+    "exact_timestamp_candidate_count",
+    "date_only_candidate_count",
+    "occurrence_candidate_count",
+    "strike_date_candidate_count",
+    "milestone_start_candidate_count",
+    "distinct_exact_candidate_times_json",
+    "has_conflicting_exact_candidate_times",
+    "has_multiple_event_tickers",
+    "missing_event_metadata",
+    "invalid_candidate_value_count",
+    "sentinel_timestamp_count",
+    "review_status",
+    "review_reason",
     "candidate_ids_json",
 )
 DECISION_TEMPLATE_FIELDS = (
-    "family_id", "family_id_source", "verification_status", "verified_anchor_time",
-    "verified_anchor_source", "timing_structure", "evidence_reference", "review_note",
+    "family_id",
+    "family_id_source",
+    "verification_status",
+    "verified_anchor_time",
+    "verified_anchor_source",
+    "timing_structure",
+    "evidence_reference",
+    "review_note",
 )
 
 MARKET_REQUIRED_FIELDS = frozenset({"family_id", "family_id_source", "event_ticker"})
 EVENT_REQUIRED_FIELDS = frozenset({"event_ticker", "strike_date"})
 MILESTONE_REQUIRED_FIELDS = frozenset(
     {
-        "event_ticker", "milestone_id", "milestone_start_date",
-        "milestone_end_date", "association_type",
+        "event_ticker",
+        "milestone_id",
+        "milestone_start_date",
+        "milestone_end_date",
+        "association_type",
     }
 )
 
@@ -69,7 +101,7 @@ class EvidenceBuild:
     evidence_rows: tuple[dict[str, Any], ...]
     family_rows: tuple[dict[str, Any], ...]
     decision_rows: tuple[dict[str, Any], ...]
-    statistics: dict[str, int]
+    statistics: dict[str, Any]
 
 
 def family_identity(row: Mapping[str, Any]) -> tuple[str, str]:
@@ -112,7 +144,9 @@ def parse_candidate_value(value: Any, *, allow_date_only: bool) -> CandidatePars
         try:
             parsed_date = date.fromisoformat(original)
         except ValueError:
-            return CandidateParse(original_value=original, issue="invalid_candidate_value")
+            return CandidateParse(
+                original_value=original, issue="invalid_candidate_value"
+            )
         if parsed_date.year == 1:
             return CandidateParse(original_value=original, issue="sentinel_timestamp")
         if allow_date_only:
@@ -142,7 +176,11 @@ def parse_candidate_value(value: Any, *, allow_date_only: bool) -> CandidatePars
 
 def analysis_window_status(parsed: CandidateParse, rules: StudyRules) -> str:
     if parsed.precision == "date_only":
-        return "date_only_unknown"
+        value = date.fromisoformat(parsed.candidate_date)
+        start, end = analysis_window_bounds(rules)
+        if value < start.date() or value >= end.date():
+            return "date_only_outside_analysis_window"
+        return "date_only_overlaps_analysis_window"
     if parsed.precision != "exact_timestamp":
         return "invalid_or_missing"
     value = _aware_timestamp(parsed.candidate_time_utc)
@@ -157,7 +195,10 @@ def analysis_window_status(parsed: CandidateParse, rules: StudyRules) -> str:
 
 
 def _candidate_id(
-    identity: tuple[str, str], event_ticker: str, source_type: str, source_identity: str,
+    identity: tuple[str, str],
+    event_ticker: str,
+    source_type: str,
+    source_identity: str,
     parsed: CandidateParse,
 ) -> str:
     normalized_value = parsed.candidate_time_utc or parsed.candidate_date
@@ -183,19 +224,53 @@ def _milestone_comparison_projection(row: Mapping[str, Any]) -> dict[str, Any]:
     return {
         key: row.get(key, "")
         for key in (
-            "event_ticker", "milestone_id", "milestone_category", "milestone_type",
-            "milestone_title", "milestone_start_date",
-            "milestone_source_id", "milestone_source_ids_json",
-            "milestone_details_json", "association_type",
+            "event_ticker",
+            "milestone_id",
+            "milestone_category",
+            "milestone_type",
+            "milestone_title",
+            "milestone_start_date",
+            "milestone_source_id",
+            "milestone_source_ids_json",
+            "milestone_details_json",
+            "association_type",
+        )
+    }
+
+
+def _market_comparison_projection(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Compare a repeated market source without retrospective fields."""
+    return {
+        key: row.get(key, "")
+        for key in (
+            "ticker",
+            "market_id",
+            "family_id",
+            "family_id_source",
+            "event_ticker",
+            "occurrence_datetime",
+            "title",
+            "subtitle",
+            "rules_primary",
+            "rules_secondary",
         )
     }
 
 
 def _candidate(
-    identity: tuple[str, str], *, event_ticker: str, source_type: str,
-    original_value: Any, allow_date_only: bool, potential_source: str,
-    title: str, reference: str, source_identity: str,
-    context: Mapping[str, Any], rules: StudyRules,
+    identity: tuple[str, str],
+    *,
+    event_ticker: str,
+    source_type: str,
+    original_value: Any,
+    allow_date_only: bool,
+    potential_source: str,
+    title: str,
+    reference: str,
+    source_identity: str,
+    context: Mapping[str, Any],
+    rules: StudyRules,
+    supporting_source_count: int = 1,
 ) -> tuple[dict[str, Any] | None, str]:
     parsed = parse_candidate_value(original_value, allow_date_only=allow_date_only)
     if not parsed.valid:
@@ -215,6 +290,7 @@ def _candidate(
         "potential_verified_anchor_source": potential_source,
         "candidate_title": title,
         "evidence_reference": reference,
+        "supporting_source_count": supporting_source_count,
         "evidence_context_json": _context(context),
         "analysis_window_status": analysis_window_status(parsed, rules),
         "review_status": "needs_review",
@@ -224,15 +300,21 @@ def _candidate(
 def _first_open_time(markets: Iterable[Mapping[str, Any]]) -> str:
     valid = []
     for market in markets:
-        parsed = _aware_timestamp(str(market.get("market_open_time") or market.get("open_time") or ""))
+        parsed = _aware_timestamp(
+            str(market.get("market_open_time") or market.get("open_time") or "")
+        )
         if parsed is not None:
             valid.append(parsed)
     return format_iso_utc(min(valid)).replace("+00:00", "Z") if valid else ""
 
 
 def _review_reason(
-    *, multiple_events: bool, missing_event: bool, conflicting_times: bool,
-    candidate_count: int, date_only_count: int,
+    *,
+    multiple_events: bool,
+    missing_event: bool,
+    conflicting_times: bool,
+    candidate_count: int,
+    date_only_count: int,
 ) -> str:
     if multiple_events:
         return "multiple_event_tickers"
@@ -308,33 +390,130 @@ def build_anchor_evidence(
                 str(row.get("ticker") or row.get("market_id") or ""),
             ),
         )
-        event_tickers = sorted({
-            str(row.get("event_ticker") or "").strip()
-            for row in family_markets if str(row.get("event_ticker") or "").strip()
-        })
+        event_tickers = sorted(
+            {
+                str(row.get("event_ticker") or "").strip()
+                for row in family_markets
+                if str(row.get("event_ticker") or "").strip()
+            }
+        )
         family_candidates: list[dict[str, Any]] = []
-        invalid_count = sentinel_count = 0
+        invalid_count = max(
+            (
+                int(row.get("_family_invalid_candidate_value_count") or 0)
+                for row in family_markets
+            ),
+            default=0,
+        )
+        sentinel_count = max(
+            (
+                int(row.get("_family_sentinel_timestamp_count") or 0)
+                for row in family_markets
+            ),
+            default=0,
+        )
 
+        unique_markets: list[dict[str, Any]] = []
+        market_sources: dict[tuple[str, str], bytes] = {}
         for market in family_markets:
-            value = market.get("occurrence_datetime")
+            source_key = (
+                str(market.get("event_ticker") or "").strip(),
+                str(market.get("ticker") or market.get("market_id") or "").strip(),
+            )
+            encoded = canonical_json(_market_comparison_projection(market))
+            if source_key in market_sources and market_sources[source_key] != encoded:
+                raise ValueError(
+                    f"conflicting candidate duplicate market source identity {source_key!r}"
+                )
+            if source_key not in market_sources:
+                market_sources[source_key] = encoded
+                unique_markets.append(market)
+        family_markets = unique_markets
+
+        occurrence_groups: dict[
+            tuple[str, str], list[tuple[dict[str, Any], CandidateParse]]
+        ] = defaultdict(list)
+        for market in family_markets:
+            parsed = parse_candidate_value(
+                market.get("occurrence_datetime"), allow_date_only=False
+            )
+            if parsed.valid:
+                occurrence_groups[
+                    (
+                        str(market.get("event_ticker") or "").strip(),
+                        parsed.candidate_time_utc,
+                    )
+                ].append((market, parsed))
+            elif parsed.issue:
+                invalid_count += parsed.issue == "invalid_candidate_value"
+                sentinel_count += parsed.issue == "sentinel_timestamp"
+
+        for (event_ticker, _), members in sorted(occurrence_groups.items()):
+            members.sort(
+                key=lambda item: str(
+                    item[0].get("ticker") or item[0].get("market_id") or ""
+                )
+            )
+            representative, _ = members[0]
+            source_references = [
+                str(
+                    row.get("_first_supporting_market_ticker")
+                    or row.get("ticker")
+                    or row.get("market_id")
+                    or ""
+                ).strip()
+                for row, _ in members
+            ]
+            last_source_references = [
+                str(
+                    row.get("_last_supporting_market_ticker")
+                    or row.get("ticker")
+                    or row.get("market_id")
+                    or ""
+                ).strip()
+                for row, _ in members
+            ]
+            supporting_source_count = sum(
+                int(row.get("_supporting_source_count") or 1) for row, _ in members
+            )
+            reference_hash = hashlib.sha256(
+                canonical_json(
+                    {
+                        "family_id": identity[0],
+                        "family_id_source": identity[1],
+                        "event_ticker": event_ticker,
+                        "candidate_time_utc": members[0][1].candidate_time_utc,
+                    }
+                )
+            ).hexdigest()
             candidate, issue = _candidate(
                 identity,
-                event_ticker=str(market.get("event_ticker") or "").strip(),
+                event_ticker=event_ticker,
                 source_type="market_occurrence_datetime",
-                original_value=value,
+                original_value=min(parsed.original_value for _, parsed in members),
                 allow_date_only=False,
                 potential_source="verified_occurrence_datetime",
-                title=str(market.get("title") or ""),
-                reference=f"market:{str(market.get('ticker') or market.get('market_id') or '').strip()}",
-                source_identity=str(market.get("ticker") or market.get("market_id") or "").strip(),
+                title=str(representative.get("title") or ""),
+                reference=f"market_occurrence_group:{reference_hash}",
+                source_identity="market_occurrence_group",
                 context={
-                    key: market.get(key, "")
+                    key: representative.get(key, "")
                     for key in (
-                        "ticker", "event_ticker", "title", "subtitle",
-                        "rules_primary", "rules_secondary",
+                        "ticker",
+                        "event_ticker",
+                        "title",
+                        "subtitle",
+                        "rules_primary",
+                        "rules_secondary",
                     )
+                }
+                | {
+                    "supporting_market_count": supporting_source_count,
+                    "first_supporting_market_ticker": min(source_references),
+                    "last_supporting_market_ticker": max(last_source_references),
                 },
                 rules=rules,
+                supporting_source_count=supporting_source_count,
             )
             if candidate:
                 family_candidates.append(candidate)
@@ -347,18 +526,24 @@ def build_anchor_evidence(
             event = events_by_ticker.get(ticker)
             if event is not None:
                 candidate, issue = _candidate(
-                    identity, event_ticker=ticker, source_type="event_strike_date",
-                    original_value=event.get("strike_date"), allow_date_only=True,
+                    identity,
+                    event_ticker=ticker,
+                    source_type="event_strike_date",
+                    original_value=event.get("strike_date"),
+                    allow_date_only=True,
                     potential_source="validated_strike_date",
                     title=str(event.get("title") or ""),
-                    reference=f"event:{ticker}", source_identity=ticker,
+                    reference=f"event:{ticker}",
+                    source_identity=ticker,
                     context={
                         "event_title": event.get("title", ""),
                         "sub_title": event.get("sub_title", ""),
                         "category": event.get("category", ""),
                         "series_ticker": event.get("series_ticker", ""),
                         "strike_period": event.get("strike_period", ""),
-                        "settlement_sources_json": event.get("settlement_sources_json", ""),
+                        "settlement_sources_json": event.get(
+                            "settlement_sources_json", ""
+                        ),
                     },
                     rules=rules,
                 )
@@ -377,7 +562,8 @@ def build_anchor_evidence(
             ):
                 milestone_id = str(milestone.get("milestone_id") or "").strip()
                 candidate, issue = _candidate(
-                    identity, event_ticker=ticker,
+                    identity,
+                    event_ticker=ticker,
                     source_type="event_milestone_start_date",
                     original_value=milestone.get("milestone_start_date"),
                     allow_date_only=False,
@@ -388,9 +574,13 @@ def build_anchor_evidence(
                     context={
                         key: milestone.get(key, "")
                         for key in (
-                            "milestone_id", "milestone_title", "milestone_category",
-                            "milestone_type", "association_type",
-                            "milestone_source_id", "milestone_source_ids_json",
+                            "milestone_id",
+                            "milestone_title",
+                            "milestone_category",
+                            "milestone_type",
+                            "association_type",
+                            "milestone_source_id",
+                            "milestone_source_ids_json",
                             "milestone_details_json",
                         )
                     },
@@ -415,17 +605,21 @@ def build_anchor_evidence(
         family_candidates = sorted(
             unique_candidates.values(),
             key=lambda row: (
-                row["family_id_source"], row["family_id"],
+                row["family_id_source"],
+                row["family_id"],
                 row["candidate_source_type"],
                 row["candidate_time_utc"] or row["candidate_date"],
                 row["candidate_id"],
             ),
         )
         evidence.extend(family_candidates)
-        exact_times = sorted({
-            row["candidate_time_utc"] for row in family_candidates
-            if row["candidate_precision"] == "exact_timestamp"
-        })
+        exact_times = sorted(
+            {
+                row["candidate_time_utc"]
+                for row in family_candidates
+                if row["candidate_precision"] == "exact_timestamp"
+            }
+        )
         date_only_count = sum(
             row["candidate_precision"] == "date_only" for row in family_candidates
         )
@@ -438,83 +632,136 @@ def build_anchor_evidence(
         invalid_total += invalid_count
         sentinel_total += sentinel_count
         representative_title = next(
-            (str(row.get("title") or "") for row in family_markets if row.get("title")), ""
+            (
+                str(row.get("_family_representative_title") or row.get("title") or "")
+                for row in family_markets
+                if row.get("_family_representative_title") or row.get("title")
+            ),
+            "",
         )
         category = next(
             (
                 str(events_by_ticker[ticker].get("category") or "")
                 for ticker in event_tickers
-                if ticker in events_by_ticker and events_by_ticker[ticker].get("category")
+                if ticker in events_by_ticker
+                and events_by_ticker[ticker].get("category")
             ),
             "",
         )
         review_reason = _review_reason(
-            multiple_events=multiple_events, missing_event=missing_event,
-            conflicting_times=conflicting, candidate_count=len(family_candidates),
+            multiple_events=multiple_events,
+            missing_event=missing_event,
+            conflicting_times=conflicting,
+            candidate_count=len(family_candidates),
             date_only_count=date_only_count,
         )
-        family_reviews.append({
-            "family_id": identity[0],
-            "family_id_source": identity[1],
-            "market_count": len(family_markets),
-            "event_tickers_json": canonical_json(event_tickers).decode("utf-8"),
-            "representative_title": representative_title,
-            "category": category,
-            "first_market_open_time": _first_open_time(family_markets),
-            "candidate_count": len(family_candidates),
-            "exact_timestamp_candidate_count": len(family_candidates) - date_only_count,
-            "date_only_candidate_count": date_only_count,
-            "occurrence_candidate_count": sum(
-                row["candidate_source_type"] == "market_occurrence_datetime"
-                for row in family_candidates
-            ),
-            "strike_date_candidate_count": sum(
-                row["candidate_source_type"] == "event_strike_date"
-                for row in family_candidates
-            ),
-            "milestone_start_candidate_count": sum(
-                row["candidate_source_type"] == "event_milestone_start_date"
-                for row in family_candidates
-            ),
-            "distinct_exact_candidate_times_json": canonical_json(exact_times).decode("utf-8"),
-            "has_conflicting_exact_candidate_times": str(conflicting).lower(),
-            "has_multiple_event_tickers": str(multiple_events).lower(),
-            "missing_event_metadata": str(missing_event).lower(),
-            "invalid_candidate_value_count": invalid_count,
-            "sentinel_timestamp_count": sentinel_count,
-            "review_status": "needs_review",
-            "review_reason": review_reason,
-            "candidate_ids_json": canonical_json(
-                [row["candidate_id"] for row in family_candidates]
-            ).decode("utf-8"),
-        })
-        decisions.append({
-            "family_id": identity[0],
-            "family_id_source": identity[1],
-            "verification_status": "needs_review",
-            "verified_anchor_time": "",
-            "verified_anchor_source": "",
-            "timing_structure": "",
-            "evidence_reference": "",
-            "review_note": "Review anchor_family_review.csv and anchor_evidence.csv",
-        })
+        family_reviews.append(
+            {
+                "family_id": identity[0],
+                "family_id_source": identity[1],
+                "market_count": max(
+                    (
+                        int(row.get("_family_market_count") or 0)
+                        for row in family_markets
+                    ),
+                    default=0,
+                )
+                or len(family_markets),
+                "event_tickers_json": canonical_json(event_tickers).decode("utf-8"),
+                "representative_title": representative_title,
+                "category": category,
+                "first_market_open_time": next(
+                    (
+                        str(row.get("_family_first_market_open_time") or "")
+                        for row in family_markets
+                        if row.get("_family_first_market_open_time")
+                    ),
+                    _first_open_time(family_markets),
+                ),
+                "candidate_count": len(family_candidates),
+                "exact_timestamp_candidate_count": len(family_candidates)
+                - date_only_count,
+                "date_only_candidate_count": date_only_count,
+                "occurrence_candidate_count": sum(
+                    row["candidate_source_type"] == "market_occurrence_datetime"
+                    for row in family_candidates
+                ),
+                "strike_date_candidate_count": sum(
+                    row["candidate_source_type"] == "event_strike_date"
+                    for row in family_candidates
+                ),
+                "milestone_start_candidate_count": sum(
+                    row["candidate_source_type"] == "event_milestone_start_date"
+                    for row in family_candidates
+                ),
+                "distinct_exact_candidate_times_json": canonical_json(
+                    exact_times
+                ).decode("utf-8"),
+                "has_conflicting_exact_candidate_times": str(conflicting).lower(),
+                "has_multiple_event_tickers": str(multiple_events).lower(),
+                "missing_event_metadata": str(missing_event).lower(),
+                "invalid_candidate_value_count": invalid_count,
+                "sentinel_timestamp_count": sentinel_count,
+                "review_status": "needs_review",
+                "review_reason": review_reason,
+                "candidate_ids_json": canonical_json(
+                    [row["candidate_id"] for row in family_candidates]
+                ).decode("utf-8"),
+            }
+        )
+        decisions.append(
+            {
+                "family_id": identity[0],
+                "family_id_source": identity[1],
+                "verification_status": "needs_review",
+                "verified_anchor_time": "",
+                "verified_anchor_source": "",
+                "timing_structure": "",
+                "evidence_reference": "",
+                "review_note": "Review anchor_family_review.csv and anchor_evidence.csv",
+            }
+        )
 
+    window_status_counts = Counter(
+        str(row["analysis_window_status"]) for row in evidence
+    )
+    candidate_distribution = Counter(
+        int(row["candidate_count"]) for row in family_reviews
+    )
+    category_coverage: dict[str, dict[str, int]] = defaultdict(
+        lambda: {
+            "family_count": 0,
+            "family_with_candidate_count": 0,
+            "candidate_count": 0,
+        }
+    )
+    for row in family_reviews:
+        category = str(row.get("category") or "[uncategorized]")
+        category_coverage[category]["family_count"] += 1
+        category_coverage[category]["family_with_candidate_count"] += bool(
+            int(row["candidate_count"])
+        )
+        category_coverage[category]["candidate_count"] += int(row["candidate_count"])
     statistics = {
-        "market_count": len(market_rows),
+        "market_count": sum(int(row["market_count"]) for row in family_reviews),
         "family_count": len(grouped_markets),
-        "event_metadata_count": sum(ticker in events_by_ticker for ticker in all_market_events),
+        "event_metadata_count": sum(
+            ticker in events_by_ticker for ticker in all_market_events
+        ),
         "milestone_association_count": sum(
             len(milestones_by_event.get(ticker, ())) for ticker in all_market_events
         ),
         "candidate_count": len(evidence),
         "occurrence_candidate_count": sum(
-            row["candidate_source_type"] == "market_occurrence_datetime" for row in evidence
+            row["candidate_source_type"] == "market_occurrence_datetime"
+            for row in evidence
         ),
         "strike_date_candidate_count": sum(
             row["candidate_source_type"] == "event_strike_date" for row in evidence
         ),
         "milestone_start_candidate_count": sum(
-            row["candidate_source_type"] == "event_milestone_start_date" for row in evidence
+            row["candidate_source_type"] == "event_milestone_start_date"
+            for row in evidence
         ),
         "exact_timestamp_candidate_count": sum(
             row["candidate_precision"] == "exact_timestamp" for row in evidence
@@ -523,11 +770,37 @@ def build_anchor_evidence(
             row["candidate_precision"] == "date_only" for row in evidence
         ),
         "family_with_no_candidate_count": family_without_candidate,
+        "family_with_candidate_count": len(grouped_markets) - family_without_candidate,
         "family_with_multiple_exact_candidate_times_count": family_conflicting,
         "family_with_multiple_event_tickers_count": family_multiple_events,
         "family_missing_event_metadata_count": family_missing_event,
         "invalid_candidate_value_count": invalid_total,
         "sentinel_timestamp_count": sentinel_total,
+        "analysis_window_coverage": {
+            "inside_candidate_count": window_status_counts["inside_analysis_window"],
+            "outside_candidate_count": sum(
+                window_status_counts[name]
+                for name in (
+                    "before_analysis_window",
+                    "at_or_after_analysis_window",
+                    "date_only_outside_analysis_window",
+                )
+            ),
+            "overlapping_candidate_count": window_status_counts[
+                "date_only_overlaps_analysis_window"
+            ],
+            "detailed_status_counts": dict(sorted(window_status_counts.items())),
+        },
+        "family_review_status_counts": {"needs_review": len(family_reviews)},
+        "candidate_review_status_counts": {"needs_review": len(evidence)},
+        "decision_verification_status_counts": {"needs_review": len(decisions)},
+        "candidate_count_distribution": {
+            str(count): frequency
+            for count, frequency in sorted(candidate_distribution.items())
+        },
+        "category_coverage": {
+            category: values for category, values in sorted(category_coverage.items())
+        },
     }
     return EvidenceBuild(
         tuple(evidence), tuple(family_reviews), tuple(decisions), statistics

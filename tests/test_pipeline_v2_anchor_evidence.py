@@ -17,8 +17,12 @@ CONFIG = Path(__file__).parents[1] / "configs" / "pipeline_v2.toml"
 
 def market(**overrides):
     row = {
-        "ticker": "M1", "family_id": "F1", "family_id_source": "source_a",
-        "event_ticker": "E1", "title": "Market", "market_open_time": "2025-06-01T00:00:00Z",
+        "ticker": "M1",
+        "family_id": "F1",
+        "family_id_source": "source_a",
+        "event_ticker": "E1",
+        "title": "Market",
+        "market_open_time": "2025-06-01T00:00:00Z",
         "occurrence_datetime": "2025-08-01T12:00:00-04:00",
     }
     row.update(overrides)
@@ -27,7 +31,9 @@ def market(**overrides):
 
 def event(**overrides):
     row = {
-        "event_ticker": "E1", "title": "Event", "category": "Sports",
+        "event_ticker": "E1",
+        "title": "Event",
+        "category": "Sports",
         "strike_date": "2025-08-01",
     }
     row.update(overrides)
@@ -36,7 +42,9 @@ def event(**overrides):
 
 def milestone(**overrides):
     row = {
-        "event_ticker": "E1", "milestone_id": "MS1", "milestone_title": "Start",
+        "event_ticker": "E1",
+        "milestone_id": "MS1",
+        "milestone_title": "Start",
         "milestone_start_date": "2025-08-01T16:00:00Z",
         "milestone_end_date": "2025-08-01T18:00:00Z",
         "association_type": "primary_event_tickers",
@@ -66,7 +74,13 @@ def test_candidate_timestamp_and_date_precision():
 
 @pytest.mark.parametrize(
     "value",
-    ["bad", "2025-08-01T12:00:00", "2025-02-30", " 2025-08-01", "2025-08-01T12:00:00Z "],
+    [
+        "bad",
+        "2025-08-01T12:00:00",
+        "2025-02-30",
+        " 2025-08-01",
+        "2025-08-01T12:00:00Z ",
+    ],
 )
 def test_invalid_values_are_not_repaired(value):
     parsed = parse_candidate_value(value, allow_date_only=True)
@@ -79,7 +93,10 @@ def test_year_one_is_sentinel_not_candidate():
     assert not parsed.valid
     assert parsed.issue == "sentinel_timestamp"
     built = build(markets=[market(occurrence_datetime="0001-01-01T00:00:00Z")])
-    assert all(row["candidate_source_type"] != "market_occurrence_datetime" for row in built.evidence_rows)
+    assert all(
+        row["candidate_source_type"] != "market_occurrence_datetime"
+        for row in built.evidence_rows
+    )
     assert built.statistics["sentinel_timestamp_count"] == 1
 
 
@@ -99,7 +116,8 @@ def test_aware_year_one_offsets_are_sentinels_without_conversion_crash(value):
 
 
 @pytest.mark.parametrize(
-    "value", ["0001-01-01T00:00:00", "0000-01-01T00:00:00Z", "9999-12-31T23:59:59-14:00"]
+    "value",
+    ["0001-01-01T00:00:00", "0000-01-01T00:00:00Z", "9999-12-31T23:59:59-14:00"],
 )
 def test_naive_year_one_and_range_invalid_values_are_invalid(value):
     parsed = parse_candidate_value(value, allow_date_only=False)
@@ -116,27 +134,44 @@ def test_all_three_allowed_candidate_sources_and_window_status():
     built = build()
     by_type = {row["candidate_source_type"]: row for row in built.evidence_rows}
     assert set(by_type) == {
-        "market_occurrence_datetime", "event_strike_date",
+        "market_occurrence_datetime",
+        "event_strike_date",
         "event_milestone_start_date",
     }
-    assert by_type["market_occurrence_datetime"]["candidate_time_utc"] == "2025-08-01T16:00:00Z"
-    assert by_type["event_strike_date"]["analysis_window_status"] == "date_only_unknown"
-    assert by_type["event_milestone_start_date"]["analysis_window_status"] == "inside_analysis_window"
+    assert (
+        by_type["market_occurrence_datetime"]["candidate_time_utc"]
+        == "2025-08-01T16:00:00Z"
+    )
+    assert (
+        by_type["event_strike_date"]["analysis_window_status"]
+        == "date_only_overlaps_analysis_window"
+    )
+    assert (
+        by_type["event_milestone_start_date"]["analysis_window_status"]
+        == "inside_analysis_window"
+    )
     assert {row["review_status"] for row in built.evidence_rows} == {"needs_review"}
 
 
 def test_forbidden_and_update_timestamps_never_become_candidates():
     built = build(
-        markets=[market(
-            occurrence_datetime="", market_open_time="2025-08-01T01:00:00Z",
-            close_time="2025-08-01T02:00:00Z", expiration_time="2025-08-01T03:00:00Z",
-            diagnostic_settlement_ts="2025-08-01T04:00:00Z",
-        )],
+        markets=[
+            market(
+                occurrence_datetime="",
+                market_open_time="2025-08-01T01:00:00Z",
+                close_time="2025-08-01T02:00:00Z",
+                expiration_time="2025-08-01T03:00:00Z",
+                diagnostic_settlement_ts="2025-08-01T04:00:00Z",
+            )
+        ],
         events=[event(strike_date="", last_updated_ts="2025-08-01T05:00:00Z")],
-        milestones=[milestone(
-            milestone_start_date="", milestone_end_date="2025-08-01T06:00:00Z",
-            milestone_last_updated_ts="2025-08-01T07:00:00Z",
-        )],
+        milestones=[
+            milestone(
+                milestone_start_date="",
+                milestone_end_date="2025-08-01T06:00:00Z",
+                milestone_last_updated_ts="2025-08-01T07:00:00Z",
+            )
+        ],
     )
     assert built.evidence_rows == ()
     assert built.family_rows[0]["review_reason"] == "no_candidate_anchor_evidence"
@@ -146,13 +181,17 @@ def test_composite_family_namespaces_are_independent():
     built = build(
         markets=[
             market(ticker="A", family_id_source="source_a"),
-            market(ticker="B", family_id_source="source_b", occurrence_datetime="2025-09-01T00:00:00Z"),
+            market(
+                ticker="B",
+                family_id_source="source_b",
+                occurrence_datetime="2025-09-01T00:00:00Z",
+            ),
         ]
     )
     assert built.statistics["family_count"] == 2
-    assert {(row["family_id"], row["family_id_source"]) for row in built.family_rows} == {
-        ("F1", "source_a"), ("F1", "source_b")
-    }
+    assert {
+        (row["family_id"], row["family_id_source"]) for row in built.family_rows
+    } == {("F1", "source_a"), ("F1", "source_b")}
     assert all(
         row["family_id_source"] in {"source_a", "source_b"}
         for row in built.evidence_rows
@@ -163,7 +202,11 @@ def test_multiple_times_and_event_tickers_are_flagged():
     built = build(
         markets=[
             market(ticker="A", event_ticker="E1"),
-            market(ticker="B", event_ticker="E2", occurrence_datetime="2025-09-01T00:00:00Z"),
+            market(
+                ticker="B",
+                event_ticker="E2",
+                occurrence_datetime="2025-09-01T00:00:00Z",
+            ),
         ],
         events=[event(), event(event_ticker="E2", strike_date="")],
         milestones=[],
@@ -195,7 +238,8 @@ def test_milestone_evidence_remains_traceable_when_event_metadata_is_missing():
 def test_repeated_equivalent_candidate_is_deduplicated():
     built = build(markets=[market(ticker="M1"), market(ticker="M1")])
     occurrence = [
-        row for row in built.evidence_rows
+        row
+        for row in built.evidence_rows
         if row["candidate_source_type"] == "market_occurrence_datetime"
     ]
     assert len(occurrence) == 1
@@ -221,7 +265,8 @@ def test_event_ticker_participates_in_candidate_identity():
         milestones=[],
     )
     occurrence = [
-        row for row in built.evidence_rows
+        row
+        for row in built.evidence_rows
         if row["candidate_source_type"] == "market_occurrence_datetime"
     ]
     assert len(occurrence) == 2

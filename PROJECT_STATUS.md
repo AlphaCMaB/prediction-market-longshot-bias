@@ -204,19 +204,49 @@ Phase 10C production acquisition completed on 2026-07-18.
   and `git diff --check` passed; the acceptance review found no remaining
   Phase 10C issue.
 
+Phase 10D candidate anchor-evidence construction completed on 2026-07-19.
+
+- The complete outcome-free Phase 10B/10C universes produced 427,090
+  composite families and 625,923 candidate rows. Every candidate, family
+  review, and verification-template row remains `needs_review`; zero anchors
+  were verified and zero outcomes were read or merged.
+- Candidate sources are frozen and exhaustive: 208,308 grouped market
+  `occurrence_datetime` candidates, 209,017 event `strike_date` candidates,
+  and 208,598 milestone-start candidates. Equivalent market occurrence values
+  within the same composite family/event are represented once with their
+  supporting-market count; no candidate value or source type is discarded.
+- Candidate availability: 418,591 families have at least one candidate and
+  8,499 have none. All 625,923 candidates are exact timestamps; the production
+  data contain zero date-only candidates, invalid candidate values, year-0001
+  sentinels, missing event metadata, or multi-event-ticker families.
+- Frozen-window diagnostics: 539,109 candidates are inside the half-open
+  analysis window, 8,196 are before it, and 78,618 are at or after its end.
+  These are availability diagnostics only and do not make a candidate
+  eligible. 198,686 families contain multiple distinct exact candidate times
+  and therefore require review.
+- Outputs are complete and untruncated under
+  `data/pipeline_v2/anchor_evidence/phase_10d/`. A deterministic no-write rerun
+  reproduced every hash and left all file sizes and modification times
+  unchanged.
+- Final acceptance: 118 focused tests and the complete 640-test offline suite
+  passed. Compilation, imports, scoped pyflakes, Black, TOML validation, and
+  `git diff --check` passed.
+
 ## Critical path
 
-1. Build anchor evidence from the validated outcome-free market and event
-   universes without automatically verifying any timestamp.
-2. Conduct the separate review/verification handoff.
+1. Conduct the separate human or otherwise approved family-level review of
+   the Phase 10D candidate evidence; populate decisions without consulting
+   outcomes.
+2. Apply and validate the reviewed verification decisions. Unreviewed and
+   rejected families remain ineligible.
 3. Construct horizons and targets, acquire pre-target prices, freeze sample
    membership, and merge outcomes last.
 
 ## Current resource state
 
 - Repository size: approximately 608 MiB.
-- Available filesystem space: 101,689,225,216 bytes (94.71 GiB) after Phase
-  10C final validation, 15,789,879,296 bytes above the safety floor.
+- Available filesystem space: 95,696,416,768 bytes (89.12 GiB) after Phase
+  10D final validation, 9,797,070,848 bytes above the safety floor.
 - Safety floor: stop before available space falls below 80 GiB.
 - Default raw acquisition budget: at most 5 GiB; any larger production run
   requires explicit approval.
@@ -228,3 +258,6 @@ Phase 10C production acquisition completed on 2026-07-18.
   guarded bytes, 454 valid partition commits, and one valid final merge commit.
 - Shared guarded namespace after Phase 10C: 3,972,267,951 bytes (3.70 GiB) of
   the 5 GiB ceiling. Phase 10C contributes 323,776,215 file bytes locally.
+- Shared generated namespace after Phase 10D: 5,131,698,784 bytes of the 5 GiB
+  ceiling, leaving 237,010,336 bytes. Phase 10D contributes 1,159,430,833
+  bytes across four ignored local artifacts.

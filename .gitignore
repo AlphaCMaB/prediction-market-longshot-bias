@@ -21,6 +21,7 @@ __pycache__/
 data/raw/
 data/processed/
 data/pipeline_v2/market_acquisition/
+data/pipeline_v2/anchor_evidence/
 
 # Python cache
 __pycache__/

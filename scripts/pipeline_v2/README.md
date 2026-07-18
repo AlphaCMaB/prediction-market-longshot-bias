@@ -312,18 +312,32 @@ select an anchor. Results, settlement values and times, and market close or
 expiration times remain quarantined. The Phase 9A
 `apply_anchor_verification` handoff is still mandatory before eligibility.
 
-## Phase 9B-B: family anchor-evidence review
+## Phase 10D: family anchor-evidence review
 
 Build deterministic review artifacts in module form:
 
 ```console
 python -m scripts.pipeline_v2.build_kalshi_anchor_evidence \
-  --market-metadata outputs/v2/market_universe/market_metadata.csv \
-  --event-metadata data/raw/kalshi/event_metadata/event_metadata.csv \
-  --event-milestones data/raw/kalshi/event_metadata/event_milestones.csv \
-  --output-root outputs/v2/anchor_evidence \
+  --market-metadata data/pipeline_v2/market_acquisition/partitioned/merged_universes/6f8aa42abec876d3aa1f6336/market_metadata.csv.gz \
+  --event-metadata data/pipeline_v2/market_acquisition/partitioned/event_metadata_acquisition/merged_event_universes/69f1b1277bdfdbd530834fe6/event_metadata.csv.gz \
+  --event-milestones data/pipeline_v2/market_acquisition/partitioned/event_metadata_acquisition/merged_event_universes/69f1b1277bdfdbd530834fe6/event_milestones.csv.gz \
+  --output-root data/pipeline_v2/anchor_evidence/phase_10d \
+  --guard-root data/pipeline_v2 \
   --config configs/pipeline_v2.toml
 ```
+
+Production-sized inputs must also be pinned with the three approved input-
+artifact SHA-256 values recorded in `DATA_RUNBOOK.md`. `--dry-run` performs
+the full streaming derivation and reports exact output byte and hash estimates
+without publishing files. Large market metadata is compacted to sufficient
+family-level rows while streaming; equivalent market occurrence evidence is
+represented once, with `supporting_source_count` preserving the number of
+supporting contracts.
+
+Publication is atomic and guarded by both the 5 GiB generated-namespace ceiling
+and the 80 GiB minimum-free-space floor. Re-running against an existing complete
+output fully re-derives and compares the report, sizes, and hashes without
+rewriting any file.
 
 The review flow is:
 
@@ -345,6 +359,14 @@ times, settlement metadata, and outcomes are not anchor candidates. The
 generated decisions template leaves every composite family at `needs_review`
 with all verified fields blank, so the explicit Phase 9A verification handoff
 remains mandatory.
+
+The completed production checkpoint contains 427,090 composite families and
+625,923 candidates. Of those families, 418,591 have at least one candidate and
+8,499 have none; 198,686 have multiple distinct exact candidate times requiring
+review. All 625,923 candidates remain `needs_review`, zero anchors are verified,
+and outcomes remain unmerged. Exact sizes, hashes, and the rerun command are
+recorded in `DATA_RUNBOOK.md`. The next phase is the separate review and
+verification handoff, not horizon-price or bias estimation.
 
 ## Planned stages
 

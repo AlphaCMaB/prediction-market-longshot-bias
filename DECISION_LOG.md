@@ -227,6 +227,44 @@ verifies an anchor nor changes `StudyRules` or the analysis window. Any future
 replacement requires a new auditable scope and merge identity; Phase 10B and
 this validated Phase 10C checkpoint remain immutable.
 
+## 2026-07-19 — Group equivalent market occurrence evidence at family level
+
+Status: accepted operational representation
+
+The raw Phase 10B universe contains 3,778,206 market rows with a nonempty
+`occurrence_datetime`, but only 208,308 distinct normalized occurrence values
+within the same composite family and event ticker. Serializing one identical
+candidate per contract would repeat evidence, obscure the family-level review,
+and exceed the shared generated-data ceiling.
+
+Decision: represent each identical normalized market occurrence value once per
+`(family_id, family_id_source, event_ticker)`, while recording the number and
+first/last identifiers of supporting market sources. Different normalized
+times remain separate candidates, and repeated source identities with
+different approved context fail closed. Event strike and milestone candidates
+retain their source identities. This is lossless for candidate values and
+family conflict detection, does not select an anchor, and does not change the
+frozen methodology.
+
+## 2026-07-19 — Accept the complete Phase 10D candidate-evidence universe
+
+Status: accepted production checkpoint
+
+Phase 10D produced 625,923 unverified candidates for all 427,090 composite
+families. The outputs contain 208,308 market-occurrence, 209,017 event-strike,
+and 208,598 milestone-start candidates. All candidates are exact timestamps;
+418,591 families have evidence and 8,499 have none. There are zero missing
+event-metadata families, invalid values, sentinels, or multi-event-ticker
+families. Every review and decision row remains `needs_review`, all verified
+fields are blank, and outcomes were unavailable.
+
+Decision: freeze the four artifacts under
+`data/pipeline_v2/anchor_evidence/phase_10d/` as the production input to the
+separate review handoff. The 198,686 families with multiple distinct exact
+candidate times are review findings, not errors and not automatic exclusions.
+No candidate becomes eligible until an approved verification decision is
+applied. Phase 10D does not authorize horizon construction or outcome access.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:
