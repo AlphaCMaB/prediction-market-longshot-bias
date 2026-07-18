@@ -232,21 +232,40 @@ Phase 10D candidate anchor-evidence construction completed on 2026-07-19.
   passed. Compilation, imports, scoped pyflakes, Black, TOML validation, and
   `git diff --check` passed.
 
+Phase 10E outcome-blind audit design reached the approval checkpoint on
+2026-07-19.
+
+- Candidate patterns: 217,835 families have one exact candidate; 2,070 have
+  multiple candidates agreeing on one exact time; 198,686 have multiple
+  distinct exact times; and 8,499 have no candidate.
+- Proposed audit tiers partition all 427,090 families: Tier 1 contains 102,413
+  proposed fixed-clock/single-exact cases; Tier 2 contains 93,997 conservative
+  Sports milestone-start cases; Tier 3 contains 230,680 manual-review cases.
+- The proposed in-window pool is 189,466 families: 97,369 in Tier 1 and 92,097
+  in Tier 2. These are availability counts, not verified or eligible families.
+- A deterministic stratified audit packet contains 150 families per tier, 450
+  total, with exact-schema decision rows all left `needs_review` and every
+  verified field blank. Approval and disagreement rates are not yet observed.
+- Packet inspection identified and excluded an endogenous-subevent false
+  positive class before publication. PR1 and PR2 remain explicitly unapproved.
+- Zero outcomes, prices, close/expiration times, or settlement values were read;
+  zero anchors were verified, zero horizons were built, and zero network
+  requests were made.
+
 ## Critical path
 
-1. Conduct the separate human or otherwise approved family-level review of
-   the Phase 10D candidate evidence; populate decisions without consulting
-   outcomes.
-2. Apply and validate the reviewed verification decisions. Unreviewed and
-   rejected families remain ineligible.
-3. Construct horizons and targets, acquire pre-target prices, freeze sample
-   membership, and merge outcomes last.
+1. Complete the 450-family outcome-blind audit and independently double-review
+   the recommended 50 families per tier.
+2. Compute weighted approval/disagreement rates and false-positive diagnostics;
+   obtain explicit approval, modification, or rejection of PR1 and PR2.
+3. Only after approval, apply and validate decisions. Then construct horizons
+   and prices, freeze the pilot sample, and merge outcomes last.
 
 ## Current resource state
 
 - Repository size: approximately 608 MiB.
-- Available filesystem space: 95,696,416,768 bytes (89.12 GiB) after Phase
-  10D final validation, 9,797,070,848 bytes above the safety floor.
+- Available filesystem space: 99,062,157,312 bytes (92.26 GiB) at final Phase
+  10E design validation, 13,162,811,392 bytes above the safety floor.
 - Safety floor: stop before available space falls below 80 GiB.
 - Default raw acquisition budget: at most 5 GiB; any larger production run
   requires explicit approval.
@@ -261,3 +280,8 @@ Phase 10D candidate anchor-evidence construction completed on 2026-07-19.
 - Shared generated namespace after Phase 10D: 5,131,698,784 bytes of the 5 GiB
   ceiling, leaving 237,010,336 bytes. Phase 10D contributes 1,159,430,833
   bytes across four ignored local artifacts.
+- The canonical Phase 10E design packet adds 1,758,331 bytes. A 1,761,991-byte
+  superseded pre-acceptance packet is retained locally as
+  `phase_10e_design_rejected_v1`; no validated data was deleted.
+- Shared generated namespace after the Phase 10E design checkpoint:
+  5,135,219,106 bytes, leaving 233,490,014 bytes below the 5 GiB ceiling.

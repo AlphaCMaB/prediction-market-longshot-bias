@@ -368,6 +368,27 @@ and outcomes remain unmerged. Exact sizes, hashes, and the rerun command are
 recorded in `DATA_RUNBOOK.md`. The next phase is the separate review and
 verification handoff, not horizon-price or bias estimation.
 
+## Phase 10E: staged outcome-blind verification audit
+
+`build_phase_10e_verification_design` profiles Phase 10D evidence patterns,
+assigns proposed audit tiers, and draws a deterministic stratified review
+sample. Its outputs are a pattern table, outcome-blind CSV and Markdown review
+packets, an exact-schema blank decisions template, and a design report. The
+command and pinned production hashes are recorded in `DATA_RUNBOOK.md`.
+
+Tier and rule labels are proposals only. The builder always reports zero
+verified anchors, zero outcome merges, zero horizon prices, and zero network
+requests. Packet context is source-specific and safelisted; retrospective,
+outcome, price, close/expiration, settlement-value, and update fields are not
+published. An existing complete packet is re-derived and compared without
+rewriting it.
+
+The production design proposes 102,413 Tier 1 families, 93,997 Tier 2 families,
+and 230,680 Tier 3 families. Its audit contains 150 families per tier. No
+deterministic rule may be applied until the packet is reviewed, weighted
+approval and disagreement diagnostics are computed, and the project owner
+explicitly approves the rule.
+
 ## Planned stages
 
 ### 1. Ex-ante occurrence anchors

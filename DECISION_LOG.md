@@ -265,6 +265,29 @@ candidate times are review findings, not errors and not automatic exclusions.
 No candidate becomes eligible until an approved verification decision is
 applied. Phase 10D does not authorize horizon construction or outcome access.
 
+## 2026-07-19 — Propose staged Phase 10E verification tiers for audit
+
+Status: pending explicit approval; no rule accepted
+
+Outcome-blind Phase 10D diagnostics show 217,835 families with one exact
+candidate, 2,070 with multiple candidates agreeing on one exact time, 198,686
+with multiple distinct exact times, and 8,499 with no candidate.
+
+Proposal: audit PR1 on 102,413 single-exact families whose existing semantic
+heuristic proposes `fixed_clock`; audit PR2 on 93,997 Sports families with one
+unique official milestone-start time, conservative title/context agreement,
+and no subevent or window flag. Assign the remaining 230,680 families to Tier
+3 manual review. These labels are sampling strata only and do not verify any
+anchor.
+
+The deterministic audit contains 150 families per tier. Proposed approval
+rates remain unobserved until review, and 50 independently double-reviewed
+families per tier are recommended for disagreement measurement. An early
+packet version admitted endogenous set-level subevents into Tier 2; acceptance
+review identified the failure, the rule was tightened, and that version was
+retained under `phase_10e_design_rejected_v1` rather than deleted. PR1 and PR2
+must not be applied without explicit project-owner approval.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:

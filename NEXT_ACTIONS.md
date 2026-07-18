@@ -1,6 +1,6 @@
 # Next Actions
 
-Last updated: 2026-07-18
+Last updated: 2026-07-19
 
 ## Phase 10A-R — completed
 
@@ -37,15 +37,18 @@ rows remain `needs_review`; verified fields are blank, zero anchors were
 verified, and zero outcomes were read. All four required outputs passed
 deterministic rerun, quarantine, schema, hash, and storage validation.
 
-## Phase 10E — exact next phase
+## Phase 10E — design checkpoint complete; approval pending
 
-1. Review the Phase 10D family and candidate evidence without outcome access.
-2. Populate the exact verification-decision handoff only through a human or
-   separately approved review. Do not infer verification from API presence.
-3. Apply and validate the reviewed decisions, leaving `needs_review`, rejected,
-   ambiguous, and unmatched families ineligible.
-4. Stop before horizon and price construction until the verified-anchor handoff
-   is complete and accepted.
+The outcome-blind pattern analysis, proposed tiers, reproducible 450-family
+audit sample, human-readable packet, blank exact-schema decision template, and
+primary pilot plan are complete. PR1 and PR2 are proposals, not approved rules.
+
+1. Review the 150 sampled families in each tier without outcome or price access.
+2. Independently double-review 50 families per tier and calculate weighted
+   approval, disagreement, and failure-mode rates.
+3. Request explicit approval, modification, or rejection of each proposed rule.
+4. Do not apply decisions, construct horizons, acquire prices, or access outcomes
+   until that approval is recorded.
 
 ## Approval gates
 

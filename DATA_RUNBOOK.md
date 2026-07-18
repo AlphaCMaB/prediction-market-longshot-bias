@@ -404,3 +404,56 @@ separately controlled review workflow, preserve the exact composite-family
 schema, and do not consult outcomes. Phase 10D artifacts are evidence and
 review inputs only; they do not authorize anchor verification, horizon-price
 construction, or bias estimation.
+
+## Phase 10E: outcome-blind verification audit design
+
+The command is local, reads only approved Phase 10D/10C projections, and makes
+no network request:
+
+```console
+python -m scripts.pipeline_v2.build_phase_10e_verification_design \
+  --family-review data/pipeline_v2/anchor_evidence/phase_10d/anchor_family_review.csv \
+  --anchor-evidence data/pipeline_v2/anchor_evidence/phase_10d/anchor_evidence.csv \
+  --event-metadata data/pipeline_v2/market_acquisition/partitioned/event_metadata_acquisition/merged_event_universes/69f1b1277bdfdbd530834fe6/event_metadata.csv.gz \
+  --output-root data/pipeline_v2/anchor_evidence/phase_10e_design \
+  --guard-root data/pipeline_v2 \
+  --config configs/pipeline_v2.toml \
+  --audit-per-tier 150 \
+  --expected-family-sha256 794178aced9711498f57b77fd74ff61412185eb4ee5f76aeafc275aa501e0795 \
+  --expected-evidence-sha256 8bd614d88c139aa02bc5fbfeb12dd9c2287cd98766a7f029d084347b6afd1e10 \
+  --expected-event-sha256 ef97e0093234e7b963f739d7ddd435691b5f8580e6551f398754d1b95807f3bf
+```
+
+The audit seed is `phase-10e-outcome-blind-audit-v1`. Sampling is deterministic
+and stratified, and every packet row records its stratum population, allocation,
+and inverse weight. The packet projection excludes outcome, result, settlement,
+close/expiration, price, and update fields. The decisions template preserves
+the exact frozen verification schema and leaves all 450 rows `needs_review`
+with verified fields blank. Re-running the command must reproduce every byte
+without modifying the published directory.
+
+### Phase 10E design checkpoint — 2026-07-19
+
+- Tier counts: 102,413 Tier 1; 93,997 Tier 2; 230,680 Tier 3.
+- Proposed in-window pool: 189,466 families (97,369 Tier 1; 92,097 Tier 2).
+- Audit: 150 families per tier; 450 total. Approval and disagreement rates are
+  not observed until the packet is reviewed.
+- `phase_10e_pattern_counts.csv`: 6,305 bytes; SHA-256
+  `88ac7886660b5f8fa69d13d823e6687501f1f3788bdc4d5c2918432252288df6`.
+- `phase_10e_audit_review_packet.csv`: 814,765 bytes; SHA-256
+  `89fc0b28be4365c78558d1aed1d77578d5d379a891c4664bb75e62bb411ed05b`.
+- `phase_10e_audit_review_packet.md`: 901,521 bytes; SHA-256
+  `fd63b71738659c233a9905ab1b4ff84cecd4681f311d75f848f15a3e8f46adcb`.
+- `phase_10e_audit_decisions_template.csv`: 27,528 bytes; SHA-256
+  `d83a0ca8515c932a48f2c2033cde2b9c5293f1b8a466194ff8b694a47da2cc06`.
+- `phase_10e_design_report.json`: 8,212 bytes; SHA-256
+  `f06c381154064be0ce1b0fe615f2390e46b05fec0e9ce1641d5ad7347d195257`.
+- Canonical packet bytes: 1,758,331. A superseded 1,761,991-byte packet is
+  retained under `phase_10e_design_rejected_v1` because no generated evidence
+  was deleted.
+- Shared generated namespace: 5,135,219,106 bytes, leaving 233,490,014 bytes
+  below the 5 GiB ceiling. Free disk at final validation: 99,062,157,312 bytes.
+
+PR1 and PR2 remain proposed and unapproved. Do not run
+`apply_anchor_verification`, construct horizons, read prices, or access outcomes
+from this checkpoint.

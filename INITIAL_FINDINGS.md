@@ -1,6 +1,6 @@
 # Initial Findings Memo: Prediction Market Longshot Bias Project
 
-**Status:** Preliminary data and methodology findings through Phase 10D
+**Status:** Preliminary data and methodology findings through the Phase 10E design checkpoint
 
 **Scope:** Kalshi only
 
@@ -99,6 +99,8 @@ The project also cannot interpret settlement outcomes, state the final analysis-
 ## 9. Phase 10D findings and planned next analysis
 
 Phase 10D completed candidate construction, not verification. Allowed evidence exists for most families, three source types contribute at similar scale, and many families present competing exact times. It does not determine which candidate—if any—is the relevant ex-ante occurrence.
+
+Phase 10E has proposed a staged, outcome-blind audit rather than reviewing all 427,090 families. The proposal assigns 102,413 families to a fixed-clock single-candidate tier, 93,997 to a conservative Sports milestone-start tier, and 230,680 to manual review. A reproducible packet samples 150 families per tier. These labels are not verified anchors: both proposed rules remain unapproved, and approval and reviewer-disagreement rates are **[TO BE COMPUTED AFTER REVIEW]**.
 
 The next phase is a separate human or explicitly approved review of the immutable evidence and blank verification template. Reviewers must decide whether evidence supports an allowed anchor source and timing structure, while recording provenance and leaving unresolved families quarantined. Only after reviewed decisions are applied and validated may later stages construct eligible horizons, target timestamps, and at-or-before prices. Sample membership and research features must be frozen before outcomes are merged.
 
