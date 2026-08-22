@@ -37,37 +37,28 @@ rows remain `needs_review`; verified fields are blank, zero anchors were
 verified, and zero outcomes were read. All four required outputs passed
 deterministic rerun, quarantine, schema, hash, and storage validation.
 
-## Phase 10E — AI-assisted review imported; fresh human validation pending
+## Phase 10E — independent human validation complete; rule approval pending
 
-The finalized 165-case table is an AI-assisted outcome-blind review. It has
-been hash-pinned, validated, imported separately, and diagnosed without
-changing any production verification status. PR1 and PR2 remain proposals,
-not approved rules.
+The finalized AI-assisted review and the fresh 100-case independent human
+validation are complete. The independent reviewer returned 95 approvals, five
+rejections, zero uncertainty, and high confidence for all cases. Eight
+AI-assisted/human disagreements are preserved in the explicit queue. PR1 and
+PR2 remain proposals, not approved rules.
 
-1. Independently review the fresh blinded 100-case packet (50 PR1, 50 PR2)
-   without outcomes, post-event information, post-anchor prices, or prior AI
-   decisions.
-2. Calculate independent-human approval, confirmed false-positive,
-   uncertainty, and AI-assisted-versus-human disagreement rates.
-3. Request explicit approval, modification, or rejection of each proposed rule.
-4. Do not apply decisions, construct horizons, acquire prices, or access outcomes
+1. Review the outcome-blind rule recommendations and eight-case disagreement
+   queue.
+2. Explicitly approve, modify, or reject PR1 and PR2 separately.
+3. Do not apply decisions, construct horizons, acquire prices, or access outcomes
    until that approval is recorded.
 
-Start or resume the local review from the repository root:
+Review the completed outputs:
 
 ```console
-python -m scripts.pipeline_v2.review_phase_10e_independent_validation \
-  --packet data/pipeline_v2/anchor_evidence/phase_10e_ai_assisted_review/phase_10e_independent_human_packet.csv \
-  --manifest data/pipeline_v2/anchor_evidence/phase_10e_ai_assisted_review/phase_10e_independent_human_sample_manifest.csv \
-  --ai-assisted-decisions data/pipeline_v2/anchor_evidence/phase_10e_ai_assisted_review/phase_10e_ai_assisted_decisions.csv \
-  --expected-packet-sha256 99269b00ac01dec9e55ea1eb80884a629fb8131ea13d6485b1f5b055f134015c \
-  --expected-manifest-sha256 60b8fab36351b1e59114879a65fb830cc1f6e09669dd7a50f87a32b5c3de6575
+ls data/pipeline_v2/anchor_evidence/phase_10e_independent_human_validation
 ```
 
-The command hash-validates both source packets and autosaves after every
-completed case. Use `Q` to stop safely; the next invocation resumes at the
-first incomplete case. PR1 must be modified and PR2 must be audited/tightened
-as recorded in `DECISION_LOG.md`; neither rule is approved.
+The outcome-blind recommendation is MODIFY for both rules with the exclusions
+recorded in `phase_10e_rule_recommendations.json`. Neither rule is approved.
 
 ## Approval gates
 

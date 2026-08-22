@@ -3,8 +3,9 @@
 ## Status and approval boundary
 
 Phase 10E has completed the design, sampling, recommendation-only AI first
-review, finalized 165-case AI-assisted outcome-blind review import, and fresh
-human-validation packet. The independent human validation remains at 0/100.
+review, finalized 165-case AI-assisted outcome-blind review import, fresh
+human-validation packet, and independent 100-case human review. The independent
+review is complete, but explicit rule approval remains pending.
 The project has not
 verified an anchor, applied a verification rule, constructed a horizon price,
 read an outcome, or estimated favorite–longshot bias. The labels below are
@@ -106,6 +107,19 @@ remaining burden is approximately 6.67 reviewer-hours. The local interface
 atomically autosaves, resumes safely, and leaves the frozen verification
 projection at `needs_review`.
 
+The completed independent review records 47 PR1 approvals and three rejections,
+plus 48 PR2 approvals and two rejections. Weighted approval is 97.17% for PR1
+and 99.96% for PR2; weighted confirmed false-positive rates are 2.83% and
+0.04%. AI-assisted/human disagreement is 3/50 for PR1 and 5/50 for PR2, or
+2.82% and 1.27% weighted. All eight disagreements remain unchanged in the
+quarantined comparison queue.
+
+The reviewer used no uncertain decisions and assigned high confidence to all
+100 cases. This response pattern may reflect reviewer style and compress
+expressed uncertainty, so it is a reporting limitation. Approximate weighted
+Wilson intervals use Kish effective sample sizes and remain conditional on the
+upstream Phase 10E audit sample.
+
 Reviewing the full universe under the same assumptions would require about
 3,413.77 Tier 1 hours, 4,699.85 Tier 2 hours, and 23,068 Tier 3 hours—31,181.62
 hours in total. This impractical burden is the reason to audit scalable rules
@@ -196,23 +210,18 @@ observed.
 
 ## Exact path to the first preliminary bias estimate
 
-1. Complete the fresh independent outcome-blind human review of the blinded
-   100-case subset.
-2. Compute weighted approval rates, disagreement rates, reasons for rejection,
-   and category/time-specific false-positive diagnostics.
-3. Present those diagnostics for explicit approval, modification, or rejection
+1. Present the completed diagnostics for explicit approval, modification, or rejection
    of PR1 and PR2. No rule may be promoted implicitly.
-4. If approved, version the exact rule specification, apply it without outcome
+2. If approved, version the exact rule specification, apply it without outcome
    access, and validate that all other families remain `needs_review` or are
    rejected.
-5. Build the one-hour target manifest from verified families only. Then acquire
+3. Build the one-hour target manifest from verified families only. Then acquire
    or extract at-or-before prices with the 15-minute staleness ceiling and
    report price-matching attrition by tier, category, month, and family size.
-6. Select and freeze the 2,000-family diagnostic pilot and all research
+4. Select and freeze the 2,000-family diagnostic pilot and all research
    features before opening quarantined outcome data.
-7. Merge outcomes last, validate binary labels, and produce the first
+5. Merge outcomes last, validate binary labels, and produce the first
    descriptive calibration/return estimates with family-clustered uncertainty
    and explicit category-specific results.
 
-Phase 10E stops at step 1 pending fresh human validation and project-owner
-approval.
+Phase 10E stops at step 1 pending explicit project-owner approval of each rule.

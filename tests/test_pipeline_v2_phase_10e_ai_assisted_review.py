@@ -19,10 +19,13 @@ from scripts.pipeline_v2.phase_10e_ai_assisted_review import (
 from scripts.pipeline_v2.phase_10e_independent_validation import (
     INDEPENDENT_DECISION_FIELDS,
     atomic_save_independent_decisions,
+    build_disagreement_queue,
     build_independent_decision,
     build_independent_validation_report,
+    build_rule_recommendations,
     load_independent_decisions,
     load_validation_sources,
+    parse_independent_review_texts,
     validate_independent_decision,
 )
 from scripts.pipeline_v2.review_phase_10e_independent_validation import render_case
@@ -382,3 +385,103 @@ def test_complete_independent_report_separates_human_and_ai_assisted(tmp_path):
         assert "weighted_human_approval_rate" in values
         assert "weighted_confirmed_false_positive_rate" in values
         assert "weighted_ai_assisted_human_disagreement_rate" in values
+        assert "confidence_intervals" in values
+        assert "ai_assisted_vs_independent_human" in values
+
+
+def test_completed_text_review_preserves_literal_vocab_and_reports_disagreement(
+    tmp_path,
+):
+    imported, packets, manifests, packet_hash, manifest_hash = validation_sources(
+        tmp_path
+    )
+    reject_numbers = {19, 28, 31, 53, 98}
+    sources = [tmp_path / "review-1.txt", tmp_path / "review-2.txt"]
+    blocks = []
+    for number, packet in enumerate(packets, 1):
+        rejected = number in reject_numbers
+        flag = (
+            "timestamp_mismatch"
+            if number == 19
+            else (
+                "unrelated_milestone"
+                if number in {28, 31}
+                else "settlement_timing" if number in {53, 98} else "none"
+            )
+        )
+        timing = (
+            "neither/uncertain"
+            if rejected
+            else (
+                "fixed_clock"
+                if packet["proposed_tier"] == "tier_1"
+                else "scheduled_event_start"
+            )
+        )
+        blocks.append(
+            "\n".join(
+                (
+                    packet["validation_id"],
+                    "",
+                    f"A / R / U: {'R' if rejected else 'A'}",
+                    f"Timing structure: {timing}",
+                    f"Candidate is relevant: {'no' if rejected else 'yes'}",
+                    "Confidence: high",
+                    f"Ambiguity flag: {flag}",
+                    "Rationale: Reviewer-supplied rationale remains unchanged.",
+                )
+            )
+        )
+    source_hashes = []
+    for source, values in zip(sources, (blocks[:50], blocks[50:])):
+        source.write_text("\n\n".join(values) + "\n", encoding="utf-8")
+        source_hashes.append(hashlib.sha256(source.read_bytes()).hexdigest())
+    decisions, validation = parse_independent_review_texts(
+        sources,
+        expected_source_sha256=source_hashes,
+        packets=packets,
+        packet_sha256=packet_hash,
+        manifest_sha256=manifest_hash,
+    )
+    assert validation["decision_counts"] == {
+        "A_approve": 95,
+        "R_reject": 5,
+        "U_uncertain": 0,
+    }
+    assert {row["confidence"] for row in decisions} == {"high"}
+    rejected = {
+        int(row["validation_id"].rsplit("-", 1)[1]): row
+        for row in decisions
+        if row["independent_human_decision"] == "reject"
+    }
+    assert rejected[19]["recommended_timing_structure"] == "neither/uncertain"
+    assert rejected[19]["ambiguity_flags_json"] == '["timestamp_mismatch"]'
+    assert rejected[28]["ambiguity_flags_json"] == '["unrelated_milestone"]'
+    assert rejected[53]["ambiguity_flags_json"] == '["settlement_timing"]'
+
+    report = build_independent_validation_report(
+        packets,
+        manifests,
+        decisions,
+        {row["audit_id"]: row for row in imported},
+        packet_sha256=packet_hash,
+        manifest_sha256=manifest_hash,
+    )
+    assert report["reviewer_style_limitation"]["zero_uncertain_decisions"] is True
+    assert report["reviewer_style_limitation"]["all_high_confidence"] is True
+    queue = build_disagreement_queue(
+        packets, decisions, {row["audit_id"]: row for row in imported}
+    )
+    assert all(
+        row["ai_assisted_decision"] != row["independent_human_decision"]
+        for row in queue
+    )
+    recommendations = build_rule_recommendations(report)
+    assert {
+        values["recommended_decision"] for values in recommendations["rules"].values()
+    } == {"MODIFY"}
+    assert all(
+        values["approval_status"]
+        == "not_approved_pending_explicit_project_owner_decision"
+        for values in recommendations["rules"].values()
+    )

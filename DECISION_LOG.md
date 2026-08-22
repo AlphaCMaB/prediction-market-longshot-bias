@@ -354,6 +354,36 @@ the AI-assisted comparator only after all 100 decisions are complete. Neither
 rule may be promoted until those human approval, false-positive, uncertainty,
 and disagreement diagnostics are presented for explicit approval.
 
+## 2026-08-22 — Complete independent human validation and recommend rule modifications
+
+Status: independent validation complete; PR1 and PR2 not approved
+
+The independent reviewer completed all 100 blinded cases without access to AI
+recommendations, AI-assisted decisions, outcomes, settlement results,
+post-event information, or post-anchor prices. The review contains 95
+approvals, five rejections, zero uncertain decisions, and 100 high-confidence
+ratings. The literal reviewer entries are preserved exactly, including all
+eight disagreements with the AI-assisted review.
+
+PR1 has 47 approvals and three rejections; inverse-probability-weighted
+approval and false-positive rates are 97.17% and 2.83%. PR2 has 48 approvals
+and two rejections; weighted rates are 99.96% and 0.04%. Weighted disagreement
+rates are 2.82% for PR1 and 1.27% for PR2. These estimates are accompanied by
+Kish-effective-sample-size Wilson intervals conditional on the upstream audit
+sample.
+
+Recommendation: MODIFY both rules before approval. PR1 must retain exclusions
+for short-duration/horizon-existence risk, non-exact deadlines or windows,
+publication/reporting/settlement timing, multiple scheduled times, and semantic
+or timestamp mismatch. PR2 must retain exclusions for set/map/series markets,
+endogenous or conditional subevents, date mismatch, unrelated milestones,
+multiple plausible starts, and post-event settlement/reporting timestamps.
+The zero-uncertainty and all-high-confidence response pattern must be reported
+as a possible reviewer-style limitation.
+
+This recommendation does not approve or apply either rule. Every status remains
+`needs_review`; zero anchors, horizons, prices, or outcomes were opened.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:

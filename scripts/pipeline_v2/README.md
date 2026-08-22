@@ -412,6 +412,20 @@ resumes at the first unfinished case, and loads the comparator only after all
 and every anchor unapproved. Run it with `--validate-only` for a no-write
 preflight.
 
+`import_phase_10e_independent_review` imports the completed 100-case reviewer
+texts. It SHA-256-pins both reviewer sources, the blinded packet, the sampling
+manifest, and the AI-assisted comparator; requires exact 50/50 PR1/PR2
+coverage; preserves literal reviewer timing and ambiguity terms; and rejects
+missing, extra, duplicate, or malformed IDs. Publication is atomic,
+recommendation-only, and generated-data guarded.
+
+The importer emits the exact independent-human decisions, a survey-weighted
+diagnostic report with approximate Kish-Wilson confidence intervals, an
+eight-case disagreement queue, and separate MODIFY recommendations for PR1 and
+PR2. Comparator access occurs only after independent review completion. No
+output can approve a rule, verify an anchor, construct a horizon, or access an
+outcome.
+
 ## Planned stages
 
 ### 1. Ex-ante occurrence anchors
