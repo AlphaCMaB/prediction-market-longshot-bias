@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-19
+Last updated: 2026-08-22
 Branch: `methodology-v2-clean`
 
 ## Research objective
@@ -277,31 +277,42 @@ promoting either proposed rule.
   --check` passed. Repository-wide Black remains a pre-existing baseline
   failure across 64 files outside this phase's scope.
 
-The compact local human-review interface is implemented and ready, but the
-human audit has not started.
+The finalized 165-case annotation table was imported on 2026-08-22 and is
+methodologically classified as an **AI-assisted outcome-blind review**, not an
+independent human review.
 
-- The interface verifies both source-packet hashes, displays only safelisted
-  outcome-blind evidence, hides the AI recommendation during the human pass,
-  and accepts keyboard decisions, timing classifications, confidence,
-  standardized ambiguity flags, and concise rationales.
-- Each completed case is atomically autosaved to a separate ignored decisions
-  file. Resume validates the exact saved schema and detects an external file
-  change before writing. The source packets are never modified.
-- Human recommendations project into the frozen eight-column verification
-  schema only as `needs_review`, with blank verified time, source, and timing
-  fields. No production application function is called.
-- A completed 165-case review will calculate two-phase inverse-probability-
-  weighted approval, confirmed false-positive, uncertainty, AI-human
-  disagreement, category, and failure-mode diagnostics separately for PR1 and
-  PR2. The generated report will continue to mark both rules unapproved.
-- Interface acceptance: 10 focused tests and the complete 659-test offline
-  suite passed. Compilation, scoped Black and pyflakes, TOML validation,
-  production packet preflight, and `git diff --check` passed.
+- The source CSV contains exactly 165 rows and unique audit IDs and has SHA-256
+  `85153b54eb7bb7d1e136c907770aa86fae57cc404821ad081c8d67204b55fff9`.
+  Its IDs exactly match the immutable compact subset; both immutable source
+  packet hashes were revalidated before import.
+- Final decisions are 149 approvals, five rejections, and 11 uncertain. All
+  finalized correction invariants and controlled vocabularies passed.
+- PR1's unweighted approval/rejection/uncertainty rates are 93.75%/2.08%/4.17%;
+  inverse-probability-weighted rates are 97.63%/0.003%/2.37%. PR2's are
+  94.92%/3.39%/1.69% unweighted and 98.73%/0.86%/0.41% weighted. These are
+  AI-assisted diagnostics, not independent-human estimates and not rule
+  approvals.
+- Every imported status remains `needs_review`; verified anchor time and
+  source remain blank. No outcome, post-event information, price, horizon,
+  verification application, or network client was accessed.
+- A fresh deterministic validation packet contains 100 cases: 50 PR1 and 50
+  PR2. It is stratified by category and observed failure mode, excludes Tier 3
+  from rule inference, and contains no AI recommendation or AI-assisted
+  decision. The estimated burden is 6.67 hours at four minutes per case.
+- The new interface hash-pins the packet and sample manifest, atomically
+  autosaves independent-human decisions, resumes safely, and loads the
+  AI-assisted comparator only after all 100 fresh decisions are complete.
+  PR1 and PR2 remain explicitly unapproved.
+- Acceptance passed 30 focused Phase 10E tests and the complete 670-test
+  offline suite, plus compilation, scoped Black and pyflakes, TOML validation,
+  recursive outcome-quarantine inspection, deterministic rerun, production
+  packet preflight, and `git diff --check`.
 
 ## Critical path
 
-1. Complete the independent human review of the 165-case compact subset without
-   outcomes, post-event information, or post-anchor prices.
+1. Complete the fresh independent human review of the 100-case blinded packet
+   without outcomes, post-event information, post-anchor prices, or access to
+   the AI-assisted decisions.
 2. Compute human approval, AI-human disagreement, and confirmed false-positive
    diagnostics; obtain explicit approval, modification, or rejection of PR1
    and PR2.
@@ -335,7 +346,9 @@ human audit has not started.
   232,844,978 bytes below the 5 GiB ceiling.
 - Available filesystem space at first-review validation: 99,051,147,264 bytes
   (92.25 GiB), 13,151,801,344 bytes above the 80 GiB safety floor.
-- Human-interface preflight estimates at most 1,728,512 additional generated
-  bytes for decisions, atomic-save overlap, and the final report. No human
-  decision or report exists yet. Current namespace headroom remains
-  232,844,978 bytes; current free disk is 99,118,981,120 bytes.
+- The accepted AI-assisted import, diagnostics, validation packet, manifest,
+  and design report add 254,224 bytes. Two small pre-acceptance directories
+  totaling 508,717 bytes are retained rather than deleted. Shared generated
+  bytes are 5,136,627,083, leaving 232,082,037 bytes below the 5 GiB ceiling.
+  Free disk is 93,633,667,072 bytes (87.20 GiB), 7,734,321,152 bytes above the
+  floor. No fresh independent-human decision or report exists yet.

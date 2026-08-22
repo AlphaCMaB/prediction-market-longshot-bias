@@ -396,13 +396,21 @@ queue. Every output remains `needs_review`; the command cannot promote a rule
 or verify an anchor. The exact production invocation and hashes are recorded in
 `DATA_RUNBOOK.md`.
 
-`review_phase_10e_human` is the local keyboard interface for the 165-case
-independent human subset. It hash-pins both source packets, hides the AI
-recommendation until after human decisions are recorded, atomically autosaves a
-separate recommendation-only CSV, and resumes at the first unfinished case.
-Its completion report calculates weighted human and AI-human diagnostics but
-keeps PR1, PR2, and every anchor unapproved. Run it with `--validate-only` for a
-no-write production preflight.
+`import_phase_10e_ai_assisted_review` imports the finalized compact annotation
+table under the required label `AI-assisted outcome-blind review`. It validates
+the annotation hash, exact 165 audit IDs, controlled vocabularies, immutable
+packet hashes, expected A/R/U totals, and specified correction invariants. It
+writes only separate ignored review artifacts and keeps every verification
+status `needs_review` with blank verified-anchor fields.
+
+The same command draws a fresh deterministic validation packet with 50 PR1 and
+50 PR2 cases. `review_phase_10e_independent_validation` is its local keyboard
+interface. The packet exposes no AI recommendation or AI-assisted decision;
+the interface hash-pins the packet and sampling manifest, autosaves atomically,
+resumes at the first unfinished case, and loads the comparator only after all
+100 independent decisions are complete. Its completion report keeps PR1, PR2,
+and every anchor unapproved. Run it with `--validate-only` for a no-write
+preflight.
 
 ## Planned stages
 

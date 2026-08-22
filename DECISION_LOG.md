@@ -332,6 +332,28 @@ after the complete human audit produces weighted approval, confirmed false-
 positive, AI-human disagreement, category, and failure-mode diagnostics may the
 project owner separately approve, modify, or reject PR1 and PR2.
 
+## 2026-08-22 — Reclassify the finalized 165-case annotations and require a fresh validation
+
+Status: AI-assisted evidence accepted; PR1 and PR2 not approved
+
+The project owner clarified that AI assistance was used during annotation and
+correction of the finalized 165-case table. Decision: label this artifact only
+as an `AI-assisted outcome-blind review`. It must not be used or reported as an
+independent human review, and the finalized decisions must not be altered.
+
+The hash-pinned import confirms 149 approvals, five rejections, and 11
+uncertain recommendations, including every specified correction. The import
+is written separately from immutable evidence and projects every case as
+`needs_review`, with blank verified-anchor fields. Its weighted and unweighted
+diagnostics are descriptive audit evidence only.
+
+For independent validation, draw a fresh deterministic and stratified sample
+of 50 PR1 and 50 PR2 cases. Exclude Tier 3 from rule-approval inference and
+withhold AI recommendations and AI-assisted decisions from the reviewer. Load
+the AI-assisted comparator only after all 100 decisions are complete. Neither
+rule may be promoted until those human approval, false-positive, uncertainty,
+and disagreement diagnostics are presented for explicit approval.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:

@@ -1,6 +1,6 @@
 # Next Actions
 
-Last updated: 2026-07-19
+Last updated: 2026-08-22
 
 ## Phase 10A-R — completed
 
@@ -37,17 +37,18 @@ rows remain `needs_review`; verified fields are blank, zero anchors were
 verified, and zero outcomes were read. All four required outputs passed
 deterministic rerun, quarantine, schema, hash, and storage validation.
 
-## Phase 10E — AI first review complete; human audit pending
+## Phase 10E — AI-assisted review imported; fresh human validation pending
 
-The outcome-blind pattern analysis, proposed tiers, reproducible 450-family
-audit sample, human-readable packet, blank exact-schema decision template, and
-primary pilot plan are complete. The recommendation-only AI first review covers
-all 450 cases, but PR1 and PR2 remain proposals, not approved rules.
+The finalized 165-case table is an AI-assisted outcome-blind review. It has
+been hash-pinned, validated, imported separately, and diagnosed without
+changing any production verification status. PR1 and PR2 remain proposals,
+not approved rules.
 
-1. Independently review the 165-case compact human subset without outcomes,
-   post-event information, or post-anchor prices.
-2. Calculate human approval, AI-human disagreement, and confirmed
-   false-positive rates. Keep AI-only estimates clearly separate.
+1. Independently review the fresh blinded 100-case packet (50 PR1, 50 PR2)
+   without outcomes, post-event information, post-anchor prices, or prior AI
+   decisions.
+2. Calculate independent-human approval, confirmed false-positive,
+   uncertainty, and AI-assisted-versus-human disagreement rates.
 3. Request explicit approval, modification, or rejection of each proposed rule.
 4. Do not apply decisions, construct horizons, acquire prices, or access outcomes
    until that approval is recorded.
@@ -55,7 +56,12 @@ all 450 cases, but PR1 and PR2 remain proposals, not approved rules.
 Start or resume the local review from the repository root:
 
 ```console
-python -m scripts.pipeline_v2.review_phase_10e_human
+python -m scripts.pipeline_v2.review_phase_10e_independent_validation \
+  --packet data/pipeline_v2/anchor_evidence/phase_10e_ai_assisted_review/phase_10e_independent_human_packet.csv \
+  --manifest data/pipeline_v2/anchor_evidence/phase_10e_ai_assisted_review/phase_10e_independent_human_sample_manifest.csv \
+  --ai-assisted-decisions data/pipeline_v2/anchor_evidence/phase_10e_ai_assisted_review/phase_10e_ai_assisted_decisions.csv \
+  --expected-packet-sha256 99269b00ac01dec9e55ea1eb80884a629fb8131ea13d6485b1f5b055f134015c \
+  --expected-manifest-sha256 60b8fab36351b1e59114879a65fb830cc1f6e09669dd7a50f87a32b5c3de6575
 ```
 
 The command hash-validates both source packets and autosaves after every

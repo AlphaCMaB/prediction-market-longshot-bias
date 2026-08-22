@@ -3,8 +3,9 @@
 ## Status and approval boundary
 
 Phase 10E has completed the design, sampling, recommendation-only AI first
-review, and local human-interface checkpoints. The human review remains at
-0/165. The project has not
+review, finalized 165-case AI-assisted outcome-blind review import, and fresh
+human-validation packet. The independent human validation remains at 0/100.
+The project has not
 verified an anchor, applied a verification rule, constructed a horizon price,
 read an outcome, or estimated favorite–longshot bias. The labels below are
 proposed audit tiers, not eligibility decisions. Both proposed deterministic
@@ -88,17 +89,22 @@ first review is available as a separate diagnostic: PR1 received 86 rule-case,
 two, respectively. Weighted AI rule-case recommendation rates are 50.10% and
 92.34%, but these are not rule-approval estimates.
 
-The compact independent human subset contains 165 unique cases: 50
-deterministically sampled from Tier 1, 50 from Tier 2, all low-confidence,
-rejected, and ambiguity-flagged Tier 1–2 cases, plus 10 Tier 3 diagnostics. At
-four minutes per case, the remaining burden is approximately 11 reviewer-hours.
+The finalized compact table contains 165 unique cases, but AI assistance during
+annotation and correction means it is an AI-assisted outcome-blind review, not
+an independent human review. It records 149 approvals, five rejections, and 11
+uncertain decisions. For Tier 1/PR1, unweighted approval, rejection, and
+uncertainty are 93.75%, 2.08%, and 4.17%; weighted values are 97.63%, 0.003%,
+and 2.37%. For Tier 2/PR2, the corresponding rates are 94.92%, 3.39%, and
+1.69% unweighted and 98.73%, 0.86%, and 0.41% weighted. These diagnostics do
+not approve either rule.
 
-The local interface deliberately does not display the AI recommendation during
-the human pass. It atomically autosaves after every completed case, supports
-safe interruption/resume, and leaves the exact frozen verification projection
-at `needs_review`. PR1 must be modified and PR2 audited/tightened according to
-the exclusions recorded in `DECISION_LOG.md` before either can be considered
-for explicit approval.
+The fresh independent-human packet contains 50 PR1 and 50 PR2 cases and
+excludes Tier 3 from rule-approval inference. It is deterministically
+stratified by category and observed failure mode and displays neither the
+AI recommendation nor the AI-assisted decision. At four minutes per case, the
+remaining burden is approximately 6.67 reviewer-hours. The local interface
+atomically autosaves, resumes safely, and leaves the frozen verification
+projection at `needs_review`.
 
 Reviewing the full universe under the same assumptions would require about
 3,413.77 Tier 1 hours, 4,699.85 Tier 2 hours, and 23,068 Tier 3 hours—31,181.62
@@ -190,7 +196,8 @@ observed.
 
 ## Exact path to the first preliminary bias estimate
 
-1. Complete the independent outcome-blind human review of the 165-case subset.
+1. Complete the fresh independent outcome-blind human review of the blinded
+   100-case subset.
 2. Compute weighted approval rates, disagreement rates, reasons for rejection,
    and category/time-specific false-positive diagnostics.
 3. Present those diagnostics for explicit approval, modification, or rejection
@@ -207,4 +214,5 @@ observed.
    descriptive calibration/return estimates with family-clustered uncertainty
    and explicit category-specific results.
 
-Phase 10E stops at step 1 pending human review and project-owner approval.
+Phase 10E stops at step 1 pending fresh human validation and project-owner
+approval.
