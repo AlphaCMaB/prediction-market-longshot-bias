@@ -809,3 +809,36 @@ compressed raw bytes, and 2,884 canonical uncompressed response bytes. No
 normalized output or final smoke commit exists. Do not run the historical
 per-market route until a new bounded sample and its materially larger request
 model are explicitly approved.
+
+### Phase 10F-B2 historical validation — 2026-08-23
+
+`scripts.pipeline_v2.run_phase_10f_b2` pins the B hard-stop report, planner,
+smoke plan, market metadata, and StudyRules. Its deterministic seed is
+`phase-10f-b2-200-ticker-stratified-v1`; sample SHA-256 is
+`862afdda09cf5a995bc04e05b8c44628b6521e23b1314fb5fb432f9fd466c83e`.
+Run `--preflight-only` before network and `--no-network-resume` afterward.
+
+The completed checkpoint under
+`data/pipeline_v2/horizon_prices/phase_10f_b2/` contains 202 immutable raw
+responses and request commits. Network totals: 202 requests, zero retries,
+zero rate limits, 200 successful historical ticker requests, zero live
+requests, zero HTTP failures, 146 empty ticker responses, and 1,164 candles.
+The cutoff was retrieved at `2026-08-23T15:24:25.867323+00:00`; its market
+settlement boundary was `2026-06-24T00:00:00Z`.
+
+Key artifact hashes:
+
+- ticker sample: `1e24fb430ca28661ef7d46f30dfa3368ca85625c285d2aaff2e3597437325921`;
+- normalized diagnostics: `4a5eeda03e765a96c6db52efb3bb24af0790ad737cc064261c245edfab63d3f4`;
+- request manifest: `41a72665c0b3472836e014488a73b99e90851d4dcc207302af411e8b0c429d82`;
+- provenance: `cc3f57333dfafa45ddbe15a57908b134a306d02fa24032174c937d0e2efefb05`;
+- primary report: `b29deb4e46ae09ac9e40b393e15e2fec5212f91a3a662e212a9925f3cb641225`;
+- final commit: `880c46d1254bb571ca36f957964010f38e0f4342542b437eed7445d4da5335d4`;
+- acceptance projection: `c7821ee78ea3f9b3e150b9c51e439fdc658927da7413ccc022ddb2bd6e5814b0`.
+
+The acceptance projection supersedes the primary report's initial
+raw-plus-normalized storage estimate because it also includes independent
+request commits and the deterministic manifest. The corrected production
+projection is 9,508,027,682 bytes, not 2,466,923,177 bytes. Both estimates
+reject production, but the corrected figure is the auditable namespace
+requirement.

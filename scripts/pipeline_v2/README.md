@@ -551,6 +551,20 @@ tickers. The generated checkpoint is incomplete by design; no price output was
 published. A per-market historical-endpoint design is the next approval gate,
 not an automatic fallback.
 
+Phase 10F-B2 implements the separately approved historical validation in
+`run_phase_10f_b2`. It fetches and pins `/historical/cutoff`, uses local
+settlement timestamps only for storage-tier routing, samples exactly 200
+tickers with no more than two per family, normalizes legacy `close` and live
+`close_dollars` schemas through explicit typed variants, and caps all physical
+requests—including cutoff and boundary validation—at 202. The completed run
+validates all 202 commits offline with zero requests.
+
+B2 establishes that the historical route works but a ticker census does not:
+146/200 responses were empty, PR1-M 15-minute midpoint coverage was 0/135,
+and the auditable full-scope projection is about 9.51 GB and 45.64 days. Do not
+start production. The next phase must freeze a family-aware contract-sampling
+estimand and inclusion weights before acquiring more prices.
+
 The settled-metadata client treats timeouts, connection failures, truncated
 chunked bodies, and content-decoding failures as transport retries under the
 configured retry and backoff limits. A page is published atomically only after

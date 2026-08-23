@@ -487,3 +487,33 @@ The outcome count remains zero and StudyRules are unchanged. Current guarded
 usage is approximately 5,307,027,293 bytes, leaving approximately 61.68 MB;
 free disk is approximately 84.61 GiB. Phase 10F-B remains incomplete pending
 an explicitly approved historical-endpoint smoke design.
+
+## Phase 10F-B2 — completed; per-market production route rejected
+
+The strict 200-ticker historical validation completed at the 202-request cap:
+one cutoff request, 200 ticker requests, and one exact-boundary probe. All 200
+sample tickers routed to the historical endpoint under the fetched
+`market_settled_ts` cutoff of `2026-06-24T00:00:00Z`. Every ticker request
+succeeded; retries, rate limits, 404s, other failures, post-target candles, and
+duplicate candles were all zero. The typed historical schema observed was
+`yes_bid.close`, `yes_ask.close`, and `price.close`; `price.previous` was never
+used.
+
+The endpoint returned 1,164 candles across 54 nonempty tickers; 146 responses
+were empty. Midpoint coverage was 44/200 at 15 minutes and 54/200 at 60
+minutes. Trade-close coverage was 24/200 and 38/200. PR1-M coverage was
+especially sparse: zero 15-minute midpoint observations and only four at 60
+minutes among 135 sampled tickers. PR2-M Sports supplied nearly all usable
+observations. This is a source-availability finding, not a bias estimate.
+
+The exact-target/end-minus-one probe passed and confirms that
+`end_period_ts` is safe as an inclusive candle-end timestamp when it is no
+later than target. The no-network replay validated all 202 immutable request
+commits with zero requests.
+
+Measured throughput was 1.16315 total requests/second. An auditable census of
+4,586,979 tickers projects 4,586,981 requests, about 45.64 days, and
+9,508,027,682 namespace bytes after including raw, normalized, request-commit,
+and manifest storage. It violates both storage guards and is operationally
+infeasible. Phase 10F production remains unauthorized. The next methodology
+gate is a family-aware, outcome-blind contract-subsampling design.

@@ -78,6 +78,24 @@ additional-namespace estimates are 2.22 GB and 10.69 GB. The deterministic
    outcome quarantine, and StudyRules unchanged. Do not archive or delete data
    without separate approval.
 
+## Phase 10F-C — contract-sampling methodology gate
+
+1. Do not start a per-market census. B2 projects 4,586,981 network requests,
+   approximately 45.64 days at the measured rate, and 9.51 GB of auditable
+   namespace storage.
+2. Design an outcome-blind two-stage sample: stratify families by rule,
+   category, target month, and family size, then select contracts within each
+   family by predeclared ex-ante contract/strike-order positions. Avoid using
+   outcomes or realized prices to choose contracts.
+3. Compare family-census/contract-subsample variants, inverse-probability
+   weights, expected independent-family counts, and the risk that sparse PR1-M
+   quotes create category-specific selection.
+4. Use historical trades only as a separately defined trade-close robustness
+   source; it cannot substitute for missing midpoint quotes.
+5. Obtain explicit methodological approval for the sampling estimand and
+   weights before any further price acquisition. Midpoint is not permanently
+   frozen and outcomes remain quarantined.
+
 ## Approval gates
 
 Ask the project owner before changing the frozen methodology, deleting any

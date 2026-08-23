@@ -482,3 +482,34 @@ Do not automatically switch to the per-market historical endpoint. That change
 raises the smoke request count from 206 batched requests toward one request per
 ticker and materially changes production feasibility. A smaller deterministic
 historical-route validation and revised request model require explicit approval.
+
+## 2026-08-23 — Complete Phase 10F-B2 and reject a per-ticker census
+
+Status: bounded validation accepted; production route not feasible
+
+The explicitly approved B2 sample contains one deterministic hash-ranked
+ticker from each of 135 network-eligible smoke families plus 65 second tickers
+allocated across Crypto, Financials, and Climate/Weather. All categories,
+target months, and family-size strata are represented; no family contributes
+more than two tickers. Sampling uses no price, outcome, or settlement value.
+Settlement timestamps are read only to choose the documented historical/live
+storage tier and never enter a research feature.
+
+All 200 sampled tickers routed historical and returned successful HTTP
+responses, but 146 were empty. The remaining 54 produced 1,164 candles under
+the historical legacy-close schema. An exact-minute base candle plus an
+end-minus-one probe established inclusive-end behavior with no post-target
+use. Midpoint and trade-close measures remain separate, and `previous` is never
+used.
+
+Decision: the historical per-market endpoint is technically valid for a small
+sample but rejected for a production census. The acceptance projection includes
+raw responses, normalized rows, independent request commits, and the manifest:
+9,508,027,682 bytes and 4,586,981 requests for the eligible production scope,
+with about 45.64 days of wall-clock time at 1.16315 requests/second. No outcome
+was accessed and no production acquisition is authorized.
+
+The leading alternative is an explicitly weighted, family-aware contract
+subsample, potentially supplemented by historical trades for trade-close
+robustness. Its target estimand and inclusion probabilities are methodological
+choices and require project-owner approval before implementation.
