@@ -517,3 +517,36 @@ Measured throughput was 1.16315 total requests/second. An auditable census of
 and manifest storage. It violates both storage guards and is operationally
 infeasible. Phase 10F production remains unauthorized. The next methodology
 gate is a family-aware, outcome-blind contract-subsampling design.
+
+## Phase 10F-C — offline estimand and sampling design complete; approval required
+
+The outcome-blind eligible frame is frozen at 112,166 families and 4,586,979
+contracts, nested within 161,343 anchor-valid in-window families. The proposed
+primary target gives equal conceptual weight to each eligible family and then
+to contracts within family; a uniformly selected eligible contract is the
+separate robustness target. Missing pre-target prices remain a measurement
+limitation and never invalidate an anchor.
+
+The proposed two-stage design uses stratified SRSWOR of families by approved
+rule, category, verified-anchor month, and deterministic family-size bin,
+followed by uniform SRSWOR of contracts within selected families. The leading
+design is 5,000 families with a three-contract cap: approximately 13,033
+tickers, 13,035 requests including fixed controls, 3.11 hours, and 27,014,949
+auditable bytes at B2 empirical rates. No production family or contract has
+been selected.
+
+The PR1 feasibility warning remains decisive for the current cross-category
+primary candidate: B2 observed 0/135 PR1 midpoint quotes within 15 minutes
+(Wilson planning upper bound 2.77%). The leading design projects zero PR1
+observations at the point estimate versus approximately 4,515 PR2 observations.
+Midpoint <=15m is therefore viable for a PR2-specific analysis on current
+evidence, not as a defensible cross-category primary measure. PR1 and PR2 must
+not be automatically pooled.
+
+Seven compact ignored design artifacts add 34,405 bytes. Shared generated
+usage is 5,307,526,419 bytes, leaving 61,182,701 bytes below the 5 GiB ceiling.
+At publication, free disk was 89,737,601,024 bytes, 3,838,255,104 bytes above
+the 80 GiB floor. No network request, new price, outcome access, archive,
+deletion, production sample draw, or StudyRules change occurred. Compilation,
+deterministic rerun, artifact-hash acceptance checks, and all 724 offline tests
+pass.

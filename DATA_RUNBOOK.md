@@ -842,3 +842,44 @@ request commits and the deterministic manifest. The corrected production
 projection is 9,508,027,682 bytes, not 2,466,923,177 bytes. Both estimates
 reject production, but the corrected figure is the auditable namespace
 requirement.
+
+### Phase 10F-C offline sampling design — 2026-08-23
+
+Generate or deterministically validate the compact planning artifacts with no
+network access:
+
+```console
+python -m scripts.pipeline_v2.build_phase_10f_c_design --preflight-only
+python -m scripts.pipeline_v2.build_phase_10f_c_design
+```
+
+The builder pins the Phase 10F-A planner, B2 report, B2 acceptance projection,
+and frozen StudyRules. It scans only the outcome-blind planner projection and
+does not decode contract identities or draw a production sample. Existing
+outputs are immutable: a byte difference fails closed.
+
+Output root:
+`data/pipeline_v2/horizon_prices/phase_10f_c/`
+
+- `phase_10f_c_estimand_design.md` —
+  `6c53d1dfb925f2f5cd2c34237e583ef9dbaebd4c9f0bf20e19b7d4c6f6dea19a`;
+- `phase_10f_c_sampling_frame_report.json` —
+  `d4208332f76732b83a1858e083124828efc40b764249427e91987d23d934e697`;
+- `phase_10f_c_candidate_sample_sizes.csv` —
+  `da03f8733a93676d90edcfee7cdbfad97b0853a0edf77a5087ecb27671869fa0`;
+- `phase_10f_c_weighting_specification.md` —
+  `1e9e2edf4f6c7b87133da5278196a0f2a959646b9549d16bba4cc34aa8831624`;
+- `phase_10f_c_pr1_viability_report.json` —
+  `02bf41cb8b0e61244aceac555f981ddf1992b924b55b09189512bbc2f25a0718`;
+- `phase_10f_c_missing_price_plan.md` —
+  `80607e2402d4a13030c7a0fd78e37459f42bd7b717181d70bcc378f637c874d7`;
+- `phase_10f_c_proposed_sampling_manifest_schema.json` —
+  `ae17b8ff4372a86df61099d26a5d88fe8d6ed979b80ff047779b415a9d5f54ef`.
+
+The 5,000-family/cap-three recommendation projects 13,032.882 tickers,
+13,035 requests including cutoff and boundary controls, 11,206.637 seconds,
+and 27,014,949 bytes. These are planning expectations, not an acquired sample.
+Never use the schema or deterministic seed to draw production identities until
+the methodology is explicitly approved. Phase acceptance: 724 offline tests,
+compilation, deterministic rerun, exact artifact hashes, population totals,
+quarantine fields, and both storage guards passed.

@@ -565,6 +565,16 @@ and the auditable full-scope projection is about 9.51 GB and 45.64 days. Do not
 start production. The next phase must freeze a family-aware contract-sampling
 estimand and inclusion weights before acquiring more prices.
 
+Phase 10F-C implements that offline design in
+`build_phase_10f_c_design` and pure helpers in `phase_10f_c_design`. It compares
+2,000-, 5,000-, and 10,000-family designs at contract caps 1, 3, 5, and 10;
+derives exact two-stage inclusion probabilities and separate family-/contract-
+weighted estimators; quantifies the PR1 source warning; and specifies the
+missing-price limitation. The recommended but unapproved design is 5,000
+families with a three-contract cap. Its proposed manifest schema contains no
+price, outcome, result, settlement, or profitability field. Running the builder
+does not select production identities, acquire prices, or access outcomes.
+
 The settled-metadata client treats timeouts, connection failures, truncated
 chunked bodies, and content-decoding failures as transport retries under the
 configured retry and backoff limits. A page is published atomically only after

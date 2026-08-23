@@ -80,21 +80,26 @@ additional-namespace estimates are 2.22 GB and 10.69 GB. The deterministic
 
 ## Phase 10F-C — contract-sampling methodology gate
 
-1. Do not start a per-market census. B2 projects 4,586,981 network requests,
-   approximately 45.64 days at the measured rate, and 9.51 GB of auditable
-   namespace storage.
-2. Design an outcome-blind two-stage sample: stratify families by rule,
-   category, target month, and family size, then select contracts within each
-   family by predeclared ex-ante contract/strike-order positions. Avoid using
-   outcomes or realized prices to choose contracts.
-3. Compare family-census/contract-subsample variants, inverse-probability
-   weights, expected independent-family counts, and the risk that sparse PR1-M
-   quotes create category-specific selection.
-4. Use historical trades only as a separately defined trade-close robustness
-   source; it cannot substitute for missing midpoint quotes.
-5. Obtain explicit methodological approval for the sampling estimand and
-   weights before any further price acquisition. Midpoint is not permanently
-   frozen and outcomes remain quarantined.
+1. Obtain explicit approval or modification of the proposed primary
+   family-weighted and secondary contract-weighted finite-population
+   estimands. Do not draw the production sample before this gate.
+2. Obtain explicit approval or modification of the 5,000-family, cap-three
+   two-stage design and its rule × category × anchor-month × family-size
+   strata, minimum allocation, seed, and exact inclusion weights.
+3. Decide whether Phase 10F-D should proceed as a PR2-specific midpoint <=15m
+   acquisition. Current evidence does not support midpoint <=15m as a
+   cross-category primary measure because PR1 coverage was 0/135 in B2.
+4. Decide whether PR1 should be deferred, restricted to a separately labeled
+   60-minute midpoint feasibility study, or investigated using another
+   explicitly approved ex-ante source. Do not change the frozen 15-minute
+   primary rule by implication.
+5. Approve the prespecified reporting gates (100 observable families and ESS
+   100 for confirmatory subgroup reporting; 30 families and ESS 30 per
+   probability bin) or replace them before outcomes are accessed.
+6. Only after approval, implement a manifest-only deterministic production
+   sample draw and conduct an offline acceptance review. Price acquisition,
+   outcomes, pooling, spread exclusions, and strike-position enrichment remain
+   separately gated.
 
 ## Approval gates
 

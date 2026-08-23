@@ -513,3 +513,31 @@ The leading alternative is an explicitly weighted, family-aware contract
 subsample, potentially supplemented by historical trades for trade-close
 robustness. Its target estimand and inclusion probabilities are methodological
 choices and require project-owner approval before implementation.
+
+## 2026-08-23 — Propose Phase 10F-C estimands and two-stage probability design
+
+Status: offline design complete; methodology not yet approved
+
+Proposed primary target: give every t-1h structurally eligible family equal
+mass, then give its eligible contracts equal mass within family. Proposed
+secondary target: give every eligible contract equal mass. These are distinct
+finite-population estimands and require distinct preserved design weights.
+
+Proposed sampling: stratified SRSWOR of families by approved verification rule,
+category, verified-anchor month, and eligible-family size bin (`1`, `2-5`,
+`6-25`, `26-100`, `101-400`), followed by uniform SRSWOR of up to three
+contracts per selected family. The leading scale is 5,000 families. The design
+does not use price availability, implied probability, outcomes, results,
+profitability, or post-event information. No production selection has occurred.
+
+Decision recommendation: retain midpoint <=15m as a candidate primary only for
+PR2-specific inference. Do not present it as cross-category while PR1's B2
+coverage is 0/135. Keep midpoint <=60m and the two trade-close measures as
+separate robustness/feasibility definitions; do not mix measures or impose a
+spread cutoff without approval. Missing-price inference is conditional on
+observability; no observation-propensity correction is approved.
+
+This entry records recommendations, not authorization. The estimands, sample
+size/cap, strata, reporting thresholds, PR1 path, and PR2-specific acquisition
+must receive explicit methodological approval before a manifest is drawn or
+any price request is made.
