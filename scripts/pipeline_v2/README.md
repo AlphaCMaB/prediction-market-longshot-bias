@@ -441,6 +441,27 @@ scheduled-event-start families (167,954 total); 259,136 remain `needs_review`.
 Phase 10F must treat short-market t-1h availability as price attrition rather
 than revisiting anchor validity.
 
+## Phase 10F-A: offline horizon-price planning
+
+`build_phase_10f_offline_planner` subtracts exactly one hour from each verified
+anchor inside the frozen window and joins only the outcome-blind market
+projection: family identity, event ticker, market ticker, and open time. It
+classifies market existence separately from anchor validity, losslessly encodes
+all associated tickers, groups retrievals by exact target timestamp, and emits
+request, storage, price-source, and deterministic smoke plans.
+
+The planner imports no HTTP client. `--preflight-only` performs the complete
+scan without writing; publication is guarded and atomic. A rerun re-derives the
+five artifacts outside the guarded namespace and requires byte-identical
+hashes. The planner does not acquire price history, select an analytical price,
+read outcomes, or modify StudyRules.
+
+The current production plan has 161,343 in-window families. Of these, 112,166
+had a market open at t−1h and 49,177 are valid anchors whose markets opened too
+late. The 4,586,979 eligible contract tickers imply at least 58,468 batched
+candlestick requests. Full acquisition does not fit current storage; only the
+pinned 200-family smoke is feasible pending explicit price-definition approval.
+
 ## Planned stages
 
 ### 1. Ex-ante occurrence anchors

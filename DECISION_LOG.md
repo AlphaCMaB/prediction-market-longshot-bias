@@ -416,6 +416,39 @@ analysis window or `StudyRules`, or exceeding storage guards. Phase 10F must
 first produce an outcome-blind request/storage preflight and measured bounded
 smoke. Any destructive archival or pruning requires separate approval.
 
+## 2026-08-23 — Complete Phase 10F-A offline planning and defer price definition
+
+Status: offline plan accepted; analytical price definition pending approval
+
+The Phase 10E anchors were joined without outcomes to the Phase 10B market
+metadata. For each in-window family, the planner subtracts exactly one hour,
+retains every associated market ticker through a lossless compact encoding, and
+compares only market `open_time` with target time. This separates anchor
+validity from market existence and later price/staleness eligibility.
+
+Decision: label the 49,177 families that opened after target as
+`valid_anchor_but_no_t_minus_1h_market`; never revoke their verified anchors.
+The other 112,166 families proceed only to price-availability testing. No
+market-existence status is unknown offline.
+
+The leading source for a bounded smoke is the existing multi-market one-minute
+candlestick endpoint because it batches tickers sharing a target window and
+exposes trade and bid/ask fields. This is a source recommendation, not network
+authorization. The current uncompressed/non-atomic cache and silent
+midpoint/trade fallback are not accepted for production.
+
+Recommendation pending explicit approval: define the primary probability as
+the contemporaneous closing yes-bid/yes-ask midpoint when both sides exist, and
+report actual trade close as a separate robustness measure. Do not substitute
+one for the other within a sample. Keep the primary 15-minute and robustness
+60-minute staleness thresholds separate and never accept a post-target candle.
+
+Full acquisition is storage-infeasible under current guards. The empirical
+projection requires about 2.22 GB and the conservative projection 10.69 GB.
+Only the deterministic 200-family smoke is storage-feasible at 29.43 MB
+conservative. No smoke, archive, move, deletion, price request, or outcome
+access is authorized by this decision.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:

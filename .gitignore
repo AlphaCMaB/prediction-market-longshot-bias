@@ -22,6 +22,7 @@ data/raw/
 data/processed/
 data/pipeline_v2/market_acquisition/
 data/pipeline_v2/anchor_evidence/
+data/pipeline_v2/horizon_prices/
 
 # Python cache
 __pycache__/

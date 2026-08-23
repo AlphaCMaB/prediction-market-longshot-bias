@@ -46,29 +46,38 @@ families remain `needs_review`; none was rejected. Deterministic compressed
 outputs and exclusion diagnostics are local and ignored. No price, horizon,
 outcome, or network input was accessed.
 
-## Phase 10F — next autonomous phase, storage-gated
+## Phase 10F-A — completed; price definition approval required
 
-1. Add an offline planner that maps the 167,954 anchors to eligible market
-   contracts and estimates one-hour-history requests, price-row volume,
-   compressed raw/normalized bytes, and expected market-existence/staleness
-   attrition without reading outcomes.
-2. Keep one-hour horizon and maximum 15-minute staleness fixed. Treat a missing
-   t-1h observation as Phase 10F attrition, never as evidence against anchor
-   validity.
-3. Run a compact bounded price-history smoke only after the planner fits within
-   the 5 GiB namespace and 80 GiB free-space guards.
-4. Before a full production run, request approval for any required archival or
-   pruning. Candidate targets are superseded Phase 10E diagnostic snapshots;
-   Phase 10B–10D validated data and final Phase 10E artifacts remain immutable.
-5. Do not access or merge outcomes until horizon prices, exclusions, sample
-   inclusion, and output hashes are frozen.
+The offline planner covers all 161,343 in-window verified families and
+4,640,355 associated contracts. It identifies 112,166 families with a market
+open by t−1h and 49,177 whose markets definitely opened too late. Zero are
+unknown offline. The eligible 4,586,979 tickers project 58,468 minimum batched
+candlestick requests.
 
-Current storage feasibility: 156,396,353 bytes remain. A deliberately minimal
-illustration of only 1 KiB compressed raw response per verified family would
-require 171,984,896 bytes before manifests or normalized outputs, so an
-unplanned full Phase 10F acquisition cannot fit. The offline planner and smoke
-must replace this lower-bound illustration with measured endpoint-specific
-estimates.
+The full acquisition does not fit current storage: empirical and conservative
+additional-namespace estimates are 2.22 GB and 10.69 GB. The deterministic
+200-family smoke projects 29,434,112 conservative bytes and fits the remaining
+62,316,968-byte namespace headroom, but it is not authorized to run yet.
+
+## Phase 10F-B — approval gate and bounded smoke
+
+1. Explicitly approve the analytical price definition. Recommendation:
+   contemporaneous closing yes-bid/yes-ask midpoint as primary, actual trade
+   close as a separate robustness measure, and no silent fallback mixing.
+2. Confirm that 15 minutes remains the primary staleness threshold and 60
+   minutes remains a separately reported robustness threshold for both price
+   measures.
+3. After approval, upgrade the candlestick cache to deterministic gzip, atomic
+   write-once partitions, immutable manifests, bounded timestamps, and
+   no-network resume. Validate the documented historical endpoint/cutoff before
+   substantive acquisition.
+4. Run only the pinned 200-family smoke after a fresh storage preflight. Measure
+   requests, bytes, market existence, any pre-target observation, 15-/60-minute
+   eligibility, field availability, retries, rate limits, and deterministic
+   resume.
+5. Stop again with measured production estimates and a specific archival
+   request. Do not archive, move, delete, acquire the full scope, or access
+   outcomes.
 
 ## Approval gates
 

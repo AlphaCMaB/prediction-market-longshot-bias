@@ -718,3 +718,67 @@ Proposed non-destructive archival plan, pending explicit approval:
    bytes. They may be candidates for approved pruning after their diagnostic
    reason and final successor hashes are preserved. The canonical Phase 10E
    output is not a pruning target.
+
+### Phase 10F-A offline horizon-price planner — 2026-08-23
+
+Run without any network client or outcome input:
+
+```console
+python -m scripts.pipeline_v2.build_phase_10f_offline_planner \
+  --verified-anchors data/pipeline_v2/anchor_evidence/phase_10e_approved_rules/phase_10e_verified_anchors.csv.gz \
+  --market-metadata data/pipeline_v2/market_acquisition/partitioned/merged_universes/6f8aa42abec876d3aa1f6336/market_metadata.csv.gz \
+  --output-root data/pipeline_v2/horizon_prices/phase_10f_a \
+  --guard-root data/pipeline_v2 \
+  --config configs/pipeline_v2.toml \
+  --empirical-cache-dir data/raw/kalshi/candlesticks_pilot \
+  --expected-anchors-sha256 c52e1f26e8e059c305d9f1a3fac311d325ea110552bea044e60dce778c8aacb8 \
+  --expected-market-metadata-sha256 7acd4b59afc1ee0d952396cecb062e4216259c0ff4cb4893d5a8e00c50e26c44
+```
+
+Add `--preflight-only` for a full scan that writes nothing. An accepted rerun
+derives all artifacts in `/tmp`, compares every hash, and preserves the original
+publication-time disk snapshot without creating a second guarded copy.
+
+Exact findings: 161,343 in-window verified families; 93,896 PR1-M and 67,447
+PR2-M. The families map to 4,640,355 unique contracts. At t−1h, 112,166
+families definitely existed, 49,177 definitely opened later, and zero are
+unknown. There are 4,586,979 offline-eligible contracts across 16,375 target
+timestamps and 58,468 minimum 100-ticker candlestick batches.
+
+Published ignored artifacts:
+
+- `phase_10f_horizon_planner.csv`: 93,981,868 bytes; SHA-256
+  `90be78a79d5671006b65e54b2819cc8ad13e115f3875e3f8925be99c9966f41e`;
+- `phase_10f_horizon_planner_report.json`: 3,638 bytes; SHA-256
+  `5e6f6522dc161baad3492cef64e9d38701d0b7e58aa8d642b22f4b83c3566a89`;
+- `phase_10f_price_source_design.md`: 4,244 bytes; SHA-256
+  `95f45304e0d2138b18231299fa3d9213cd493b4aa48f985d2187f4991152904b`;
+- `phase_10f_storage_preflight.json`: 3,908 bytes; SHA-256
+  `92127986894330dbcb8071dcce3298b8744aad57f0a4224ef27bd93dab585eec`;
+- `phase_10f_smoke_plan.json`: 85,727 bytes; SHA-256
+  `f0d6bf31ee5ef486aa13b4de123b67385f8f278f6ff18921c53986e2d245ac10`.
+
+The compact planner encoding is lossless: each full ticker is reconstructed
+from its family prefix and a pipe-delimited suffix token, with explicit escape
+forms for non-prefix tickers. It avoids duplicating the family prefix across
+4.64 million contracts while preserving exact retrieval identities.
+
+The empirical production projection uses 16 retained local pilot responses
+containing 40 returned markets and 864 candles; their deterministic gzip ratio
+is 349.825 bytes per returned market. It projects 1,604,639,929 raw bytes,
+587,133,312 normalized bytes, and 32,032,768 manifest/provenance bytes:
+2,223,806,009 additional namespace bytes total. The conservative projection is
+10,690,239,232 bytes. Neither fits the namespace; the conservative model also
+crosses the disk floor. Production acquisition remains blocked.
+
+The deterministic 200-family smoke contains 50 short-duration Crypto, 30
+existing Crypto, 25 Financials, 15 Climate and Weather, 15 late-opening Sports,
+and 65 existing Sports families. It projects 12,137 eligible tickers, 206
+minimum requests, and 29,434,112 conservative bytes. It fits the guards but is
+not authorized until the project owner freezes the non-mixing analytical price
+definition.
+
+The five Phase 10F-A outputs total 94,079,385 bytes. Shared namespace usage is
+5,306,392,152 bytes, leaving 62,316,968 bytes. Free disk after publication is
+approximately 89,821,372,416 bytes (83.65 GiB). No data was archived, moved, or
+deleted.
