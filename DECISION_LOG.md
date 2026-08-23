@@ -459,3 +459,26 @@ access is authorized by this decision.
   fields never become verified anchors automatically.
 - Outcome data remains unavailable until features, anchors, horizons, targets,
   prices, and sample inclusion are frozen.
+
+## 2026-08-23 — Phase 10F-B live-batch route rejected by bounded smoke
+
+Status: hard stop; no price accepted
+
+The project owner approved the deterministic 200-family smoke with a closing
+YES bid/ask midpoint primary measure, actual trade close as a separate
+robustness measure, 15-/60-minute staleness thresholds, and empirical inclusive-
+end boundary validation. The implementation and 703-test offline acceptance
+suite passed, and the storage preflight remained within both guards.
+
+Decision: reject the live multi-market batch endpoint as a validated route for
+this archived smoke scope. Every one of 206 successfully committed responses
+contained `{"markets":[]}`. Thus 12,137 requested tickers yielded zero market
+objects and zero candles. This is an endpoint-routing failure, not liquidity or
+staleness attrition. No boundary semantic was empirically established, no
+normalized price was published, and the primary price definition is not
+permanently frozen.
+
+Do not automatically switch to the per-market historical endpoint. That change
+raises the smoke request count from 206 batched requests toward one request per
+ticker and materially changes production feasibility. A smaller deterministic
+historical-route validation and revised request model require explicit approval.

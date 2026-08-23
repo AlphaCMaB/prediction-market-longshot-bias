@@ -462,3 +462,28 @@ Phase 10F-A offline horizon-price planning completed on 2026-08-23.
   5,306,392,152, leaving 62,316,968 bytes below the ceiling. Free disk after
   publication is approximately 89,821,372,416 bytes (83.65 GiB), about
   3,922,026,496 bytes above the 80 GiB floor.
+
+## Phase 10F-B — implementation complete; bounded smoke hard-stopped
+
+The approved non-mixing midpoint/trade-close extractor, inclusive-end candle
+boundary checks, deterministic request grouping, compressed immutable raw
+cache, independent request commits, storage guards, no-network resume, spread
+diagnostics, and incomplete-run reporting are implemented. The full offline
+suite passes 703 tests.
+
+The production preflight passed for exactly 200 families: 65 structural
+late-opening families were skipped, 135 families mapped to 12,137 eligible
+tickers, and 206 batch groups were planned. All 206 network responses were
+successfully committed with zero retries and zero rate limits, but the live
+batch endpoint returned an empty `markets` array for every group: zero returned
+market objects and zero candles. The runner therefore failed closed before the
+boundary probe, normalization, price acceptance, spread calculation, or any
+production projection based on prices.
+
+The incomplete smoke uses 635,141 bytes before its compact report: 109,154
+compressed raw bytes and 525,987 request-commit bytes. Report SHA-256:
+`a7bdeb4221c45ba42b8ae6c32f271f60d1e4f10d6565eaec0677031333d0d6bb`.
+The outcome count remains zero and StudyRules are unchanged. Current guarded
+usage is approximately 5,307,027,293 bytes, leaving approximately 61.68 MB;
+free disk is approximately 84.61 GiB. Phase 10F-B remains incomplete pending
+an explicitly approved historical-endpoint smoke design.

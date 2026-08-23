@@ -782,3 +782,30 @@ The five Phase 10F-A outputs total 94,079,385 bytes. Shared namespace usage is
 5,306,392,152 bytes, leaving 62,316,968 bytes. Free disk after publication is
 approximately 89,821,372,416 bytes (83.65 GiB). No data was archived, moved, or
 deleted.
+
+### Phase 10F-B bounded-smoke hard stop — 2026-08-23
+
+The accepted runner is `scripts.pipeline_v2.run_phase_10f_b_smoke`. Always run
+`--preflight-only` first. The production preflight verified 200 families, 65
+network skips, 12,137 eligible tickers, 206 groups, 62,316,968 bytes of initial
+headroom, and 29,434,112 conservative additional bytes.
+
+The authorized network attempt committed 206 immutable gzip responses and 206
+request commits under:
+
+`data/pipeline_v2/horizon_prices/phase_10f_b_smoke/`
+
+All response payloads had the valid top-level schema but contained zero market
+objects. No raw response may be redownloaded. Validate the checkpoint without
+network by adding `--no-network-resume` to the original command. That rerun
+reused all 206 commits, made zero requests, and published:
+
+- `phase_10f_b_incomplete_report.json`: SHA-256
+  `a7bdeb4221c45ba42b8ae6c32f271f60d1e4f10d6565eaec0677031333d0d6bb`.
+
+Observed network accounting: 206 requests, zero retries, zero rate limits,
+12,137 requested tickers, zero returned markets, zero candles, 109,154
+compressed raw bytes, and 2,884 canonical uncompressed response bytes. No
+normalized output or final smoke commit exists. Do not run the historical
+per-market route until a new bounded sample and its materially larger request
+model are explicitly approved.

@@ -59,25 +59,24 @@ additional-namespace estimates are 2.22 GB and 10.69 GB. The deterministic
 200-family smoke projects 29,434,112 conservative bytes and fits the remaining
 62,316,968-byte namespace headroom, but it is not authorized to run yet.
 
-## Phase 10F-B — approval gate and bounded smoke
+## Phase 10F-B — historical-route approval gate
 
-1. Explicitly approve the analytical price definition. Recommendation:
-   contemporaneous closing yes-bid/yes-ask midpoint as primary, actual trade
-   close as a separate robustness measure, and no silent fallback mixing.
-2. Confirm that 15 minutes remains the primary staleness threshold and 60
-   minutes remains a separately reported robustness threshold for both price
-   measures.
-3. After approval, upgrade the candlestick cache to deterministic gzip, atomic
-   write-once partitions, immutable manifests, bounded timestamps, and
-   no-network resume. Validate the documented historical endpoint/cutoff before
-   substantive acquisition.
-4. Run only the pinned 200-family smoke after a fresh storage preflight. Measure
-   requests, bytes, market existence, any pre-target observation, 15-/60-minute
-   eligibility, field availability, retries, rate limits, and deterministic
-   resume.
-5. Stop again with measured production estimates and a specific archival
-   request. Do not archive, move, delete, acquire the full scope, or access
-   outcomes.
+1. Do not retry the 206 completed live-batch groups; their immutable commits
+   prove that the live batch route returned zero markets for the archived
+   smoke scope.
+2. Obtain explicit approval for a newly pinned historical-endpoint validation
+   sample. The documented historical endpoint is per ticker, so applying it to
+   all 12,137 smoke tickers would materially change the request burden and is
+   not authorized by the original 206-batch design.
+3. Before any historical request, propose a compact deterministic ticker sample
+   stratified across PR1/PR2, category, family size, and target month. Include
+   paired exact-end/end-minus-one probes to establish candle boundaries.
+4. If that validation succeeds, redesign production routing and recompute
+   request/storage/time estimates. Do not infer the original 58,468 live-batch
+   request estimate applies to archived histories.
+5. Keep the primary midpoint, trade-close robustness, 15-/60-minute thresholds,
+   outcome quarantine, and StudyRules unchanged. Do not archive or delete data
+   without separate approval.
 
 ## Approval gates
 

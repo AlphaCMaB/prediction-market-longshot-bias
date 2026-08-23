@@ -541,6 +541,16 @@ request counts, and restartable without redownloading completed data. Date
 partitioning and dry-run or metadata-only modes should be supported where
 practical.
 
+Phase 10F-B implements these controls in `run_phase_10f_b_smoke`. It keeps
+midpoint and trade close separate, never uses `previous_trade`, accepts an
+exact-target candle only under the pinned inclusive-end convention, stores
+deterministic gzip responses behind independent immutable commits, and supports
+strict `--no-network-resume` validation. The first bounded run hard-stopped:
+the live batch endpoint returned zero markets for all 12,137 archived-scope
+tickers. The generated checkpoint is incomplete by design; no price output was
+published. A per-market historical-endpoint design is the next approval gate,
+not an automatic fallback.
+
 The settled-metadata client treats timeouts, connection failures, truncated
 chunked bodies, and content-decoding failures as transport retries under the
 configured retry and backoff limits. A page is published atomically only after
