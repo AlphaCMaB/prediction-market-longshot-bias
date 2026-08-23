@@ -426,6 +426,21 @@ PR2. Comparator access occurs only after independent review completion. No
 output can approve a rule, verify an anchor, construct a horizon, or access an
 outcome.
 
+After explicit project-owner approval, `apply_phase_10e_approved_rules`
+hash-pins that approval, the independent report, Phase 10D evidence, Phase 10C
+event metadata, frozen `StudyRules`, and the rule implementation. It applies
+PR1-M and PR2-M offline to all 427,090 families and publishes deterministic
+gzip decisions, verified anchors, exclusions, provenance, and a compact report.
+Excluded and uncovered families remain `needs_review`; the command never emits
+a retrospective rejection. It does not read prices or outcomes, test horizon
+availability, or make network requests. `--preflight-only` performs input,
+identity, and storage validation without writing.
+
+The accepted production application verifies 98,625 fixed-clock and 69,329
+scheduled-event-start families (167,954 total); 259,136 remain `needs_review`.
+Phase 10F must treat short-market t-1h availability as price attrition rather
+than revisiting anchor validity.
+
 ## Planned stages
 
 ### 1. Ex-ante occurrence anchors

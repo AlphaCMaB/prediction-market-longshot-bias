@@ -384,6 +384,38 @@ as a possible reviewer-style limitation.
 This recommendation does not approve or apply either rule. Every status remains
 `needs_review`; zero anchors, horizons, prices, or outcomes were opened.
 
+## 2026-08-23 — Approve and apply modified PR1-M and PR2-M outcome-blind rules
+
+Status: accepted and applied; Phase 10F not started
+
+The project owner explicitly approved modified PR1-M and PR2-M after the
+AI-assisted review and fresh independent-human validation. PR1-M requires a
+single exact predetermined fixed-clock candidate, with exact contract-reference
+agreement and no competing clock, deadline/window, publication, platform
+settlement, or semantic/date ambiguity. An official benchmark settlement value
+is allowed only when its observation time and value are exactly the contract
+reference. Short duration is not an anchor exclusion; t-1h availability is a
+separate price-stage question.
+
+PR2-M requires a unique exact official milestone start for the exact event
+scope with title/event/milestone agreement. Endogenous or conditional
+subevents, partial-event scopes, set/map/series ambiguity, date/scope conflicts,
+unrelated or post-event milestones, multiple starts, and sub-minute values not
+consistent with a predetermined schedule remain unverified.
+
+Decision: apply both rules deterministically to the full outcome-blind family
+universe. The accepted result verifies 98,625 PR1-M and 69,329 PR2-M families.
+All 259,136 uncovered or excluded families remain `needs_review`; none becomes
+`rejected`. Two acceptance-review snapshots are retained because initial
+classification admitted first-goalscorer, first-five-innings, and sub-minute
+scheduled-start cases. No data was deleted.
+
+This decision authorizes only anchor verification. It does not authorize
+outcome access, horizon construction, price acquisition, changing the frozen
+analysis window or `StudyRules`, or exceeding storage guards. Phase 10F must
+first produce an outcome-blind request/storage preflight and measured bounded
+smoke. Any destructive archival or pruning requires separate approval.
+
 ## Standing frozen decisions
 
 - Analysis anchor window:
