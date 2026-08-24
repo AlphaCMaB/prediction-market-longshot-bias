@@ -545,7 +545,10 @@ def figure_bytes(fig: Any, extension: str) -> bytes:
         facecolor="white",
         metadata=metadata,
     )
-    return buffer.getvalue()
+    content = buffer.getvalue()
+    if extension == "svg":
+        content = b"\n".join(line.rstrip() for line in content.splitlines()) + b"\n"
+    return content
 
 
 def build_figures(data: Mapping[str, Any]) -> dict[str, bytes]:
