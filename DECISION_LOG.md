@@ -600,3 +600,31 @@ preserved transport failure. It completed all 11,573 contract identities in
 with 4,377 observable families and family-weighted ESS 4,208.115. This decision
 does not authorize outcomes, a favorite–longshot estimate, new observation-
 propensity weights, a methodology change, or PR1/PR2 pooling.
+
+## 2026-08-24 — Accept Phase 10F-E price freeze and authorize final audit
+
+Status: final pre-outcome audit complete; inferential plan and outcomes not yet
+approved
+
+The owner accepted Phase 10F-E, including the separated midpoint/trade schema,
+unchanged PR2 sample, frozen weights, primary midpoint <=15m definition, three
+price robustness definitions, and the passing overall family/ESS gate. The
+authorization permitted only the final pre-outcome sample audit and continued
+to prohibit outcomes, settlement joins, post-target information, anchor
+changes, and methodology changes.
+
+The audit re-derived the 11,573-contract/5,000-family sampling design, all
+11,575 request identities, 116 partitions, temporal and arithmetic rules, the
+9,388-contract/4,377-family primary projection, all robustness projections,
+and every frozen weight. All ten fixed probability deciles pass their
+100-family/ESS-100 support gate. The audit found zero outcome or settlement
+columns and made zero network requests.
+
+The analysis plan is now recorded before outcomes under SHA-256
+`1da09fbe7d8fc14a25109c7ebd1f66969ca61e3f64f3cf32b5703dd5109da73b`.
+Its price definitions, estimands, weights, support thresholds, and no-
+replacement rules repeat prior approvals. Its proposed scalar favorite–
+longshot contrast and deterministic stratified family-cluster bootstrap are
+recommendations requiring explicit approval. Outcome-quarantine release also
+requires separate explicit authorization; recording the plan does not grant
+access.

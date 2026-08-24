@@ -631,3 +631,23 @@ primary midpoint <=15m artifact contains 9,388 contracts from 4,377 families,
 with family-weighted ESS 4,208.115; it passes the predeclared overall gate.
 Outcomes remain quarantined. The local ignored commit file pins final identity
 `79e022b7d9d359b484632e82671ef0095eba040687a21bc9a34a9bb947cf08de`.
+
+## Final pre-outcome sample audit
+
+`audit_phase_10f_e_sample` is the offline gate between the frozen price sample
+and any future outcome access. It reconstructs all sampling probabilities and
+weights, rebuilds every partition and analysis projection, rehashes all raw
+request commits, validates one-hour/pre-target timing, reports primary
+attrition and support by month, family size, and fixed probability decile, and
+rejects outcome or settlement columns.
+
+```console
+python -m scripts.pipeline_v2.audit_phase_10f_e_sample --preflight-only
+python -m scripts.pipeline_v2.audit_phase_10f_e_sample
+```
+
+The completed audit identity is
+`bd14ba156585c4b2ed43c798ea55c977e8496326642edca9748eb703491eab24`.
+Its tracked pre-outcome plan is `PHASE_10F_FINAL_ANALYSIS_PLAN.md`. The audit
+does not open outcomes, authorize their release, or compute favorite–longshot
+bias.

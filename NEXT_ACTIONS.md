@@ -114,26 +114,28 @@ validated data, exceeding 5 GiB of generated data, allowing free space below
 80 GiB, using credentials/private access, or choosing between research designs
 with materially different interpretations.
 
-## Phase 10F-E — completed; final pre-outcome sample audit
+## Phase 10F final audit — completed; explicit outcome-access gate
 
-The frozen PR2 acquisition and all four outcome-blind analysis samples are
-complete. The primary midpoint <=15m sample passes both frozen overall gates
-with 4,377 observable families and family-weighted ESS 4,208.115. The sample,
-weights, attrition classifications, spread diagnostics, request provenance,
-and immutable hashes must now receive one final pre-outcome audit.
+The final pre-outcome audit passes under identity
+`bd14ba156585c4b2ed43c798ea55c977e8496326642edca9748eb703491eab24`.
+All frozen identities, partition/raw hashes, price projections, temporal rules,
+inclusion probabilities, weights, support gates, and quarantine checks were
+re-derived without network or outcome access.
 
-The next phase is the explicit outcome-access gate. Before any outcome join:
+The next action requires one explicit methodological and access approval. The
+owner must review `PHASE_10F_FINAL_ANALYSIS_PLAN.md` and either approve or
+modify, before outcome access:
 
-1. accept the final 10F-E acquisition and sample audit;
-2. preserve commit identity
-   `79e022b7d9d359b484632e82671ef0095eba040687a21bc9a34a9bb947cf08de`;
-3. freeze the primary and robustness artifact hashes and the predeclared
-   weighting/ESS rules;
-4. obtain explicit authorization to read and join quarantined outcomes; and
-5. keep unsupported subgroup or probability-bin results descriptive under the
-   already frozen support thresholds.
+1. the family-target `Y-P` estimand as primary and contract-target version as
+   secondary;
+2. fixed 0.10 calibration bins;
+3. proposed scalar contrast `mean(Y-P | P<0.20) - mean(Y-P | P>=0.80)`;
+4. the deterministic 10,000-replicate stratified family-cluster bootstrap and
+   95% percentile intervals; and
+5. the minimal one-to-one binary-outcome projection and join contract.
 
-Do not redraw failed or unobservable contracts, change staleness or spread
-rules, reweight for price observability, pool PR1 with PR2, or access outcomes
-without a new explicit authorization. Generated Phase 10F-E data remain local
-and ignored; namespace headroom is only 20,644,964 bytes.
+If modified, commit the revised plan and rerun the audit before any outcome is
+opened. If approved, separately release the outcome quarantine. Until both
+actions occur, do not open outcome artifacts, merge results, compute bias,
+calibration or Brier scores, redraw the sample, change price rules, add
+observation-propensity weights, or pool PR1 and PR2.

@@ -981,3 +981,41 @@ Guarded storage is 5,348,064,156 bytes with 20,644,964 bytes remaining. Do
 not start any new generated-data phase near this ceiling. No outcome access is
 authorized; the next action is a final pre-outcome audit and explicit release
 of the outcome quarantine.
+
+### Phase 10F final pre-outcome sample audit — 2026-08-24
+
+Run the audit without network or outcome access:
+
+```console
+python -m scripts.pipeline_v2.audit_phase_10f_e_sample --preflight-only
+python -m scripts.pipeline_v2.audit_phase_10f_e_sample
+```
+
+The first command checks the pinned Phase 10F-D/10F-E identities, StudyRules,
+analysis-plan hash, storage ceiling, and free-space floor. The second rechecks
+all partitions, request commits and raw hashes, exact sample projections,
+one-hour targets, at-or-before observation times, midpoint/spread arithmetic,
+staleness flags, inclusion probabilities, raw weights, support gates, and
+outcome quarantine. Rerunning the second command validates and reuses the
+immutable audit.
+
+Generated ignored outputs are under
+`data/pipeline_v2/horizon_prices/phase_10f_e/final_pre_outcome_audit/`:
+
+- audit report SHA-256:
+  `8ac3fb4b1de1ede9336306589a7b17aa47df94cd1a8245ef441d6360e7c75a73`;
+- audit commit SHA-256:
+  `6deaaebdd4dd296d90f9651f4e7a43f40472bc07d5d168da4dc5f865f02b3f92`;
+- audit identity:
+  `bd14ba156585c4b2ed43c798ea55c977e8496326642edca9748eb703491eab24`.
+
+The tracked analysis plan is `PHASE_10F_FINAL_ANALYSIS_PLAN.md`, SHA-256
+`1da09fbe7d8fc14a25109c7ebd1f66969ca61e3f64f3cf32b5703dd5109da73b`.
+It is recorded before outcome access but its proposed scalar contrast and
+bootstrap specification remain an approval gate. Do not read or project the
+quarantined outcome artifact until the owner approves the plan and explicitly
+releases the quarantine.
+
+The audit adds 14,049 guarded bytes. Final guarded use is 5,348,078,205 bytes,
+leaving 20,630,915 bytes under the 5-GiB ceiling. Free disk at publication was
+107,925,622,784 bytes (100.51 GiB), safely above the 80-GiB floor.

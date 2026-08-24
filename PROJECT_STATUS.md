@@ -620,10 +620,12 @@ weighted ESS is 4,208.115 and contract-weighted ESS is 3,155.763, so the frozen
 10,644 contracts/4,735 families for midpoint <=60m, 5,455/3,178 for trade
 close <=15m, and 7,213/3,855 for trade close <=60m.
 
-Primary attrition consists of 928 contracts with no pre-target candle, the one
-preserved API/data failure, and zero missing-bid, missing-ask, or stale-midpoint
-cases. Trade diagnostics additionally contain 3,430 no-trade cases and one
-trade-schema-unavailable case. No post-target candle, duplicate request,
+Primary exclusion consists of 928 contracts with no pre-target candle, the one
+preserved API/data failure, and 1,256 otherwise valid midpoints that are between
+15 and 60 minutes stale. There are zero missing-bid, missing-ask, or greater-
+than-60-minute stale-midpoint cases. Trade diagnostics additionally contain
+3,430 no-trade cases and one trade-schema-unavailable case. No post-target
+candle, duplicate request,
 inclusion-probability change, outcome field, or outcome access was found.
 
 Final commit identity is
@@ -633,3 +635,37 @@ namespace use is 5,348,064,156 bytes, leaving 20,644,964 bytes below the 5-GiB
 ceiling. Free disk at finalization was about 91.18 GiB, above the 80-GiB hard
 floor. Phase 10F-E stops at the required final pre-outcome sample audit; no
 outcome was accessed and no favorite–longshot estimate was calculated.
+
+## Phase 10F final pre-outcome audit — complete; outcome release not authorized
+
+The deterministic final audit independently rebuilt all 116 Phase 10F-E
+partitions, rehashed 11,575 request commits and 8,860,920 compressed raw bytes,
+reconstructed every inclusion probability and raw weight, and reproduced all
+four analysis projections exactly. It found zero duplicate tickers or request
+identities, zero post-target rows, zero previous-price fallbacks, zero anchor or
+StudyRules changes, and zero outcome or settlement columns in research
+artifacts. A second run reused the immutable audit with no write or network
+request.
+
+The primary sample retains 9,388 contracts, 4,377 families, and family-
+weighted ESS 4,208.115. All ten fixed 0.10 probability bins independently pass
+the frozen 100-family/ESS-100 bin gate. Sports is the only category and passes
+the subgroup gate. Anchor months November 2025 through April 2026 pass the
+200-family/ESS-150 subgroup gate; other months are descriptive. Family-size
+bins `2-5` and `6-25` pass; `1`, `26-100`, and `101-400` are descriptive.
+
+Outcome-blind observability diagnostics show nontrivial composition differences
+that must remain a limitation: the family-weighted standardized difference in
+hours since market open is 0.257; maximum absolute observed-versus-missing
+share differences are 0.197 by family-size bin, 0.123 by month, and 0.027 by
+target UTC hour. No observation-propensity correction is approved or applied.
+
+The audit identity is
+`bd14ba156585c4b2ed43c798ea55c977e8496326642edca9748eb703491eab24`.
+The recorded pre-outcome analysis plan SHA-256 is
+`1da09fbe7d8fc14a25109c7ebd1f66969ca61e3f64f3cf32b5703dd5109da73b`.
+Its proposed scalar contrast and stratified family-cluster bootstrap require
+explicit approval together with outcome-quarantine release. No outcome was
+accessed and no favorite–longshot calculation was performed. The focused
+Phase 10F suite passes 57 tests, the full offline suite passes 760 tests, and
+compilation, Black, pyflakes, TOML validation, and `git diff --check` pass.
