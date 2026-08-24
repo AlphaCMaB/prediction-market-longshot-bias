@@ -115,15 +115,12 @@ def draw_two_stage_sample(
     seed: str = SAMPLING_SEED,
 ) -> list[dict[str, Any]]:
     """Deterministically realize the approved probability design for a supplied frame."""
-    if contract_cap <= 0:
-        raise SamplingDesignError("contract cap must be positive")
-    by_stratum: dict[tuple[str, str, str, str], list[FrameFamily]] = defaultdict(list)
-    identities: set[tuple[str, str]] = set()
     all_contracts: set[str] = set()
+    all_families: set[tuple[str, str]] = set()
     for family in families:
-        if family.identity in identities:
+        if family.identity in all_families:
             raise SamplingDesignError("duplicate family identity")
-        identities.add(family.identity)
+        all_families.add(family.identity)
         if len(family.contract_ids) != family.contract_count:
             raise SamplingDesignError("family contract identities are incomplete")
         if len(set(family.contract_ids)) != len(family.contract_ids):
@@ -131,9 +128,34 @@ def draw_two_stage_sample(
         if all_contracts.intersection(family.contract_ids):
             raise SamplingDesignError("contract appears in multiple families")
         all_contracts.update(family.contract_ids)
-        by_stratum[family.stratum].append(family)
+    selected_families = select_stage_one_families(
+        families, allocation, seed=seed
+    )
+    stratum_counts = Counter(family.stratum for family in families)
+    return draw_stage_two_sample(
+        selected_families,
+        stratum_counts,
+        allocation,
+        contract_cap,
+        seed=seed,
+    )
 
-    selected: list[dict[str, Any]] = []
+
+def select_stage_one_families(
+    families: Sequence[FrameFamily],
+    allocation: Mapping[tuple[str, str, str, str], int],
+    *,
+    seed: str = SAMPLING_SEED,
+) -> list[FrameFamily]:
+    """Hash-rank and select the allocated families without inspecting contracts."""
+    by_stratum: dict[tuple[str, str, str, str], list[FrameFamily]] = defaultdict(list)
+    identities: set[tuple[str, str]] = set()
+    for family in families:
+        if family.identity in identities:
+            raise SamplingDesignError("duplicate family identity")
+        identities.add(family.identity)
+        by_stratum[family.stratum].append(family)
+    selected: list[FrameFamily] = []
     for stratum in sorted(by_stratum):
         frame = sorted(
             by_stratum[stratum],
@@ -142,41 +164,84 @@ def draw_two_stage_sample(
         n_h = int(allocation.get(stratum, 0))
         if not 0 <= n_h <= len(frame):
             raise SamplingDesignError("invalid stratum sample size")
-        pi_family = n_h / len(frame)
-        for family in frame[:n_h]:
-            m_i = min(family.contract_count, contract_cap)
-            ranked_contracts = sorted(
-                family.contract_ids,
-                key=lambda ticker: (
-                    _rank(seed, "contract", *family.identity, ticker),
-                    ticker,
-                ),
+        selected.extend(frame[:n_h])
+    if len({family.identity for family in selected}) != len(selected):
+        raise SamplingDesignError("stage-one sample contains duplicate families")
+    return sorted(selected, key=lambda family: family.identity)
+
+
+def draw_stage_two_sample(
+    selected_families: Sequence[FrameFamily],
+    stratum_counts: Mapping[tuple[str, str, str, str], int],
+    allocation: Mapping[tuple[str, str, str, str], int],
+    contract_cap: int,
+    *,
+    seed: str = SAMPLING_SEED,
+) -> list[dict[str, Any]]:
+    """Select contracts for an already selected, probability-tracked family sample."""
+    if contract_cap <= 0:
+        raise SamplingDesignError("contract cap must be positive")
+    selected_by_stratum: Counter[tuple[str, str, str, str]] = Counter()
+    identities: set[tuple[str, str]] = set()
+    all_contracts: set[str] = set()
+    for family in selected_families:
+        if family.identity in identities:
+            raise SamplingDesignError("duplicate family identity")
+        identities.add(family.identity)
+        selected_by_stratum[family.stratum] += 1
+        if len(family.contract_ids) != family.contract_count:
+            raise SamplingDesignError("family contract identities are incomplete")
+        if len(set(family.contract_ids)) != len(family.contract_ids):
+            raise SamplingDesignError("duplicate contract inside family")
+        if all_contracts.intersection(family.contract_ids):
+            raise SamplingDesignError("contract appears in multiple families")
+        all_contracts.update(family.contract_ids)
+    if any(
+        selected_by_stratum.get(stratum, 0) != int(n_h)
+        for stratum, n_h in allocation.items()
+    ):
+        raise SamplingDesignError("selected family counts do not match allocation")
+
+    selected: list[dict[str, Any]] = []
+    for family in sorted(selected_families, key=lambda row: row.identity):
+        N_h = int(stratum_counts[family.stratum])
+        n_h = int(allocation[family.stratum])
+        if not 0 < n_h <= N_h:
+            raise SamplingDesignError("invalid stratum inclusion counts")
+        pi_family = n_h / N_h
+        m_i = min(family.contract_count, contract_cap)
+        ranked_contracts = sorted(
+            family.contract_ids,
+            key=lambda ticker: (
+                _rank(seed, "contract", *family.identity, ticker),
+                ticker,
+            ),
+        )
+        pi_conditional = m_i / family.contract_count
+        pi_contract = pi_family * pi_conditional
+        for ticker in ranked_contracts[:m_i]:
+            selected.append(
+                {
+                    "family_id": family.family_id,
+                    "family_id_source": family.family_id_source,
+                    "contract_id": ticker,
+                    "rule": family.rule,
+                    "category": family.category,
+                    "anchor_month": family.anchor_month,
+                    "family_size_bin": family.size_bin,
+                    "family_contract_count": family.contract_count,
+                    "sampled_contract_count_in_family": m_i,
+                    "stratum_family_count": N_h,
+                    "stratum_sampled_family_count": n_h,
+                    "pi_family": pi_family,
+                    "pi_contract_given_family": pi_conditional,
+                    "pi_contract": pi_contract,
+                    "contract_weight_raw": 1 / pi_contract,
+                    "family_weight_raw": 1
+                    / (pi_contract * family.contract_count),
+                    "sampling_seed": seed,
+                }
             )
-            pi_conditional = m_i / family.contract_count
-            pi_contract = pi_family * pi_conditional
-            for ticker in ranked_contracts[:m_i]:
-                selected.append(
-                    {
-                        "family_id": family.family_id,
-                        "family_id_source": family.family_id_source,
-                        "contract_id": ticker,
-                        "rule": family.rule,
-                        "category": family.category,
-                        "anchor_month": family.anchor_month,
-                        "family_size_bin": family.size_bin,
-                        "family_contract_count": family.contract_count,
-                        "sampled_contract_count_in_family": m_i,
-                        "stratum_family_count": len(frame),
-                        "stratum_sampled_family_count": n_h,
-                        "pi_family": pi_family,
-                        "pi_contract_given_family": pi_conditional,
-                        "pi_contract": pi_contract,
-                        "contract_weight_raw": 1 / pi_contract,
-                        "family_weight_raw": 1
-                        / (pi_contract * family.contract_count),
-                        "sampling_seed": seed,
-                    }
-                )
     identities = [(row["family_id"], row["family_id_source"], row["contract_id"]) for row in selected]
     if len(identities) != len(set(identities)):
         raise SamplingDesignError("two-stage sample contains duplicates")

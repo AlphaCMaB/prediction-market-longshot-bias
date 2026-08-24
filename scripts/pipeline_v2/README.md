@@ -575,6 +575,16 @@ families with a three-contract cap. Its proposed manifest schema contains no
 price, outcome, result, settlement, or profitability field. Running the builder
 does not select production identities, acquire prices, or access outcomes.
 
+Phase 10F-D is the owner-approved PR2-only realization in
+`build_phase_10f_d_sampling_manifest`. It selects exactly 5,000 families from
+the 64,775 structurally eligible PR2 families using verified-anchor month ×
+family-size strata, then selects up to three eligible tickers uniformly within
+family. The immutable gzip family and contract manifests preserve every
+inclusion probability and both raw weight systems. The builder uses only an
+outcome-free column projection and makes no network request. Re-running it
+validates the pinned sample and commit; it never redraws. Phase 10F-E remains a
+separate network approval gate.
+
 The settled-metadata client treats timeouts, connection failures, truncated
 chunked bodies, and content-decoding failures as transport retries under the
 configured retry and backoff limits. A page is published atomically only after

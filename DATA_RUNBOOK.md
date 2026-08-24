@@ -883,3 +883,43 @@ Never use the schema or deterministic seed to draw production identities until
 the methodology is explicitly approved. Phase acceptance: 724 offline tests,
 compilation, deterministic rerun, exact artifact hashes, population totals,
 quarantine fields, and both storage guards passed.
+
+### Phase 10F-D approved PR2 manifest — 2026-08-24
+
+The offline-only builder uses the pinned Phase 10F-A planner, outcome-free
+market metadata, B2 planning evidence, and StudyRules. It uses bundled PyArrow
+to project only ticker/event/family/open-time columns while retaining bounded
+memory. Always preflight first:
+
+```console
+python -m scripts.pipeline_v2.build_phase_10f_d_sampling_manifest --preflight-only
+python -m scripts.pipeline_v2.build_phase_10f_d_sampling_manifest
+```
+
+The second command now performs a deterministic no-network resume and validates
+the immutable outputs under
+`data/pipeline_v2/horizon_prices/phase_10f_d/`. It must never redraw a sample
+after price availability or outcomes become visible.
+
+Detailed hashes:
+
+- family manifest: `fbf41690c4f7bdd9233131f8e84dc6fe0f47297930a90d688586289af4a8c0f6`;
+- contract manifest: `aaaebdc86f01df5d1c6aecc9b985beb0638ebe6db24e8422930d1496e0752c4d`;
+- stratum allocation: `6bbfa422b4427e644cd3b68e277b35fcfe066beed22d2737f487390695e40920`;
+- inclusion validation: `f93b422db647c149de23aac3195973399f140b0e8d727e9a9d5b71bb4b9ac077`;
+- family-weight diagnostics: `71ce9fd1c877294ad4437cef310660895599c6f3b28c9e93d2e334a3facfe38c`;
+- contract-weight diagnostics: `cf48c12ebc8bab134ee06a7409d2454ae40da4422fde479304ad0c5f534e67fc`;
+- final sampling manifest: `c4861c15bc15bc4775750d466761416e3f6e05ac467e94358e37a6c863952a41`;
+- production preflight: `f1a04163010c726ff6089db8df4a5f0e02f6c013d08771807b277796c42b5284`;
+- final commit file: `832e6f6e8d5ad19403b1200a1bc2142a3f8339c7926cfd55ab271def46690c96`.
+
+Commit identity is
+`8a95158441c245988d2562b732762d9a6f3c5c9cd6d0bb33b9fcc6f3b8de2bc9`.
+The manifest contains 5,000 families, 11,573 contracts, and all 51 nonempty
+month/size strata. It projects 11,575 total future requests, 9,951.425 seconds,
+and 23,988,862 auditable bytes. These requests remain unauthorized. Phase
+acceptance is 730 offline tests with zero price, outcome, network, anchor, or
+StudyRules change. The fresh acceptance snapshot records 5,307,893,277 guarded
+bytes, 60,815,843 namespace bytes remaining, 89,212,518,400 free disk bytes,
+and 3,313,172,480 bytes above the disk floor. Recompute rather than reuse these
+values at the Phase 10F-E gate.

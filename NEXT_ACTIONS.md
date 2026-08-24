@@ -78,28 +78,34 @@ additional-namespace estimates are 2.22 GB and 10.69 GB. The deterministic
    outcome quarantine, and StudyRules unchanged. Do not archive or delete data
    without separate approval.
 
-## Phase 10F-C — contract-sampling methodology gate
+## Phase 10F-C — approved as modified
 
-1. Obtain explicit approval or modification of the proposed primary
-   family-weighted and secondary contract-weighted finite-population
-   estimands. Do not draw the production sample before this gate.
-2. Obtain explicit approval or modification of the 5,000-family, cap-three
-   two-stage design and its rule × category × anchor-month × family-size
-   strata, minimum allocation, seed, and exact inclusion weights.
-3. Decide whether Phase 10F-D should proceed as a PR2-specific midpoint <=15m
-   acquisition. Current evidence does not support midpoint <=15m as a
-   cross-category primary measure because PR1 coverage was 0/135 in B2.
-4. Decide whether PR1 should be deferred, restricted to a separately labeled
-   60-minute midpoint feasibility study, or investigated using another
-   explicitly approved ex-ante source. Do not change the frozen 15-minute
-   primary rule by implication.
-5. Approve the prespecified reporting gates (100 observable families and ESS
-   100 for confirmatory subgroup reporting; 30 families and ESS 30 per
-   probability bin) or replace them before outcomes are accessed.
-6. Only after approval, implement a manifest-only deterministic production
-   sample draw and conduct an offline acceptance review. Price acquisition,
-   outcomes, pooling, spread exclusions, and strike-position enrichment remain
-   separately gated.
+The owner froze separate family- and contract-weighted estimands conditional on
+price observability, restricted confirmatory acquisition to PR2, approved 5,000
+PR2 families with a three-contract cap, predeclared midpoint/trade and spread
+sensitivities, and replaced the provisional reporting thresholds. PR1 anchors
+remain valid but the current primary price source is not viable.
+
+## Phase 10F-D — completed offline; Phase 10F-E approval gate
+
+1. Review the deterministic 5,000-family/11,573-contract PR2 manifests, 51
+   stratum allocations, exact inclusion probabilities, raw weights, hashes,
+   and commit identity. Do not redraw identities after price or outcome access.
+2. Obtain explicit Phase 10F-E network authorization before any of the 11,575
+   projected requests. Re-run a fresh namespace/free-disk preflight immediately
+   before acquisition because disk margin is declining independently of these
+   compact artifacts.
+3. If authorized, implement/resume immutable per-ticker acquisition only for
+   the pinned contract manifest. Keep midpoint and actual trade close separate,
+   reject post-target candles, and retain no-cutoff primary midpoint plus the
+   predeclared $0.20/$0.10 spread sensitivities.
+4. Stop if the namespace or 80 GiB disk guard would be crossed. Do not acquire
+   PR1, pool rules, weaken 15-minute staleness, access outcomes, or change the
+   sample.
+5. After acquisition, report observability and ESS against the frozen gates:
+   overall 500 families/ESS 500; subgroup 200 families/ESS 150; probability bin
+   100 families/ESS 100. Missing prices remain valid anchors and are not given
+   unapproved observation-propensity weights.
 
 ## Approval gates
 

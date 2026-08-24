@@ -541,3 +541,32 @@ This entry records recommendations, not authorization. The estimands, sample
 size/cap, strata, reporting thresholds, PR1 path, and PR2-specific acquisition
 must receive explicit methodological approval before a manifest is drawn or
 any price request is made.
+
+## 2026-08-24 — Approve Phase 10F-C as modified and freeze PR2 sample
+
+Status: Phase 10F-D offline manifest complete; network not approved
+
+The owner approved the family-weighted primary and contract-weighted secondary
+estimands, both explicitly conditional on qualifying pre-target price
+observability. Confirmatory scope is PR2 only. PR1 anchors and timing remain
+valid, but structurally eligible PR1 families receive downstream status
+`valid_anchor_but_primary_price_source_not_viable`; no large PR1 acquisition,
+15-minute relaxation, or PR1/PR2 pooling is allowed.
+
+The confirmatory candidate is the latest fully pre-target YES bid/ask midpoint
+within 15 minutes with both sides present and no fallback. Prespecified
+robustness measures are midpoint within 60 minutes and actual trade close
+within 15/60 minutes. The primary sample has no spread cutoff; $0.20 and $0.10
+maximum-spread analyses are frozen sensitivities. No post-target candle is
+allowed.
+
+Reporting gates are frozen before outcomes: overall PR2 inference requires 500
+observable families and family-weighted ESS 500; subgroups require 200 families
+and ESS 150; probability bins require 100 families and ESS 100. Lower-support
+results are descriptive only. No observation-propensity correction is approved.
+
+The authorized offline design selected 5,000 PR2 families by month × frozen
+family-size bin and 11,573 contracts by uniform within-family SRSWOR capped at
+three. The manifest is immutable under commit identity
+`8a95158441c245988d2562b732762d9a6f3c5c9cd6d0bb33b9fcc6f3b8de2bc9`.
+This decision does not authorize Phase 10F-E price requests or outcome access.
