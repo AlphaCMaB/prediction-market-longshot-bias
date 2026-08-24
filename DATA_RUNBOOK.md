@@ -1069,3 +1069,29 @@ contract-level research file. Its guarded outputs bring namespace use to
 5,348,508,429 bytes, leaving 20,200,691 bytes below the 5-GiB ceiling. Free
 disk after deterministic replay was 107,832,115,200 bytes (about 100.42 GiB).
 New generated work must preflight this narrow namespace headroom.
+
+### Phase 10H deterministic paper reporting — 2026-08-25
+
+Generate or validate the complete reporting package from repository root:
+
+```console
+python -m scripts.pipeline_v2.build_phase_10g_paper_report
+```
+
+The authoritative output root is `reports/phase_10g/`. The command verifies
+the pinned Phase 10B merge, Phase 10E approved anchors, Phase 10F planning,
+sampling, observability and final-audit reports, and every Phase 10G v3 source
+hash before rendering. Existing outputs are immutable: a changed byte or an
+unexpected file causes a fail-closed error. The recorded generator commit is
+`250b9d3f3f1117b7f421020c80b368f2eb02bf5e`.
+
+The package includes four CSV tables, four PNG/SVG figure pairs, five separate
+narrative drafts, one combined report, and the reproducibility manifest. The
+manifest records every input and output hash and has SHA-256
+`db298df905de11e145638d1f633f6829b5a9006f8012f0c02755e5f38443ccc8`.
+Do not edit numerical table cells or plotted values manually; revise the
+generator and rerun if an approved presentational change is needed.
+
+This reporting stage reads only already-approved aggregate analysis artifacts.
+It does not reopen the quarantined outcome source, persist contract-level
+joined data, make network requests, or alter the frozen methodology.

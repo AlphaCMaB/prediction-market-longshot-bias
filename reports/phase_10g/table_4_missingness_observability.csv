@@ -1,0 +1,14 @@
+Domain,Metric,Value,Interpretation
+Outcome availability,Binary-resolved sampled contracts,11495,Allowed yes/no outcome available
+Outcome availability,Unresolved/nonbinary sampled contracts,78,Retained as missing; no replacement
+Outcome availability,Family-target weighted resolution coverage,99.21%,Design-weighted coverage
+Outcome availability,Contract-target weighted resolution coverage,99.46%,Design-weighted coverage
+Primary outcome sample,Resolved price-observable contracts,9353,Contribute to primary analysis
+Primary outcome sample,Families with a resolved primary contract,4360,Contribute to primary analysis
+Primary price exclusion,No pre-target candle,928,No eligible candle at or before target
+Primary price exclusion,Midpoint only within 15-60m,1256,Eligible for 60-minute robustness only
+Primary price exclusion,API/data failure,1,Preserved failure; no replacement
+Observability balance,Hours-since-open standardized difference,0.257,Observed versus unavailable-price contracts
+Observability balance,Maximum family-size share difference,0.197,Absolute weighted-share difference
+Observability balance,Maximum month share difference,0.123,Absolute weighted-share difference
+Observability balance,Maximum target-hour share difference,0.027,Absolute weighted-share difference

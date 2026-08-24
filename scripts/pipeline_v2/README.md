@@ -672,3 +672,20 @@ minimal projection and the nonpersisted in-memory joined sample and validates
 the joined field scope. A completed run is immutable and reused only after full
 hash validation. Generated outputs remain ignored; do not commit the minimal
 outcome projection or analysis artifacts.
+
+## Phase 10H paper-ready reporting
+
+`build_phase_10g_paper_report` deterministically converts the authoritative
+Phase 10G v3 aggregate artifacts into paper-ready prose, tables, and figures:
+
+```console
+python -m scripts.pipeline_v2.build_phase_10g_paper_report
+```
+
+The command verifies all frozen source hashes and the Phase 10G identity before
+writing `reports/phase_10g/`. It produces Methods, Results, Discussion,
+Limitations, a mentor summary, four CSV tables, four figures in PNG and SVG,
+a combined report, and a manifest containing the source, code, table, and
+figure hashes. Re-running must reproduce every byte; changed or unexpected
+artifacts fail closed. The generator performs no network request and no new
+analysis.

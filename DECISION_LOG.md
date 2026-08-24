@@ -668,3 +668,28 @@ fingerprint and a fail-closed joined-field scope check without persisting the
 joined data. Shared v1/v2/v3 estimates are unchanged. V3 is the reporting
 version under commit identity
 `931a1d35de134e91eee3ed71041a712414c1435fbcd37f1ffc28b263e746252e`.
+
+## 2026-08-25 — Freeze the Phase 10H paper-ready reporting interpretation
+
+Status: approved and completed
+
+The owner authorized paper-ready reporting from the authoritative Phase 10G v3
+artifacts while freezing every analytical choice. The approved headline is:
+“In the pre-specified PR2 Sports sample, we detect no statistically
+distinguishable evidence of favorite-longshot bias.” Venue-wide absence,
+perfect calibration, selective emphasis on one robustness result, and
+standalone interpretation of the one descriptive decile interval excluding
+zero are prohibited.
+
+Decision: tables, figures, and prose must be generated deterministically from
+the hash-pinned frozen artifacts. The family-target result remains primary;
+the contract-target result and Brier score remain secondary. All five frozen
+robustness analyses must appear together. Observability differences,
+resolution missingness, PR1 price limitations, within-family dependence, the
+indicative nature of midpoints, and statistical uncertainty must be reported.
+
+The resulting package is under `reports/phase_10g/`. Its manifest SHA-256 is
+`db298df905de11e145638d1f633f6829b5a9006f8012f0c02755e5f38443ccc8`,
+and its generator is pinned to code commit
+`250b9d3f3f1117b7f421020c80b368f2eb02bf5e`. Reporting changed no frozen
+analysis input and made no network request.

@@ -169,3 +169,19 @@ paper-ready tables, figures, and a limitations section. It must:
 
 No generated-data expansion, new outcome fields, new subgroup search, sample
 redraw, observation-weight change, or methodology change is authorized.
+
+## Phase 10H — reporting package complete; mentor review gate
+
+The paper-ready package is complete at `reports/phase_10g/` and is pinned by
+manifest SHA-256
+`db298df905de11e145638d1f633f6829b5a9006f8012f0c02755e5f38443ccc8`.
+All required tables and figures were regenerated deterministically from the
+authoritative Phase 10G v3 identity.
+
+The next step is editorial review and paper integration. Review may improve
+wording, captions, or layout, but it must not change numerical values,
+analytical definitions, the primary conclusion, or the hierarchy between the
+family-target primary result and contract-target secondary result. Any new
+subgroup, model, horizon, price definition, or multiple-comparison procedure
+would be a separately labeled exploratory extension and requires a new
+methodological decision before implementation.

@@ -721,3 +721,31 @@ namespace use is 5,348,508,429 bytes, leaving 20,200,691 bytes below the
 ceiling; free disk is approximately 100.42 GiB. No network request, sample
 redraw, anchor change, price change, weight change, StudyRules change, or
 post-outcome eligibility change occurred.
+
+## Phase 10H — deterministic paper-ready reporting complete
+
+The frozen authoritative Phase 10G v3 analysis has been converted into a
+paper-ready reporting package under `reports/phase_10g/`. The package contains
+separate Methods, Results, Discussion, Limitations, and mentor-summary drafts;
+four CSV tables; four figures in both publication PNG and editable SVG formats;
+a combined paper report; and a reproducibility manifest.
+
+Every numerical table and figure is generated directly from hash-pinned Phase
+10B/10E/10F/10G artifacts. The generator rejects changed source hashes or a
+changed Phase 10G identity. A second execution reproduced every byte. The
+reporting code commit is
+`250b9d3f3f1117b7f421020c80b368f2eb02bf5e`, and the reporting-manifest
+SHA-256 is
+`db298df905de11e145638d1f633f6829b5a9006f8012f0c02755e5f38443ccc8`.
+
+The reporting preserves the approved conclusion: in the pre-specified PR2
+Sports sample, no statistically distinguishable evidence of favorite-longshot
+bias is detected. It does not generalize the finding to Kalshi as a whole,
+claim perfect calibration, reinterpret the isolated descriptive decile, or
+promote a robustness definition. The frozen sample, outcomes, estimands,
+weights, prices, inference, thresholds, and exclusions are unchanged. No
+network request or new inferential analysis was performed. The acceptance
+review verified all table cells against their pinned sources, visually
+inspected all four figures, reproduced all 19 files byte-for-byte, and passed
+the full 769-test offline suite plus scoped Black, pyflakes, compilation, TOML,
+and `git diff --check` validation.
