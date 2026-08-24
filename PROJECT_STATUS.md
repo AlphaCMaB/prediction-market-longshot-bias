@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-08-23
+Last updated: 2026-08-24
 Branch: `methodology-v2-clean`
 
 ## Research objective
@@ -592,3 +592,44 @@ of namespace headroom. Free disk is 89,212,518,400 bytes (83.09 GiB),
 3,313,172,480 bytes above the floor. At current projections a later authorized
 acquisition would leave 36,826,981 namespace bytes and 3,289,183,618 free-space
 margin bytes; both must be recomputed immediately before any network run.
+
+## Phase 10F-E — frozen PR2 price acquisition complete; pre-outcome gate reached
+
+The immutable Phase 10F-D sample was preserved exactly: 11,573 contracts from
+5,000 PR2 families under sampling commit
+`8a95158441c245988d2562b732762d9a6f3c5c9cd6d0bb33b9fcc6f3b8de2bc9`.
+All 116 acquisition partitions are complete. Of the 11,573 frozen contract
+requests, 11,572 succeeded and the previously preserved transport failure
+remains an explicit `API/data_failure`; no replacement was drawn. Acquisition
+recorded three retries and zero rate limits.
+
+A bounded investigation of request 11,060 established an unambiguous live
+quote schema. All bid/ask candles had documented dollar closes. One earlier
+candle lacked a documented trade close while a later valid trade close was
+available. The normalizer therefore treats quote and trade validity
+independently, never substitutes `previous_dollars`, and records the isolated
+condition as `trade_schema_unavailable`. Immutable raw bytes and a raw-capture
+commit are now published before normalization so future schema failures remain
+auditable and resumable.
+
+The primary midpoint-at-t−1h sample with at most 15 minutes of staleness has
+9,388 contracts and 4,377 observable families. Contract-target weighted
+coverage is 0.696388; family-target weighted coverage is 0.816086. Family-
+weighted ESS is 4,208.115 and contract-weighted ESS is 3,155.763, so the frozen
+500-family and family-ESS-500 final gate passes. Robustness samples contain
+10,644 contracts/4,735 families for midpoint <=60m, 5,455/3,178 for trade
+close <=15m, and 7,213/3,855 for trade close <=60m.
+
+Primary attrition consists of 928 contracts with no pre-target candle, the one
+preserved API/data failure, and zero missing-bid, missing-ask, or stale-midpoint
+cases. Trade diagnostics additionally contain 3,430 no-trade cases and one
+trade-schema-unavailable case. No post-target candle, duplicate request,
+inclusion-probability change, outcome field, or outcome access was found.
+
+Final commit identity is
+`79e022b7d9d359b484632e82671ef0095eba040687a21bc9a34a9bb947cf08de`.
+The deterministic no-network replay and all 752 offline tests pass. Guarded
+namespace use is 5,348,064,156 bytes, leaving 20,644,964 bytes below the 5-GiB
+ceiling. Free disk at finalization was about 91.18 GiB, above the 80-GiB hard
+floor. Phase 10F-E stops at the required final pre-outcome sample audit; no
+outcome was accessed and no favorite–longshot estimate was calculated.

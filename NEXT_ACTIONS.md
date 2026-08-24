@@ -1,6 +1,6 @@
 # Next Actions
 
-Last updated: 2026-08-23
+Last updated: 2026-08-24
 
 ## Phase 10A-R — completed
 
@@ -113,3 +113,27 @@ Ask the project owner before changing the frozen methodology, deleting any
 validated data, exceeding 5 GiB of generated data, allowing free space below
 80 GiB, using credentials/private access, or choosing between research designs
 with materially different interpretations.
+
+## Phase 10F-E — completed; final pre-outcome sample audit
+
+The frozen PR2 acquisition and all four outcome-blind analysis samples are
+complete. The primary midpoint <=15m sample passes both frozen overall gates
+with 4,377 observable families and family-weighted ESS 4,208.115. The sample,
+weights, attrition classifications, spread diagnostics, request provenance,
+and immutable hashes must now receive one final pre-outcome audit.
+
+The next phase is the explicit outcome-access gate. Before any outcome join:
+
+1. accept the final 10F-E acquisition and sample audit;
+2. preserve commit identity
+   `79e022b7d9d359b484632e82671ef0095eba040687a21bc9a34a9bb947cf08de`;
+3. freeze the primary and robustness artifact hashes and the predeclared
+   weighting/ESS rules;
+4. obtain explicit authorization to read and join quarantined outcomes; and
+5. keep unsupported subgroup or probability-bin results descriptive under the
+   already frozen support thresholds.
+
+Do not redraw failed or unobservable contracts, change staleness or spread
+rules, reweight for price observability, pool PR1 with PR2, or access outcomes
+without a new explicit authorization. Generated Phase 10F-E data remain local
+and ignored; namespace headroom is only 20,644,964 bytes.

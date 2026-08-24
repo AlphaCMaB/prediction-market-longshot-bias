@@ -609,3 +609,25 @@ have been independently validated.
 Existing raw data, processed data, and outputs remain in their current paths.
 Only newly generated V2 artifacts should eventually use namespaced V2 paths,
 as documented in `docs/refactor/OUTPUT_PATH_INVENTORY.md`.
+
+## Phase 10F-E frozen PR2 price acquisition
+
+`run_phase_10f_e` acquires only the immutable Phase 10F-D PR2 contract sample.
+It publishes compressed raw responses and independent request commits, resumes
+without redownloading completed requests, rejects post-target candles, and
+keeps midpoint and trade-close validity separate. Live bid/ask values require
+documented `close_dollars`; a live trade without `close_dollars` is classified
+`trade_schema_unavailable`. The normalizer never substitutes
+`previous_dollars`.
+
+Validate a completed production root offline with:
+
+```console
+python -m scripts.pipeline_v2.run_phase_10f_e --no-network-resume
+```
+
+The completed freeze contains 116 partitions and 11,573 contract rows. The
+primary midpoint <=15m artifact contains 9,388 contracts from 4,377 families,
+with family-weighted ESS 4,208.115; it passes the predeclared overall gate.
+Outcomes remain quarantined. The local ignored commit file pins final identity
+`79e022b7d9d359b484632e82671ef0095eba040687a21bc9a34a9bb947cf08de`.

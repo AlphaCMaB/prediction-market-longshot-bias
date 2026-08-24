@@ -92,6 +92,10 @@ TECHNICAL_FIELDS = (
     "duplicate_candle_count",
     "missing_bid",
     "missing_ask",
+    "midpoint_valid",
+    "trade_close_valid",
+    "midpoint_failure_reason",
+    "trade_failure_reason",
     "yes_bid",
     "yes_ask",
     "midpoint",
@@ -112,6 +116,7 @@ TECHNICAL_FIELDS = (
     "no_pre_target_candle",
     "midpoint_too_stale",
     "no_trade",
+    "trade_schema_unavailable",
     "trade_too_stale",
 )
 NORMALIZED_FIELDS = (*CONTRACT_FIELDS, *TECHNICAL_FIELDS)
@@ -149,6 +154,10 @@ ANALYSIS_FIELDS = (
     "trade_close",
     "trade_observation_time",
     "trade_staleness_minutes",
+    "midpoint_valid",
+    "trade_close_valid",
+    "midpoint_failure_reason",
+    "trade_failure_reason",
     "midpoint_observability_status",
     "trade_observability_status",
 )
@@ -159,6 +168,8 @@ BOOL_FIELDS = frozenset(
         "empty_response",
         "missing_bid",
         "missing_ask",
+        "midpoint_valid",
+        "trade_close_valid",
         "midpoint_within_15m",
         "midpoint_within_60m",
         "trade_within_15m",
@@ -168,6 +179,7 @@ BOOL_FIELDS = frozenset(
         "no_pre_target_candle",
         "midpoint_too_stale",
         "no_trade",
+        "trade_schema_unavailable",
         "trade_too_stale",
     }
 )
@@ -449,6 +461,33 @@ def _load_complete_partition(
         if _sha256(path) != commit["artifact_hashes"][name]:
             raise PhaseEError("partition artifact hash changed")
     rows = _read_gzip_csv(normalized_path, typed=True)
+    for row in rows:
+        # Complete v1 partitions were produced by a stricter normalizer that
+        # rejected any unavailable live trade schema. Upgrade their in-memory
+        # projection without rewriting immutable partition artifacts.
+        row.setdefault("midpoint_valid", row.get("midpoint") is not None)
+        row.setdefault("trade_close_valid", row.get("trade_close") is not None)
+        row.setdefault(
+            "midpoint_failure_reason",
+            (
+                ""
+                if row.get("midpoint") is not None
+                else (
+                    "missing_bid"
+                    if row.get("missing_bid") and not row.get("missing_ask")
+                    else (
+                        "missing_ask"
+                        if row.get("missing_ask") and not row.get("missing_bid")
+                        else "missing_bid_and_ask"
+                    )
+                )
+            ),
+        )
+        row.setdefault(
+            "trade_failure_reason",
+            "" if row.get("trade_close") is not None else "no_trade",
+        )
+        row.setdefault("trade_schema_unavailable", False)
     requests_rows = [json.loads(line) for line in request_path.read_text().splitlines()]
     if (
         len(rows) != commit["contract_count"]
@@ -976,6 +1015,9 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, An
         max_bytes=args.max_generated_bytes,
         min_free_bytes=args.min_free_bytes,
     )
+    final_path = args.output_root / "phase_10f_e_commit.json"
+    if final_path.exists():
+        return _validate_final(args, budget)
     b2_acceptance = json.loads(args.b2_acceptance.read_text())
     preflight = _preflight(budget, frozen_rows, b2_acceptance)
     if args.preflight_only:
@@ -988,10 +1030,6 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, An
             raise PhaseEError("stored preflight sample identity changed")
     else:
         _publish(budget, preflight_path, _json_bytes(preflight, pretty=True))
-
-    final_path = args.output_root / "phase_10f_e_commit.json"
-    if final_path.exists():
-        return _validate_final(args, budget)
 
     active_session = session or requests.Session()
     started = time.monotonic()

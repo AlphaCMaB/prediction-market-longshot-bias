@@ -71,12 +71,16 @@ def family_size_stratum(count: int) -> str:
     return "high_contract_count"
 
 
-def select_ticker_sample(candidates: Iterable[TickerCandidate]) -> list[TickerCandidate]:
+def select_ticker_sample(
+    candidates: Iterable[TickerCandidate],
+) -> list[TickerCandidate]:
     by_family: dict[tuple[str, str], list[TickerCandidate]] = {}
     for candidate in candidates:
         by_family.setdefault(candidate.family_identity, []).append(candidate)
     if len(by_family) != 135:
-        raise B2ValidationError(f"expected 135 network families, found {len(by_family)}")
+        raise B2ValidationError(
+            f"expected 135 network families, found {len(by_family)}"
+        )
 
     selected: list[TickerCandidate] = []
     remaining_by_family: dict[tuple[str, str], list[TickerCandidate]] = {}
@@ -113,7 +117,9 @@ def select_ticker_sample(candidates: Iterable[TickerCandidate]) -> list[TickerCa
             ),
         )
         if len(ranked_families) < quota:
-            raise B2ValidationError(f"insufficient second-ticker families in {category}")
+            raise B2ValidationError(
+                f"insufficient second-ticker families in {category}"
+            )
         for identity in ranked_families[:quota]:
             second = min(
                 remaining_by_family[identity],
@@ -123,11 +129,20 @@ def select_ticker_sample(candidates: Iterable[TickerCandidate]) -> list[TickerCa
             )
             selected.append(second)
 
-    if len(selected) != SAMPLE_SIZE or len({row.ticker for row in selected}) != SAMPLE_SIZE:
-        raise B2ValidationError("deterministic ticker sample is not exactly 200 unique rows")
-    if max(
-        sum(row.family_identity == identity for row in selected) for identity in by_family
-    ) > 2:
+    if (
+        len(selected) != SAMPLE_SIZE
+        or len({row.ticker for row in selected}) != SAMPLE_SIZE
+    ):
+        raise B2ValidationError(
+            "deterministic ticker sample is not exactly 200 unique rows"
+        )
+    if (
+        max(
+            sum(row.family_identity == identity for row in selected)
+            for identity in by_family
+        )
+        > 2
+    ):
         raise B2ValidationError("large family dominates the bounded sample")
     return sorted(selected, key=lambda row: (row.family_identity, row.ticker))
 
@@ -179,6 +194,34 @@ def _distribution_close(
     return result
 
 
+def _live_quote_close(value: Any, *, field: str) -> float | None:
+    """Parse a live quote side without accepting a legacy representation."""
+    if not isinstance(value, Mapping):
+        raise B2ValidationError(f"{field} is not an object")
+    if "close_dollars" not in value:
+        raise B2ValidationError(f"unknown live quote schema in {field}")
+    documented = _typed_value(
+        value.get("close_dollars"), field=f"{field}.close_dollars"
+    )
+    if "close" in value:
+        legacy = _typed_value(value.get("close"), field=f"{field}.close")
+        if documented != legacy:
+            raise B2ValidationError(f"ambiguous live quote schema in {field}")
+    return documented
+
+
+def _live_trade_close(value: Any) -> tuple[float | None, bool, str]:
+    """Parse live trade close independently, never using previous-price fields."""
+    if not isinstance(value, Mapping):
+        return None, False, "trade_schema_unavailable"
+    if "close_dollars" not in value or "close" in value:
+        return None, False, "trade_schema_unavailable"
+    result = _typed_value(value.get("close_dollars"), field="price.close_dollars")
+    if result is None:
+        return None, False, "no_trade_value"
+    return result, True, ""
+
+
 def normalize_candle(candle: Any, *, route: str) -> dict[str, Any]:
     if not isinstance(candle, Mapping):
         raise B2ValidationError("candlestick is not an object")
@@ -192,34 +235,58 @@ def normalize_candle(candle: Any, *, route: str) -> dict[str, Any]:
         variant = "live_fixed_point_dollars"
     else:
         raise B2ValidationError("unknown candlestick route")
-    bid = _distribution_close(
-        candle.get("yes_bid"), variant=variant, field="yes_bid", nullable=True
-    )
-    ask = _distribution_close(
-        candle.get("yes_ask"), variant=variant, field="yes_ask", nullable=True
-    )
-    trade = _distribution_close(
-        candle.get("price"), variant=variant, field="price", nullable=True
-    )
+    if route == HISTORICAL_ROUTE:
+        bid = _distribution_close(
+            candle.get("yes_bid"), variant=variant, field="yes_bid", nullable=True
+        )
+        ask = _distribution_close(
+            candle.get("yes_ask"), variant=variant, field="yes_ask", nullable=True
+        )
+        trade = _distribution_close(
+            candle.get("price"), variant=variant, field="price", nullable=True
+        )
+        trade_valid = trade is not None
+        trade_failure = "" if trade_valid else "no_trade_value"
+    else:
+        bid = _live_quote_close(candle.get("yes_bid"), field="yes_bid")
+        ask = _live_quote_close(candle.get("yes_ask"), field="yes_ask")
+        trade, trade_valid, trade_failure = _live_trade_close(candle.get("price"))
     if bid is not None and ask is not None and bid > ask:
         raise B2ValidationError("crossed YES quote")
+    midpoint_valid = bid is not None and ask is not None
+    if midpoint_valid:
+        midpoint_failure = ""
+    elif bid is None and ask is None:
+        midpoint_failure = "missing_bid_and_ask"
+    elif bid is None:
+        midpoint_failure = "missing_bid"
+    else:
+        midpoint_failure = "missing_ask"
     return {
         "end_period_ts": end_ts,
         "yes_bid_close": bid,
         "yes_ask_close": ask,
         "trade_close": trade,
+        "midpoint_valid": midpoint_valid,
+        "trade_close_valid": trade_valid,
+        "midpoint_failure_reason": midpoint_failure,
+        "trade_failure_reason": trade_failure,
         "schema_variant": variant,
         "previous_trade_used": False,
     }
 
 
-def normalize_response(payload: Any, *, route: str, ticker: str) -> list[dict[str, Any]]:
+def normalize_response(
+    payload: Any, *, route: str, ticker: str
+) -> list[dict[str, Any]]:
     if not isinstance(payload, Mapping):
         raise B2ValidationError("candlestick response is not an object")
     if route == HISTORICAL_ROUTE:
         if set(payload) != {"ticker", "candlesticks"}:
             raise B2ValidationError("historical response schema changed")
-        if payload.get("ticker") != ticker or not isinstance(payload.get("candlesticks"), list):
+        if payload.get("ticker") != ticker or not isinstance(
+            payload.get("candlesticks"), list
+        ):
             raise B2ValidationError("historical response ticker/schema mismatch")
         source = payload["candlesticks"]
     elif route == LIVE_ROUTE:
@@ -252,12 +319,36 @@ def extract_observation(
     ask = latest.get("yes_ask_close") if latest else None
     quote_ts = int(latest["end_period_ts"]) if latest else None
     quote_age = (target_ts - quote_ts) / 60 if quote_ts is not None else None
-    midpoint = (float(bid) + float(ask)) / 2 if bid is not None and ask is not None else None
+    midpoint = (
+        (float(bid) + float(ask)) / 2 if bid is not None and ask is not None else None
+    )
     spread = float(ask) - float(bid) if midpoint is not None else None
-    trades = [row for row in candles if row.get("trade_close") is not None]
+    trades = [
+        row
+        for row in candles
+        if bool(row.get("trade_close_valid")) and row.get("trade_close") is not None
+    ]
     trade_row = max(trades, key=lambda row: int(row["end_period_ts"]), default=None)
-    trade = float(trade_row["trade_close"]) if trade_row else None
+    unavailable = [
+        row
+        for row in candles
+        if row.get("trade_failure_reason") == "trade_schema_unavailable"
+    ]
+    latest_unavailable_ts = max(
+        (int(row["end_period_ts"]) for row in unavailable), default=None
+    )
     trade_ts = int(trade_row["end_period_ts"]) if trade_row else None
+    trade_schema_unavailable = bool(
+        latest_unavailable_ts is not None
+        and (trade_ts is None or latest_unavailable_ts >= trade_ts)
+    )
+    if trade_schema_unavailable:
+        trade = None
+        trade_ts = None
+        trade_failure_reason = "trade_schema_unavailable"
+    else:
+        trade = float(trade_row["trade_close"]) if trade_row else None
+        trade_failure_reason = "" if trade_row else "no_trade"
     trade_age = (target_ts - trade_ts) / 60 if trade_ts is not None else None
     return {
         "candle_count": len(candles),
@@ -268,19 +359,35 @@ def extract_observation(
         "duplicate_candle_count": 0,
         "missing_bid": bool(latest is not None and bid is None),
         "missing_ask": bool(latest is not None and ask is None),
+        "midpoint_valid": bool(latest is not None and latest.get("midpoint_valid")),
+        "midpoint_failure_reason": (
+            str(latest.get("midpoint_failure_reason") or "")
+            if latest is not None
+            else "no_pre_target_candle"
+        ),
         "yes_bid": bid,
         "yes_ask": ask,
         "midpoint": midpoint,
         "spread": spread,
         "midpoint_observation_time": _iso(quote_ts),
         "midpoint_staleness_minutes": quote_age,
-        "midpoint_within_15m": bool(midpoint is not None and quote_age is not None and quote_age <= 15),
-        "midpoint_within_60m": bool(midpoint is not None and quote_age is not None and quote_age <= 60),
+        "midpoint_within_15m": bool(
+            midpoint is not None and quote_age is not None and quote_age <= 15
+        ),
+        "midpoint_within_60m": bool(
+            midpoint is not None and quote_age is not None and quote_age <= 60
+        ),
         "trade_close": trade,
+        "trade_close_valid": bool(trade is not None),
+        "trade_failure_reason": trade_failure_reason,
         "trade_observation_time": _iso(trade_ts),
         "trade_staleness_minutes": trade_age,
-        "trade_within_15m": bool(trade is not None and trade_age is not None and trade_age <= 15),
-        "trade_within_60m": bool(trade is not None and trade_age is not None and trade_age <= 60),
+        "trade_within_15m": bool(
+            trade is not None and trade_age is not None and trade_age <= 15
+        ),
+        "trade_within_60m": bool(
+            trade is not None and trade_age is not None and trade_age <= 60
+        ),
         "previous_trade_used": False,
     }
 

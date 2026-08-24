@@ -58,7 +58,9 @@ DEFAULT_MAX_BYTES = 5 * 1024**3
 DEFAULT_MIN_FREE_BYTES = 80 * 1024**3
 CONSERVATIVE_ADDITIONAL_BYTES = 32 * 1024**2
 CUTOFF_PATH = "/historical/cutoff"
-HISTORICAL_DOC_SHA256 = "ad0fa333f30f9bc3762dc6052d7cc9429db8eaf0bbcfdc33eddc89a01892bf0f"
+HISTORICAL_DOC_SHA256 = (
+    "ad0fa333f30f9bc3762dc6052d7cc9429db8eaf0bbcfdc33eddc89a01892bf0f"
+)
 CUTOFF_DOC_SHA256 = "a44c4a8def2fa1368ef1bdebe50968a596dac126bcba71034a221956862a5162"
 SAMPLE_FIELDS = (
     "sample_index",
@@ -90,6 +92,10 @@ NORMALIZED_FIELDS = (
     "duplicate_candle_count",
     "missing_bid",
     "missing_ask",
+    "midpoint_valid",
+    "trade_close_valid",
+    "midpoint_failure_reason",
+    "trade_failure_reason",
     "yes_bid",
     "yes_ask",
     "midpoint",
@@ -167,7 +173,9 @@ def _load_candidates(
     }
     associated = {
         identity: set(
-            decode_market_tickers(row["family_id"], row["associated_market_tickers_compact"])
+            decode_market_tickers(
+                row["family_id"], row["associated_market_tickers_compact"]
+            )
         )
         for identity, row in selected.items()
     }
@@ -194,11 +202,16 @@ def _load_candidates(
                 continue
             ticker = source[index["ticker"]]
             if ticker not in associated[identity] or ticker in seen[identity]:
-                raise B2ValidationError("market association is duplicate or inconsistent")
+                raise B2ValidationError(
+                    "market association is duplicate or inconsistent"
+                )
             seen[identity].add(ticker)
             if source[index["event_ticker"]] != plan["event_ticker"]:
                 raise B2ValidationError("event identity changed")
-            if classify_market_open(source[index["open_time"]], plan["target_time"]) != EXISTED:
+            if (
+                classify_market_open(source[index["open_time"]], plan["target_time"])
+                != EXISTED
+            ):
                 continue
             candidates.append(
                 TickerCandidate(
@@ -219,7 +232,9 @@ def _load_candidates(
     ):
         raise B2ValidationError("not all pinned smoke market associations were found")
     if len(candidates) != 12137:
-        raise B2ValidationError(f"expected 12,137 eligible tickers, found {len(candidates)}")
+        raise B2ValidationError(
+            f"expected 12,137 eligible tickers, found {len(candidates)}"
+        )
     return candidates, {"smoke_plan": smoke_plan, "full_planner": full_stats}
 
 
@@ -323,22 +338,47 @@ class BoundedNetworkClient:
             self.output_root / "request_commits" / f"request_{request_id}.json",
         )
 
+    def _capture_path(self, request_id: str) -> Path:
+        return self.output_root / "raw_captures" / f"request_{request_id}.json"
+
     def _validate_cached(
         self, request: Mapping[str, Any], request_id: str
-    ) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    ) -> tuple[dict[str, Any], dict[str, Any] | None] | None:
         raw, commit_path = self._raw_paths(request_id)
+        capture_path = self._capture_path(request_id)
         if not commit_path.exists() and not raw.exists():
             return None
-        if not commit_path.exists() or not raw.exists():
+        if commit_path.exists() and not raw.exists():
             raise B2ValidationError("partial immutable request publication")
         wrapper = json.loads(gzip.decompress(raw.read_bytes()))
-        commit = json.loads(commit_path.read_text(encoding="utf-8"))
-        if wrapper.get("schema_version") != SCHEMA_VERSION or wrapper.get("request") != request:
+        if (
+            wrapper.get("schema_version") != SCHEMA_VERSION
+            or wrapper.get("request") != request
+        ):
             raise B2ValidationError("cached B2 request identity mismatch")
         response = wrapper.get("response")
-        if wrapper.get("response_sha256") != hashlib.sha256(canonical_json(response)).hexdigest():
+        if (
+            wrapper.get("response_sha256")
+            != hashlib.sha256(canonical_json(response)).hexdigest()
+        ):
             raise B2ValidationError("cached B2 response hash mismatch")
-        if commit.get("raw_sha256") != _sha256(raw) or commit.get("request_id") != request_id:
+        if not commit_path.exists():
+            if not capture_path.exists():
+                raise B2ValidationError("raw response lacks immutable capture metadata")
+            capture = json.loads(capture_path.read_text(encoding="utf-8"))
+            if (
+                capture.get("request_id") != request_id
+                or capture.get("raw_sha256") != _sha256(raw)
+                or capture.get("request") != request
+            ):
+                raise B2ValidationError("cached raw capture mismatch")
+            self.resume_hits += 1
+            return wrapper, None
+        commit = json.loads(commit_path.read_text(encoding="utf-8"))
+        if (
+            commit.get("raw_sha256") != _sha256(raw)
+            or commit.get("request_id") != request_id
+        ):
             raise B2ValidationError("cached B2 commit mismatch")
         self.resume_hits += 1
         return wrapper, commit
@@ -349,6 +389,8 @@ class BoundedNetworkClient:
         cached = self._validate_cached(request, request_id)
         if cached is not None:
             wrapper, commit = cached
+            if commit is None:
+                raise B2ValidationError("cutoff raw capture lacks a complete commit")
             return dict(wrapper["response"]), commit
         response = self._network_get(CUTOFF_PATH, {})
         response.raise_for_status()
@@ -358,7 +400,12 @@ class BoundedNetworkClient:
         required = {"market_settled_ts", "trades_created_ts", "orders_updated_ts"}
         if not isinstance(payload, Mapping) or not required.issubset(payload):
             raise B2ValidationError("historical cutoff schema changed")
-        if route_for_settlement(payload["market_settled_ts"], payload["market_settled_ts"]) != LIVE_ROUTE:
+        if (
+            route_for_settlement(
+                payload["market_settled_ts"], payload["market_settled_ts"]
+            )
+            != LIVE_ROUTE
+        ):
             raise B2ValidationError("historical cutoff timestamp is invalid")
         retrieved = format_iso_utc(datetime.now(timezone.utc))
         wrapper = {
@@ -423,9 +470,31 @@ class BoundedNetworkClient:
         cached = self._validate_cached(request, request_id)
         if cached is not None:
             wrapper, commit = cached
+            if commit is None:
+                status = int(wrapper.get("http_status") or 0)
+                success = status == 200
+                normalized = (
+                    normalize_response(wrapper["response"], route=route, ticker=ticker)
+                    if success
+                    else []
+                )
+                if any(row["end_period_ts"] > end_ts for row in normalized):
+                    raise B2ValidationError("API returned a post-request-end candle")
+                failure_kind = str(wrapper.get("failure_kind") or "")
+                commit = self._publish_candle_commit(
+                    request_id=request_id,
+                    request=request,
+                    wrapper=wrapper,
+                    normalized=normalized,
+                    success=success,
+                    failure_kind=failure_kind,
+                )
             if not commit["success"]:
                 return [], commit
-            return normalize_response(wrapper["response"], route=route, ticker=ticker), commit
+            return (
+                normalize_response(wrapper["response"], route=route, ticker=ticker),
+                commit,
+            )
 
         attempts = 0
         rate_limits = 0
@@ -452,6 +521,10 @@ class BoundedNetworkClient:
                 self.sleep(min(2 ** (attempts - 1), 30))
 
         status = int(response.status_code) if response is not None else 0
+        headers = getattr(response, "headers", {}) or {}
+        content_type = str(
+            headers.get("Content-Type") or headers.get("content-type") or ""
+        )
         success = status == 200
         failure_kind = ""
         payload: Any
@@ -459,23 +532,23 @@ class BoundedNetworkClient:
             try:
                 payload = response.json()
             except Exception as exc:
-                raise B2ValidationError("successful candlestick response is not JSON") from exc
+                raise B2ValidationError(
+                    "successful candlestick response is not JSON"
+                ) from exc
             reject_sensitive_response(payload)
             _check_prohibited(payload)
-            normalized = normalize_response(payload, route=route, ticker=ticker)
-            if any(row["end_period_ts"] > end_ts for row in normalized):
-                raise B2ValidationError("API returned a post-request-end candle")
         else:
-            normalized = []
             failure_kind = (
                 "http_404"
                 if status == 404
-                else f"http_{status}"
-                if status
-                else "transport_failure"
+                else f"http_{status}" if status else "transport_failure"
             )
             try:
-                payload = response.json() if response is not None else {"transport_error": transport_error}
+                payload = (
+                    response.json()
+                    if response is not None
+                    else {"transport_error": transport_error}
+                )
             except Exception:
                 content = response.content if response is not None else b""
                 payload = {
@@ -493,11 +566,59 @@ class BoundedNetworkClient:
             "attempts": attempts,
             "retries": max(0, attempts - 1),
             "rate_limits": rate_limits,
+            "content_type": content_type,
+            "failure_kind": failure_kind,
             "response": payload,
         }
         raw_content = _gzip(canonical_json(wrapper) + b"\n")
         raw, commit_path = self._raw_paths(request_id)
         _publish(self.budget, raw, raw_content)
+        capture = {
+            "schema_version": SCHEMA_VERSION,
+            "request_id": request_id,
+            "request": request,
+            "raw_path": str(raw.relative_to(self.output_root)),
+            "raw_sha256": _sha256(raw),
+            "http_status": status,
+            "content_type": content_type,
+            "attempts": attempts,
+            "retries": max(0, attempts - 1),
+            "rate_limits": rate_limits,
+            "raw_published_before_normalization": True,
+            "complete": True,
+        }
+        _publish(
+            self.budget,
+            self._capture_path(request_id),
+            canonical_json(capture) + b"\n",
+        )
+        normalized = (
+            normalize_response(payload, route=route, ticker=ticker) if success else []
+        )
+        if any(row["end_period_ts"] > end_ts for row in normalized):
+            raise B2ValidationError("API returned a post-request-end candle")
+        commit = self._publish_candle_commit(
+            request_id=request_id,
+            request=request,
+            wrapper=wrapper,
+            normalized=normalized,
+            success=success,
+            failure_kind=failure_kind,
+        )
+        return normalized, commit
+
+    def _publish_candle_commit(
+        self,
+        *,
+        request_id: str,
+        request: Mapping[str, Any],
+        wrapper: Mapping[str, Any],
+        normalized: Sequence[Mapping[str, Any]],
+        success: bool,
+        failure_kind: str,
+    ) -> dict[str, Any]:
+        raw, commit_path = self._raw_paths(request_id)
+        payload = wrapper.get("response")
         commit = {
             "schema_version": SCHEMA_VERSION,
             "request_id": request_id,
@@ -506,10 +627,11 @@ class BoundedNetworkClient:
             "raw_sha256": _sha256(raw),
             "compressed_bytes": raw.stat().st_size,
             "uncompressed_response_bytes": len(canonical_json(payload)),
-            "http_status": status,
-            "attempts": attempts,
-            "retries": max(0, attempts - 1),
-            "rate_limits": rate_limits,
+            "http_status": int(wrapper.get("http_status") or 0),
+            "content_type": str(wrapper.get("content_type") or ""),
+            "attempts": int(wrapper.get("attempts") or 0),
+            "retries": int(wrapper.get("retries") or 0),
+            "rate_limits": int(wrapper.get("rate_limits") or 0),
             "success": success,
             "failure_kind": failure_kind,
             "candle_count": len(normalized),
@@ -517,7 +639,7 @@ class BoundedNetworkClient:
             "complete": True,
         }
         _publish(self.budget, commit_path, canonical_json(commit) + b"\n")
-        return normalized, commit
+        return commit
 
 
 def _preflight(
@@ -543,10 +665,13 @@ def _preflight(
         },
         "conservative_additional_bytes": CONSERVATIVE_ADDITIONAL_BYTES,
         "storage_before": state,
-        "projected_namespace_bytes": state["used_bytes"] + CONSERVATIVE_ADDITIONAL_BYTES,
+        "projected_namespace_bytes": state["used_bytes"]
+        + CONSERVATIVE_ADDITIONAL_BYTES,
         "projected_free_bytes": state["free_bytes"] - CONSERVATIVE_ADDITIONAL_BYTES,
-        "passes_namespace_ceiling": state["used_bytes"] + CONSERVATIVE_ADDITIONAL_BYTES <= state["max_bytes"],
-        "passes_free_space_floor": state["free_bytes"] - CONSERVATIVE_ADDITIONAL_BYTES >= state["min_free_bytes"],
+        "passes_namespace_ceiling": state["used_bytes"] + CONSERVATIVE_ADDITIONAL_BYTES
+        <= state["max_bytes"],
+        "passes_free_space_floor": state["free_bytes"] - CONSERVATIVE_ADDITIONAL_BYTES
+        >= state["min_free_bytes"],
         "network_requests_made": 0,
     }
 
@@ -598,13 +723,23 @@ def _boundary_probe(
 def _counts(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     return {
         "sample_tickers": len(rows),
-        "successful_historical_requests": sum(row["request_success"] and row["routing_tier"] == HISTORICAL_ROUTE for row in rows),
-        "successful_live_requests": sum(row["request_success"] and row["routing_tier"] == LIVE_ROUTE for row in rows),
+        "successful_historical_requests": sum(
+            row["request_success"] and row["routing_tier"] == HISTORICAL_ROUTE
+            for row in rows
+        ),
+        "successful_live_requests": sum(
+            row["request_success"] and row["routing_tier"] == LIVE_ROUTE for row in rows
+        ),
         "empty_responses": sum(bool(row["empty_response"]) for row in rows),
         "http_404_failures": sum(row["failure_kind"] == "http_404" for row in rows),
-        "other_http_or_transport_failures": sum(bool(row["failure_kind"]) and row["failure_kind"] != "http_404" for row in rows),
+        "other_http_or_transport_failures": sum(
+            bool(row["failure_kind"]) and row["failure_kind"] != "http_404"
+            for row in rows
+        ),
         "candles_returned": sum(int(row["candle_count"]) for row in rows),
-        "post_target_candles": sum(int(row["post_target_candle_count"]) for row in rows),
+        "post_target_candles": sum(
+            int(row["post_target_candle_count"]) for row in rows
+        ),
         "duplicate_candles": sum(int(row["duplicate_candle_count"]) for row in rows),
         "missing_bid": sum(bool(row["missing_bid"]) for row in rows),
         "missing_ask": sum(bool(row["missing_ask"]) for row in rows),
@@ -617,11 +752,19 @@ def _counts(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 
 def _breakdowns(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     result = {}
-    for field in ("rule", "category", "target_month", "family_size_stratum", "routing_tier"):
+    for field in (
+        "rule",
+        "category",
+        "target_month",
+        "family_size_stratum",
+        "routing_tier",
+    ):
         groups: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
         for row in rows:
             groups[str(row[field])].append(row)
-        result[f"by_{field}"] = {key: _counts(group) for key, group in sorted(groups.items())}
+        result[f"by_{field}"] = {
+            key: _counts(group) for key, group in sorted(groups.items())
+        }
     return result
 
 
@@ -636,7 +779,11 @@ def _projection(
     elapsed_seconds: float,
     storage: Mapping[str, int],
 ) -> dict[str, Any]:
-    ticker_commits = [commit for commit in commits if commit["request"]["purpose"] == "sample_price_window"]
+    ticker_commits = [
+        commit
+        for commit in commits
+        if commit["request"]["purpose"] == "sample_price_window"
+    ]
     raw_bytes = sum(int(commit["compressed_bytes"]) for commit in ticker_commits)
     retries = sum(int(commit["retries"]) for commit in ticker_commits)
     raw_per_ticker = raw_bytes / SAMPLE_SIZE
@@ -660,8 +807,10 @@ def _projection(
             "projected_normalized_bytes": normalized,
             "projected_request_commit_and_manifest_bytes": operational,
             "projected_total_namespace_bytes": total,
-            "fits_current_namespace_ceiling": storage["used_bytes"] + total <= storage["max_bytes"],
-            "fits_current_free_space_floor": storage["free_bytes"] - total >= storage["min_free_bytes"],
+            "fits_current_namespace_ceiling": storage["used_bytes"] + total
+            <= storage["max_bytes"],
+            "fits_current_free_space_floor": storage["free_bytes"] - total
+            >= storage["min_free_bytes"],
         }
 
     production = scope(4586979)
@@ -707,10 +856,11 @@ def _acceptance_projection(
         report["feasibility"]["measured_normalized_bytes_per_ticker"]
     )
     commit_bytes = sum(
-        path.stat().st_size
-        for path in (output_root / "request_commits").glob("*.json")
+        path.stat().st_size for path in (output_root / "request_commits").glob("*.json")
     )
-    manifest_bytes = (output_root / "phase_10f_b2_request_manifest.jsonl").stat().st_size
+    manifest_bytes = (
+        (output_root / "phase_10f_b2_request_manifest.jsonl").stat().st_size
+    )
     operational_per_ticker = (commit_bytes + manifest_bytes) / SAMPLE_SIZE
     state = budget.snapshot()
 
@@ -757,10 +907,22 @@ def _acceptance_projection(
 
 def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, Any]:
     inputs = {
-        "planner_sha256": _verify(args.planner, args.expected_planner_sha256, "planner"),
-        "smoke_plan_sha256": _verify(args.smoke_plan, args.expected_smoke_plan_sha256, "smoke plan"),
-        "market_metadata_sha256": _verify(args.market_metadata, args.expected_market_metadata_sha256, "market metadata"),
-        "phase_10f_b_incomplete_report_sha256": _verify(args.phase_10f_b_report, args.expected_phase_10f_b_report_sha256, "Phase 10F-B report"),
+        "planner_sha256": _verify(
+            args.planner, args.expected_planner_sha256, "planner"
+        ),
+        "smoke_plan_sha256": _verify(
+            args.smoke_plan, args.expected_smoke_plan_sha256, "smoke plan"
+        ),
+        "market_metadata_sha256": _verify(
+            args.market_metadata,
+            args.expected_market_metadata_sha256,
+            "market metadata",
+        ),
+        "phase_10f_b_incomplete_report_sha256": _verify(
+            args.phase_10f_b_report,
+            args.expected_phase_10f_b_report_sha256,
+            "Phase 10F-B report",
+        ),
     }
     rules = load_study_rules(args.config)
     if rules.fingerprint != args.expected_study_rules_fingerprint:
@@ -780,10 +942,20 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, An
     if args.preflight_only:
         result = {
             **preflight,
-            "category_counts": dict(sorted(Counter(row.category for row in sample).items())),
+            "category_counts": dict(
+                sorted(Counter(row.category for row in sample).items())
+            ),
             "rule_counts": dict(sorted(Counter(row.rule for row in sample).items())),
-            "month_counts": dict(sorted(Counter(row.target_time[:7] for row in sample).items())),
-            "family_size_counts": dict(sorted(Counter(family_size_stratum(row.family_market_count) for row in sample).items())),
+            "month_counts": dict(
+                sorted(Counter(row.target_time[:7] for row in sample).items())
+            ),
+            "family_size_counts": dict(
+                sorted(
+                    Counter(
+                        family_size_stratum(row.family_market_count) for row in sample
+                    ).items()
+                )
+            ),
         }
         print(json.dumps(result, sort_keys=True))
         return result
@@ -873,18 +1045,21 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, An
     cutoff, cutoff_commit = client.fetch_cutoff()
     cutoff_hash = cutoff_commit["raw_sha256"]
     routes = {
-        row.ticker: route_for_settlement(row.settlement_time, cutoff["market_settled_ts"])
+        row.ticker: route_for_settlement(
+            row.settlement_time, cutoff["market_settled_ts"]
+        )
         for row in sample
     }
     sample_rows = _sample_rows(sample, routes)
     sample_content = _gzip_csv(sample_rows, SAMPLE_FIELDS)
-    _publish(budget, args.output_root / "phase_10f_b2_ticker_sample.csv.gz", sample_content)
+    _publish(
+        budget, args.output_root / "phase_10f_b2_ticker_sample.csv.gz", sample_content
+    )
 
     commits: list[dict[str, Any]] = [cutoff_commit]
     candles_by_ticker: dict[str, list[dict[str, Any]]] = {}
     normalized_rows: list[dict[str, Any]] = []
     sample_projection = {row["market_ticker"]: row for row in sample_rows}
-    by_ticker = {row.ticker: row for row in sample}
     for candidate in sample:
         candles, commit = client.fetch_candles(
             ticker=candidate.ticker,
@@ -932,7 +1107,11 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, An
         _publish(budget, args.output_root / name, content)
     counts = _counts(normalized_rows)
     spread = diagnostic_distribution(
-        [float(row["spread"]) for row in normalized_rows if row.get("spread") is not None]
+        [
+            float(row["spread"])
+            for row in normalized_rows
+            if row.get("spread") is not None
+        ]
     )
     storage_before_final = budget.snapshot()
     feasibility = _projection(
@@ -940,7 +1119,13 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, An
         commits=commits,
         normalized_bytes=len(normalized_content),
         request_commit_bytes=sum(
-            (args.output_root / "request_commits" / f"request_{commit['request_id']}.json").stat().st_size
+            (
+                args.output_root
+                / "request_commits"
+                / f"request_{commit['request_id']}.json"
+            )
+            .stat()
+            .st_size
             for commit in commits
         ),
         manifest_bytes=len(manifest_content),
@@ -973,8 +1158,12 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, An
         "study_rules_changed": False,
         "production_acquisition_started": False,
     }
-    provenance_content = json.dumps(provenance, indent=2, sort_keys=True).encode("utf-8") + b"\n"
-    _publish(budget, args.output_root / "phase_10f_b2_provenance.json", provenance_content)
+    provenance_content = (
+        json.dumps(provenance, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    )
+    _publish(
+        budget, args.output_root / "phase_10f_b2_provenance.json", provenance_content
+    )
     report = {
         "schema_version": SCHEMA_VERSION,
         "complete": True,
@@ -986,9 +1175,29 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, An
         "routing_counts": dict(sorted(Counter(routes.values()).items())),
         "diagnostics": counts,
         **_breakdowns(normalized_rows),
-        "schema_variants": dict(sorted(Counter(row["schema_variant"] or "empty" for row in normalized_rows).items())),
-        "earliest_end_period_ts": min((row["earliest_end_period_ts"] for row in normalized_rows if row["earliest_end_period_ts"] is not None), default=None),
-        "latest_end_period_ts": max((row["latest_end_period_ts"] for row in normalized_rows if row["latest_end_period_ts"] is not None), default=None),
+        "schema_variants": dict(
+            sorted(
+                Counter(
+                    row["schema_variant"] or "empty" for row in normalized_rows
+                ).items()
+            )
+        ),
+        "earliest_end_period_ts": min(
+            (
+                row["earliest_end_period_ts"]
+                for row in normalized_rows
+                if row["earliest_end_period_ts"] is not None
+            ),
+            default=None,
+        ),
+        "latest_end_period_ts": max(
+            (
+                row["latest_end_period_ts"]
+                for row in normalized_rows
+                if row["latest_end_period_ts"] is not None
+            ),
+            default=None,
+        ),
         "spread_diagnostics": spread,
         "candle_boundary_validation": boundary,
         "physical_network_requests": client.physical_requests,
@@ -996,15 +1205,21 @@ def run(args: argparse.Namespace, *, session: Any | None = None) -> dict[str, An
         "retries": sum(int(commit.get("retries", 0)) for commit in commits),
         "rate_limits": sum(int(commit.get("rate_limits", 0)) for commit in commits),
         "network_elapsed_seconds": client.elapsed_network_seconds,
-        "compressed_raw_bytes": sum(int(commit["compressed_bytes"]) for commit in commits),
-        "uncompressed_response_bytes": sum(int(commit["uncompressed_response_bytes"]) for commit in commits),
+        "compressed_raw_bytes": sum(
+            int(commit["compressed_bytes"]) for commit in commits
+        ),
+        "uncompressed_response_bytes": sum(
+            int(commit["uncompressed_response_bytes"]) for commit in commits
+        ),
         "normalized_output_bytes": len(normalized_content),
         "feasibility": feasibility,
         "outcome_fields_accessed": 0,
         "production_acquisition_started": False,
         "storage_at_report": budget.snapshot(),
     }
-    report_content = json.dumps(report, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    report_content = (
+        json.dumps(report, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    )
     _publish(budget, args.output_root / "phase_10f_b2_report.json", report_content)
     all_artifact_names = (
         "phase_10f_b2_ticker_sample.csv.gz",

@@ -1,6 +1,6 @@
 # Data Runbook
 
-Last updated: 2026-08-22
+Last updated: 2026-08-24
 
 ## Non-negotiable safety limits
 
@@ -923,3 +923,61 @@ StudyRules change. The fresh acceptance snapshot records 5,307,893,277 guarded
 bytes, 60,815,843 namespace bytes remaining, 89,212,518,400 free disk bytes,
 and 3,313,172,480 bytes above the disk floor. Recompute rather than reuse these
 values at the Phase 10F-E gate.
+
+### Phase 10F-E schema investigation and frozen acquisition — 2026-08-24
+
+The completed output root is
+`data/pipeline_v2/horizon_prices/phase_10f_e/`. Existing raw responses,
+request commits, partitions, and final artifacts are immutable and ignored by
+Git. Never delete, rewrite, or redownload them.
+
+Validate the completed acquisition without network access:
+
+```console
+python -m scripts.pipeline_v2.run_phase_10f_e --no-network-resume
+```
+
+This command validates the pinned Phase 10F-D sampling identity, all partition
+and request-commit hashes, request uniqueness, outcome quarantine, final
+artifact hashes, and deterministic replay. It returns `existing_final_reused`
+and performs zero network requests.
+
+The separately authorized request-11,060 investigation used:
+
+```console
+python -m scripts.pipeline_v2.investigate_phase_10f_e_schema --sample-index 11060
+```
+
+Do not rerun it: its immutable report is under
+`schema_investigation_11060/`, and its raw response is already the committed
+request for partition 111. The report SHA-256 is
+`a2344ba0a7dbcce859f87b21008b47af977012b9c1518ba41ff99a892b17f327`;
+the compressed raw SHA-256 is
+`39a0c5b50459168c162ac5209588562caaa8a8045187d70fffd7e53a6379feaa`.
+
+Final acquisition facts: 11,573 frozen identities, 11,572 successes, one
+preserved transport failure, three retries, zero rate limits, 8,860,920
+compressed raw bytes, 96,528,568 uncompressed response bytes, and 9,472.671
+network-elapsed seconds. The final manifest accounts for 11,578 physical
+requests. Including the original pre-persistence schema-failed attempt retained
+only in the investigation metadata, the historical run made 11,579 physical
+requests in total. No identity was replaced.
+
+Final artifact SHA-256 values:
+
+- acquisition report: `b8ded3848d8a85e7d15a2cf9f839bbf7a491c6c6d2afe08d451616ef553dd553`;
+- normalized prices: `11f9ce8d3ed32ad9c3974a7f162c08b414e3aa5b87af80974283fd09175ef0d8`;
+- observability report: `efb2ffbd621d6c29a048992f562519c6f53879bfd86778167408f79540696dce`;
+- primary midpoint <=15m: `a95a6f3c7f55d5f297b2dfec29dcea591b7f8fb49e52000650ef5b8e22fd4b86`;
+- midpoint <=60m: `93f2d6cf67c8d9c8240672512b1d6a9d706f7a4997621fea01f0963eafc54197`;
+- trade close <=15m: `39f185734d92b0e6550edbae3ba9c8ca986c0d9e5b33fc75fee6d2afeda23b77`;
+- trade close <=60m: `59443fb614502e9515617d78b860d65b40177658144cbb2619b3aa4220eeef71`;
+- raw request manifest: `3775c9acc93d87c83b7e2203b69af96da6d44a7ba3738f39df15df0660ed75b4`;
+- provenance: `d03fb265c8f3c781280ecfdb333bfb73c226e627434cd149d72cde8654633cbd`.
+
+The final commit identity is
+`79e022b7d9d359b484632e82671ef0095eba040687a21bc9a34a9bb947cf08de`.
+Guarded storage is 5,348,064,156 bytes with 20,644,964 bytes remaining. Do
+not start any new generated-data phase near this ceiling. No outcome access is
+authorized; the next action is a final pre-outcome audit and explicit release
+of the outcome quarantine.

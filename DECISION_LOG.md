@@ -570,3 +570,33 @@ family-size bin and 11,573 contracts by uniform within-family SRSWOR capped at
 three. The manifest is immutable under commit identity
 `8a95158441c245988d2562b732762d9a6f3c5c9cd6d0bb33b9fcc6f3b8de2bc9`.
 This decision does not authorize Phase 10F-E price requests or outcome access.
+
+## 2026-08-24 — Accept measure-level live schema and complete Phase 10F-E
+
+Status: implementation fact; frozen acquisition complete; outcomes still
+unauthorized
+
+The owner authorized one exact retry of frozen sample request 11,060 and a
+conditional resume only if quote extraction was unambiguous and any ambiguity
+was confined to the trade measure. The retry returned 61 at-or-before-target
+candles with documented `yes_bid.close_dollars` and
+`yes_ask.close_dollars`. Sixty candles had `price.close_dollars`; one earlier
+candle had only `price.previous_dollars`. A later documented trade close was
+available at the target. No post-target or duplicate candle was observed.
+
+Decision: live quote and trade schemas are validated independently. A missing
+documented trade close invalidates only that candle's trade measure and is
+recorded as `trade_schema_unavailable`; it does not invalidate a documented
+bid/ask midpoint or a later documented trade close. `previous_dollars` and all
+other legacy-looking fields remain prohibited fallbacks. Conflicting quote
+fields still fail closed. Raw response bytes and their immutable capture
+metadata must be published before normalization so a schema failure can be
+inspected and resumed without redownload.
+
+Because the authorized condition was satisfied and the offline tests passed,
+the frozen acquisition resumed without redrawing the sample or replacing the
+preserved transport failure. It completed all 11,573 contract identities in
+116 partitions. The primary midpoint <=15m sample passes the frozen final gate
+with 4,377 observable families and family-weighted ESS 4,208.115. This decision
+does not authorize outcomes, a favorite–longshot estimate, new observation-
+propensity weights, a methodology change, or PR1/PR2 pooling.

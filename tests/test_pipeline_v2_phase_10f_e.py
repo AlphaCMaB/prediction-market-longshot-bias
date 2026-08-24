@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from scripts.pipeline_v2.investigate_phase_10f_e_schema import inspect_live_payload
 from scripts.pipeline_v2.phase_10f_e import (
     attrition_counts,
     classify_price_observability,
@@ -61,6 +62,16 @@ def base(**changes):
             {"trade_close": None, "trade_within_15m": False, "trade_within_60m": False},
             "usable_midpoint_15m",
             "no_trade",
+        ),
+        (
+            {
+                "trade_close": None,
+                "trade_within_15m": False,
+                "trade_within_60m": False,
+                "trade_failure_reason": "trade_schema_unavailable",
+            },
+            "usable_midpoint_15m",
+            "trade_schema_unavailable",
         ),
     ],
 )
@@ -140,3 +151,33 @@ def test_price_freeze_schema_quarantines_outcomes():
     validate_research_feature_columns(ANALYSIS_FIELDS)
     with pytest.raises(ValueError, match="quarantined"):
         validate_research_feature_columns((*ANALYSIS_FIELDS, "outcome"))
+
+
+def test_investigation_reports_every_requested_live_key_presence():
+    payload = {
+        "markets": [
+            {
+                "market_ticker": "A",
+                "candlesticks": [
+                    {
+                        "end_period_ts": 100,
+                        "yes_bid": {"close_dollars": "0.40"},
+                        "yes_ask": {"close_dollars": "0.50"},
+                        "price": {"previous_dollars": "0.30"},
+                    }
+                ],
+            }
+        ]
+    }
+    report = inspect_live_payload(payload, ticker="A", target_ts=100)
+    candle = report["per_candle_key_presence"][0]
+    assert candle["yes_bid"]["close_dollars"] is True
+    assert candle["yes_bid"]["close"] is False
+    assert candle["yes_ask"]["close_dollars"] is True
+    assert candle["yes_ask"]["close"] is False
+    assert candle["price"]["close_dollars"] is False
+    assert candle["price"]["close"] is False
+    assert candle["price"]["previous_dollars"] is True
+    assert candle["price"]["previous"] is False
+    assert report["quote_ambiguity_count"] == 0
+    assert report["trade_schema_unavailable_candles"] == 1

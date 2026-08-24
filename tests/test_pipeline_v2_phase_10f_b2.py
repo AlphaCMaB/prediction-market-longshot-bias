@@ -43,7 +43,9 @@ def candidate(
             else "PR1_M_FIXED_CLOCK_SINGLE_EXACT"
         ),
         category=category,
-        timing_structure=("scheduled_event_start" if category == "Sports" else "fixed_clock"),
+        timing_structure=(
+            "scheduled_event_start" if category == "Sports" else "fixed_clock"
+        ),
         target_time=f"{month}-02T12:00:00Z",
         ticker=ticker,
         family_market_count=count,
@@ -53,7 +55,12 @@ def candidate(
 
 def make_candidates():
     rows = []
-    definitions = (("Crypto", 30, 5), ("Financials", 25, 5), ("Climate and Weather", 15, 5), ("Sports", 65, 1))
+    definitions = (
+        ("Crypto", 30, 5),
+        ("Financials", 25, 5),
+        ("Climate and Weather", 15, 5),
+        ("Sports", 65, 1),
+    )
     index = 0
     for category, families, contracts in definitions:
         for family_index in range(families):
@@ -78,7 +85,14 @@ def historical_candle(end=100, bid="0.40", ask="0.50", trade="0.45", previous="0
         "end_period_ts": end,
         "yes_bid": {"open": bid, "low": bid, "high": bid, "close": bid},
         "yes_ask": {"open": ask, "low": ask, "high": ask, "close": ask},
-        "price": {"open": trade, "low": trade, "high": trade, "close": trade, "mean": trade, "previous": previous},
+        "price": {
+            "open": trade,
+            "low": trade,
+            "high": trade,
+            "close": trade,
+            "mean": trade,
+            "previous": previous,
+        },
         "volume": "1.00",
         "open_interest": "2.00",
     }
@@ -134,6 +148,51 @@ def test_historical_and_live_schemas_normalize_to_same_typed_projection():
     assert historical["previous_trade_used"] is False
 
 
+@pytest.mark.parametrize(
+    "price",
+    [
+        {"previous_dollars": "0.30"},
+        {"close": "0.45", "previous": "0.30"},
+        {"close_dollars": "0.45", "close": "0.44"},
+    ],
+)
+def test_live_quote_can_be_valid_while_trade_schema_is_unavailable(price):
+    candle = live_candle()
+    candle["price"] = price
+    normalized = normalize_candle(candle, route=LIVE_ROUTE)
+    assert normalized["midpoint_valid"] is True
+    assert normalized["trade_close_valid"] is False
+    assert normalized["trade_close"] is None
+    assert normalized["trade_failure_reason"] == "trade_schema_unavailable"
+    assert normalized["previous_trade_used"] is False
+
+
+@pytest.mark.parametrize("side", ["yes_bid", "yes_ask"])
+def test_ambiguous_live_quote_side_fails_closed(side):
+    candle = live_candle()
+    candle[side]["close"] = "0.01"
+    with pytest.raises(
+        B2ValidationError, match=f"ambiguous live quote schema in {side}"
+    ):
+        normalize_candle(candle, route=LIVE_ROUTE)
+
+
+def test_trade_schema_unavailable_is_not_no_trade_or_previous_fallback():
+    candle = live_candle(end=100)
+    candle["price"] = {"previous_dollars": "0.99"}
+    rows = normalize_response(
+        {"markets": [{"market_ticker": "A", "candlesticks": [candle]}]},
+        route=LIVE_ROUTE,
+        ticker="A",
+    )
+    observation = extract_observation(rows, target_ts=100)
+    assert observation["midpoint_valid"] is True
+    assert observation["trade_close_valid"] is False
+    assert observation["trade_failure_reason"] == "trade_schema_unavailable"
+    assert observation["trade_close"] is None
+    assert observation["previous_trade_used"] is False
+
+
 def test_typed_normalizer_fails_closed_on_ambiguous_or_wrong_schema():
     ambiguous = historical_candle()
     ambiguous["yes_bid"]["close_dollars"] = "0.40"
@@ -171,17 +230,24 @@ def test_observation_staleness_and_post_target_boundaries():
         route=HISTORICAL_ROUTE,
         ticker="A",
     )
-    assert extract_observation(rows, target_ts=100 + 15 * 60)["midpoint_within_15m"] is True
-    assert extract_observation(rows, target_ts=101 + 15 * 60)["midpoint_within_15m"] is False
+    assert (
+        extract_observation(rows, target_ts=100 + 15 * 60)["midpoint_within_15m"]
+        is True
+    )
+    assert (
+        extract_observation(rows, target_ts=101 + 15 * 60)["midpoint_within_15m"]
+        is False
+    )
     with pytest.raises(B2ValidationError, match="post-target"):
         extract_observation(rows, target_ts=99)
 
 
 class FakeResponse:
-    def __init__(self, payload, status=200):
+    def __init__(self, payload, status=200, content_type="application/json"):
         self.payload = payload
         self.status_code = status
         self.content = json.dumps(payload).encode()
+        self.headers = {"Content-Type": content_type}
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -281,7 +347,9 @@ def test_physical_request_cap_includes_retries(tmp_path):
 
 
 def test_live_route_uses_single_ticker_batch_without_synthetic_previous(tmp_path):
-    payload = {"markets": [{"market_ticker": "A", "candlesticks": [live_candle(end=200)]}]}
+    payload = {
+        "markets": [{"market_ticker": "A", "candlesticks": [live_candle(end=200)]}]
+    }
     session = FakeSession([FakeResponse(payload)])
     active = client(tmp_path, session)
     rows, _ = active.fetch_candles(
@@ -295,10 +363,42 @@ def test_cached_candle_response_never_redownloads(tmp_path):
     payload = {"ticker": "A", "candlesticks": [historical_candle(end=200)]}
     first = client(tmp_path, FakeSession([FakeResponse(payload)]))
     first.fetch_candles(
-        ticker="A", route=HISTORICAL_ROUTE, start_ts=100, end_ts=200, cutoff_hash="c" * 64
+        ticker="A",
+        route=HISTORICAL_ROUTE,
+        start_ts=100,
+        end_ts=200,
+        cutoff_hash="c" * 64,
     )
     resumed = client(tmp_path, None, network_forbidden=True)
     rows, _ = resumed.fetch_candles(
-        ticker="A", route=HISTORICAL_ROUTE, start_ts=100, end_ts=200, cutoff_hash="c" * 64
+        ticker="A",
+        route=HISTORICAL_ROUTE,
+        start_ts=100,
+        end_ts=200,
+        cutoff_hash="c" * 64,
     )
-    assert len(rows) == 1 and resumed.physical_requests == 0 and resumed.resume_hits == 1
+    assert (
+        len(rows) == 1 and resumed.physical_requests == 0 and resumed.resume_hits == 1
+    )
+
+
+def test_raw_response_is_published_before_quote_normalization_failure(tmp_path):
+    candle = live_candle(end=200)
+    candle["yes_bid"]["close"] = "0.01"
+    payload = {"markets": [{"market_ticker": "A", "candlesticks": [candle]}]}
+    active = client(tmp_path, FakeSession([FakeResponse(payload)]), max_requests=1)
+    with pytest.raises(B2ValidationError, match="ambiguous live quote"):
+        active.fetch_candles(
+            ticker="A",
+            route=LIVE_ROUTE,
+            start_ts=100,
+            end_ts=200,
+            cutoff_hash="c" * 64,
+        )
+    raw = list((tmp_path / "b2" / "raw").glob("*.json.gz"))
+    captures = list((tmp_path / "b2" / "raw_captures").glob("*.json"))
+    commits = list((tmp_path / "b2" / "request_commits").glob("*.json"))
+    assert len(raw) == len(captures) == 1
+    assert commits == []
+    wrapper = json.loads(gzip.decompress(raw[0].read_bytes()))
+    assert wrapper["response"] == payload

@@ -41,6 +41,8 @@ def classify_price_observability(row: Mapping[str, Any]) -> dict[str, Any]:
             trade_status = "usable_trade_15m"
         elif bool(row.get("trade_within_60m")):
             trade_status = "usable_trade_60m_only"
+        elif row.get("trade_failure_reason") == "trade_schema_unavailable":
+            trade_status = "trade_schema_unavailable"
         elif row.get("trade_close") is None:
             trade_status = "no_trade"
         else:
@@ -54,6 +56,7 @@ def classify_price_observability(row: Mapping[str, Any]) -> dict[str, Any]:
         "missing_ask": midpoint_status in {"missing_ask", "missing_bid_and_ask"},
         "midpoint_too_stale": midpoint_status == "midpoint_too_stale",
         "no_trade": trade_status == "no_trade",
+        "trade_schema_unavailable": trade_status == "trade_schema_unavailable",
         "trade_too_stale": trade_status == "trade_too_stale",
     }
 
@@ -156,6 +159,7 @@ def attrition_counts(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "missing_ask",
         "midpoint_too_stale",
         "no_trade",
+        "trade_schema_unavailable",
         "trade_too_stale",
     )
     return {
