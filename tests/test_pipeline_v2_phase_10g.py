@@ -14,10 +14,14 @@ from scripts.pipeline_v2.phase_10g_analysis import (
 )
 from scripts.pipeline_v2.run_phase_10f_e import SAMPLE_COMMIT_IDENTITY
 from scripts.pipeline_v2.run_phase_10g_outcome_analysis import (
+    JOINED_DERIVED_FIELDS,
     MINIMAL_OUTCOME_FIELDS,
     _release_minimal_outcomes,
     _resolution_diagnostics,
+    _rows_sha256,
+    _validate_joined_scope,
 )
+from scripts.pipeline_v2.run_phase_10f_e import NORMALIZED_FIELDS
 
 
 def row(index, price, outcome, **changes):
@@ -140,3 +144,21 @@ def test_resolution_diagnostics_do_not_filter_or_replace_missing_outcomes():
         ]
         is False
     )
+
+
+def test_joined_scope_and_hash_are_deterministic_and_fail_closed():
+    joined = {field: "" for field in NORMALIZED_FIELDS}
+    joined.update(
+        {
+            "binary_resolution_outcome": 1,
+            "midpoint_15m_spread_lte_0_20": True,
+            "midpoint_15m_spread_lte_0_10": True,
+        }
+    )
+    assert set(joined) == set(NORMALIZED_FIELDS) | set(JOINED_DERIVED_FIELDS)
+    assert _validate_joined_scope([joined])["passed"] is True
+    assert _rows_sha256([joined]) == _rows_sha256([dict(joined)])
+
+    contaminated = dict(joined, settlement_timestamp="future")
+    with pytest.raises(Exception, match="schema changed"):
+        _validate_joined_scope([contaminated])

@@ -37,7 +37,7 @@ from scripts.pipeline_v2.run_phase_10f_e import (
 from scripts.pipeline_v2.study_rules import load_study_rules
 
 
-SCHEMA_VERSION = "phase-10g-frozen-outcome-analysis-v2"
+SCHEMA_VERSION = "phase-10g-frozen-outcome-analysis-v3"
 FINAL_AUDIT_IDENTITY = (
     "bd14ba156585c4b2ed43c798ea55c977e8496326642edca9748eb703491eab24"
 )
@@ -64,6 +64,11 @@ MINIMAL_OUTCOME_FIELDS = (
     "contract_identifier",
     "frozen_sample_identifier",
     "binary_resolution_outcome",
+)
+JOINED_DERIVED_FIELDS = (
+    "binary_resolution_outcome",
+    "midpoint_15m_spread_lte_0_20",
+    "midpoint_15m_spread_lte_0_10",
 )
 ESTIMATE_FIELDS = (
     "sample_name",
@@ -140,6 +145,39 @@ def _csv_bytes(rows: Sequence[Mapping[str, Any]], fields: Sequence[str]) -> byte
     for row in rows:
         writer.writerow({field: row.get(field, "") for field in fields})
     return buffer.getvalue().encode()
+
+
+def _rows_sha256(rows: Sequence[Mapping[str, Any]]) -> str:
+    digest = hashlib.sha256()
+    for row in rows:
+        digest.update(canonical_json(row))
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def _validate_joined_scope(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    expected = set(NORMALIZED_FIELDS) | set(JOINED_DERIVED_FIELDS)
+    prohibited_fragments = ("outcome", "result", "settlement", "postresolution")
+    for index, row in enumerate(rows):
+        if set(row) != expected:
+            raise PhaseGError(f"joined sample schema changed at row {index}")
+        for key, value in row.items():
+            canonical = "".join(
+                character for character in key.casefold() if character.isalnum()
+            )
+            if key != "binary_resolution_outcome" and any(
+                fragment in canonical for fragment in prohibited_fragments
+            ):
+                raise PhaseGError(f"prohibited joined-sample field: {key}")
+            if isinstance(value, (Mapping, list, tuple)):
+                raise PhaseGError(f"unexpected nested joined-sample value: {key}")
+    return {
+        "passed": True,
+        "rows": len(rows),
+        "fields": sorted(expected),
+        "allowed_outcome_fields": ["binary_resolution_outcome"],
+        "prohibited_post_resolution_fields": 0,
+    }
 
 
 def _validate_pre_outcome_inputs(args: argparse.Namespace) -> dict[str, str]:
@@ -426,6 +464,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         raise PhaseGError("frozen normalized sample schema/count changed")
     tickers = [str(row["ticker"]) for row in normalized]
     minimal, release = _release_minimal_outcomes(args.quarantined_outcomes, tickers)
+    minimal_outcome_payload = _gzip_csv(minimal, MINIMAL_OUTCOME_FIELDS)
+    minimal_outcome_sha256 = hashlib.sha256(minimal_outcome_payload).hexdigest()
     outcome_by_ticker = {
         str(row["contract_identifier"]): (
             int(row["binary_resolution_outcome"])
@@ -451,6 +491,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         }
         for row in normalized
     ]
+    joined_scope = _validate_joined_scope(joined)
+    joined_sample_sha256 = _rows_sha256(joined)
     resolution = _resolution_diagnostics(joined)
     primary_state = resolution["primary_price_observable"]
     if primary_state["families_with_any_resolved_contract"] < 500:
@@ -547,6 +589,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "primary_sample": "primary_midpoint_15m",
         "input_hashes": input_hashes,
         "minimal_outcome_release": release,
+        "pre_estimation_integrity": {
+            "minimal_outcome_projection_sha256": minimal_outcome_sha256,
+            "joined_sample_sha256": joined_sample_sha256,
+            "joined_sample_persisted": False,
+            "joined_scope_validation": joined_scope,
+            "frozen_price_input_sha256": input_hashes["normalized_prices"],
+            "checks_completed_before_estimation": True,
+        },
         "resolution_availability": resolution,
         "estimates": estimates,
         "primary_calibration_bins": bins,
@@ -585,6 +635,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "bootstrap_replicates": BOOTSTRAP_REPLICATES,
         "minimal_outcome_fields": list(MINIMAL_OUTCOME_FIELDS),
         "outcome_source_fields_used": ["ticker", "result"],
+        "minimal_outcome_projection_sha256": minimal_outcome_sha256,
+        "joined_sample_sha256": joined_sample_sha256,
+        "joined_sample_persisted": False,
+        "joined_scope_validation": joined_scope,
         "settlement_or_post_resolution_fields_used": 0,
         "network_requests_made": 0,
         "sample_redrawn": False,
@@ -594,9 +648,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "study_rules_changed": False,
     }
     artifacts = {
-        "phase_10g_minimal_binary_outcomes.csv.gz": _gzip_csv(
-            minimal, MINIMAL_OUTCOME_FIELDS
-        ),
+        "phase_10g_minimal_binary_outcomes.csv.gz": minimal_outcome_payload,
         "phase_10g_resolution_availability_report.json": _json_bytes(resolution),
         "phase_10g_weighted_estimates.csv": _csv_bytes(estimate_rows, ESTIMATE_FIELDS),
         "phase_10g_primary_calibration_bins.csv": _csv_bytes(bin_rows, BIN_FIELDS),
@@ -620,6 +672,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "sample_identity": SAMPLE_COMMIT_IDENTITY,
         "artifacts": refs,
         "minimal_outcome_fields": list(MINIMAL_OUTCOME_FIELDS),
+        "minimal_outcome_projection_sha256": minimal_outcome_sha256,
+        "joined_sample_sha256": joined_sample_sha256,
+        "joined_sample_persisted": False,
         "settlement_fields_released": 0,
         "network_requests_made": 0,
     }
@@ -675,7 +730,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--output-root",
         type=Path,
-        default=Path("data/pipeline_v2/horizon_prices/phase_10g_outcome_analysis_v2"),
+        default=Path("data/pipeline_v2/horizon_prices/phase_10g_outcome_analysis_v3"),
     )
     parser.add_argument("--config", type=Path, default=Path("configs/pipeline_v2.toml"))
     parser.add_argument("--guard-root", type=Path, default=Path("data/pipeline_v2"))
