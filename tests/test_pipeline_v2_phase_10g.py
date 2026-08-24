@@ -35,6 +35,8 @@ def row(index, price, outcome, **changes):
         "trade_close": price,
         "midpoint_within_15m": True,
         "midpoint_within_60m": True,
+        "midpoint_15m_spread_lte_0_20": True,
+        "midpoint_15m_spread_lte_0_10": True,
         "trade_within_15m": True,
         "trade_within_60m": True,
         "family_weight_raw": 1.0,
@@ -82,7 +84,7 @@ def test_stratified_family_cluster_bootstrap_is_deterministic():
     assert first == second
     assert first["replicates"] == 25
     assert first["stratum_count"] == 1
-    assert len(first["intervals"]) == 26
+    assert len(first["intervals"]) == 34
 
 
 def test_minimal_release_discards_settlement_and_extra_source_fields(tmp_path):

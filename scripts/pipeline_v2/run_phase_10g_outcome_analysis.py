@@ -37,7 +37,7 @@ from scripts.pipeline_v2.run_phase_10f_e import (
 from scripts.pipeline_v2.study_rules import load_study_rules
 
 
-SCHEMA_VERSION = "phase-10g-frozen-outcome-analysis-v1"
+SCHEMA_VERSION = "phase-10g-frozen-outcome-analysis-v2"
 FINAL_AUDIT_IDENTITY = (
     "bd14ba156585c4b2ed43c798ea55c977e8496326642edca9748eb703491eab24"
 )
@@ -263,6 +263,16 @@ def _resolution_diagnostics(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]
     primary_resolved = [
         row for row in primary if row.get("binary_resolution_outcome") in {0, 1}
     ]
+    all_families = {family_identity(row) for row in rows}
+    resolved_families = {family_identity(row) for row in resolved}
+    unresolved_families = {family_identity(row) for row in unresolved}
+    primary_families = {family_identity(row) for row in primary}
+    primary_resolved_families = {family_identity(row) for row in primary_resolved}
+    primary_unresolved_families = {
+        family_identity(row)
+        for row in primary
+        if row.get("binary_resolution_outcome") not in {0, 1}
+    }
 
     def coverage(weight_field: str, group: Sequence[Mapping[str, Any]]) -> float:
         denominator = sum(float(row[weight_field]) for row in rows)
@@ -299,11 +309,12 @@ def _resolution_diagnostics(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]
     return {
         "frozen_sample": {
             "contracts": len(rows),
-            "families": len({family_identity(row) for row in rows}),
+            "families": len(all_families),
             "resolved_contracts": len(resolved),
-            "resolved_families": len({family_identity(row) for row in resolved}),
+            "families_with_any_resolved_contract": len(resolved_families),
             "unresolved_contracts": len(unresolved),
-            "unresolved_families": len({family_identity(row) for row in unresolved}),
+            "families_with_any_unresolved_contract": len(unresolved_families),
+            "families_with_no_resolved_contract": len(all_families - resolved_families),
             "family_target_weighted_resolution_coverage": coverage(
                 "family_weight_raw", resolved
             ),
@@ -313,12 +324,14 @@ def _resolution_diagnostics(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]
         },
         "primary_price_observable": {
             "contracts": len(primary),
-            "families": len({family_identity(row) for row in primary}),
+            "families": len(primary_families),
             "resolved_contracts": len(primary_resolved),
-            "resolved_families": len(
-                {family_identity(row) for row in primary_resolved}
-            ),
+            "families_with_any_resolved_contract": len(primary_resolved_families),
             "unresolved_contracts": len(primary) - len(primary_resolved),
+            "families_with_any_unresolved_contract": len(primary_unresolved_families),
+            "families_with_no_resolved_contract": len(
+                primary_families - primary_resolved_families
+            ),
         },
         "resolved_vs_unresolved_ex_ante_comparison": comparison,
     }
@@ -422,12 +435,25 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         for row in minimal
     }
     joined = [
-        {**row, "binary_resolution_outcome": outcome_by_ticker[str(row["ticker"])]}
+        {
+            **row,
+            "binary_resolution_outcome": outcome_by_ticker[str(row["ticker"])],
+            "midpoint_15m_spread_lte_0_20": bool(
+                row.get("midpoint_within_15m")
+                and row.get("spread") is not None
+                and float(row["spread"]) <= 0.20
+            ),
+            "midpoint_15m_spread_lte_0_10": bool(
+                row.get("midpoint_within_15m")
+                and row.get("spread") is not None
+                and float(row["spread"]) <= 0.10
+            ),
+        }
         for row in normalized
     ]
     resolution = _resolution_diagnostics(joined)
     primary_state = resolution["primary_price_observable"]
-    if primary_state["resolved_families"] < 500:
+    if primary_state["families_with_any_resolved_contract"] < 500:
         raise PhaseGError("resolved primary sample fails the frozen family gate")
     primary_family_weights: dict[tuple[str, str], float] = defaultdict(float)
     for row in joined:
@@ -649,7 +675,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--output-root",
         type=Path,
-        default=Path("data/pipeline_v2/horizon_prices/phase_10g_outcome_analysis"),
+        default=Path("data/pipeline_v2/horizon_prices/phase_10g_outcome_analysis_v2"),
     )
     parser.add_argument("--config", type=Path, default=Path("configs/pipeline_v2.toml"))
     parser.add_argument("--guard-root", type=Path, default=Path("data/pipeline_v2"))

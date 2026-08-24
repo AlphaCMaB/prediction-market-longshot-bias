@@ -21,6 +21,8 @@ WEIGHT_SYSTEMS = {
 }
 SAMPLE_FLAGS = {
     "primary_midpoint_15m": "midpoint_within_15m",
+    "robustness_midpoint_15m_spread_lte_0_20": "midpoint_15m_spread_lte_0_20",
+    "robustness_midpoint_15m_spread_lte_0_10": "midpoint_15m_spread_lte_0_10",
     "robustness_midpoint_60m": "midpoint_within_60m",
     "robustness_trade_close_15m": "trade_within_15m",
     "robustness_trade_close_60m": "trade_within_60m",
