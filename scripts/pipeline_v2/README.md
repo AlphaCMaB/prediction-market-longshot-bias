@@ -651,3 +651,24 @@ The completed audit identity is
 Its tracked pre-outcome plan is `PHASE_10F_FINAL_ANALYSIS_PLAN.md`. The audit
 does not open outcomes, authorize their release, or compute favorite–longshot
 bias.
+
+## Phase 10G frozen outcome analysis
+
+`run_phase_10g_outcome_analysis` implements the separately approved minimal
+outcome release and the frozen Phase 10F analysis plan. It persists only the
+contract identifier, frozen sample identifier, and binary outcome, then joins
+that projection to prices in memory. It rejects changed sample, price, audit,
+plan, StudyRules, or outcome-source hashes and makes no network request.
+
+```console
+python -m scripts.pipeline_v2.run_phase_10g_outcome_analysis
+```
+
+The authoritative v3 result uses the primary family target, secondary contract
+target, fixed 0.10 bins, 10,000 deterministic stratified family-cluster
+bootstrap replicates, all three price-window robustness definitions, and both
+pre-specified spread sensitivities. Before estimation it hashes both the
+minimal projection and the nonpersisted in-memory joined sample and validates
+the joined field scope. A completed run is immutable and reused only after full
+hash validation. Generated outputs remain ignored; do not commit the minimal
+outcome projection or analysis artifacts.

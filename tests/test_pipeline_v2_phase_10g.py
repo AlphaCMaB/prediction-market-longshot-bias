@@ -16,6 +16,7 @@ from scripts.pipeline_v2.run_phase_10f_e import SAMPLE_COMMIT_IDENTITY
 from scripts.pipeline_v2.run_phase_10g_outcome_analysis import (
     JOINED_DERIVED_FIELDS,
     MINIMAL_OUTCOME_FIELDS,
+    PhaseGError,
     _release_minimal_outcomes,
     _resolution_diagnostics,
     _rows_sha256,
@@ -160,5 +161,5 @@ def test_joined_scope_and_hash_are_deterministic_and_fail_closed():
     assert _rows_sha256([joined]) == _rows_sha256([dict(joined)])
 
     contaminated = dict(joined, settlement_timestamp="future")
-    with pytest.raises(Exception, match="schema changed"):
+    with pytest.raises(PhaseGError, match="schema changed"):
         _validate_joined_scope([contaminated])

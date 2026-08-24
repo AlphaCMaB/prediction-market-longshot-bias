@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-08-24
+Last updated: 2026-08-25
 Branch: `methodology-v2-clean`
 
 ## Research objective
@@ -669,3 +669,55 @@ explicit approval together with outcome-quarantine release. No outcome was
 accessed and no favorite–longshot calculation was performed. The focused
 Phase 10F suite passes 57 tests, the full offline suite passes 760 tests, and
 compilation, Black, pyflakes, TOML validation, and `git diff --check` pass.
+
+## Phase 10G — approved outcome release and frozen initial analysis complete
+
+The owner approved the final pre-outcome audit, the recorded Phase 10F
+analysis plan, and release of only the minimal binary-outcome projection.
+Phase 10G therefore joined outcomes in memory to the unchanged frozen PR2
+sample and persisted only contract identifier, frozen sample identifier, and
+binary resolution outcome. The release has 11,573 unique contract rows:
+11,495 binary resolutions and 78 unresolved/nonbinary source results. It
+contains no settlement timestamp, settlement value, post-resolution metadata,
+price, anchor, weight, or eligibility field.
+
+Resolution coverage is high but not perfect. Of 5,000 frozen families, 4,964
+have at least one resolved contract, 45 have at least one unresolved contract,
+and 36 have no resolved contract. In the primary price-observable sample,
+9,353 of 9,388 contracts resolve, covering 4,360 of 4,377 families; 35
+contracts are unresolved and 17 families have no resolved primary contract.
+No unresolved contract was replaced or filtered before the availability
+comparison.
+
+Under the pre-specified primary family target, the weighted calibration gap
+`Y-P` is 0.00285 (95% family-cluster bootstrap interval -0.00333 to 0.00906).
+The predeclared favorite-longshot contrast,
+`gap(P<0.20) - gap(P>=0.80)`, is 0.01004 (95% interval -0.02358 to 0.04565).
+The classical favorite-longshot pattern would imply a negative contrast, so
+the primary estimate does not provide statistically distinguishable evidence
+of that pattern in this frozen, price-observable PR2 Sports sample. This is not
+evidence that bias is absent in Kalshi generally: the sample is conditional on
+PR2 eligibility and price observability, and the audit documented
+observability-related composition differences.
+
+All pre-specified robustness contrasts likewise have intervals spanning zero:
+midpoint <=60m 0.00259, trade close <=15m 0.00607, trade close <=60m 0.00777,
+midpoint <=15m with spread <=0.20 0.00908, and midpoint <=15m with spread
+<=0.10 0.00807. The secondary contract-target contrast is 0.02912 (95%
+interval -0.01530 to 0.07528). One of ten descriptive calibration-bin
+intervals excludes zero; it is not a pre-specified standalone effect and does
+not form a monotone favorite-longshot pattern.
+
+Phase 10G uses 10,000 deterministic stratified family-cluster bootstrap
+replicates and reproduces the published artifacts without network access. The
+authoritative v3 commit identity is
+`931a1d35de134e91eee3ed71041a712414c1435fbcd37f1ffc28b263e746252e`.
+V2 added the already-approved spread sensitivities and clearer family-
+resolution diagnostics; v3 adds the analysis-plan-required pre-estimation
+fingerprints for the minimal outcome projection and the nonpersisted in-memory
+joined sample. All earlier output roots are preserved and all shared numerical
+estimates are identical. The full offline suite passes 766 tests. Generated
+namespace use is 5,348,508,429 bytes, leaving 20,200,691 bytes below the
+ceiling; free disk is approximately 100.42 GiB. No network request, sample
+redraw, anchor change, price change, weight change, StudyRules change, or
+post-outcome eligibility change occurred.

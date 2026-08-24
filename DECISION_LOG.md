@@ -628,3 +628,43 @@ longshot contrast and deterministic stratified family-cluster bootstrap are
 recommendations requiring explicit approval. Outcome-quarantine release also
 requires separate explicit authorization; recording the plan does not grant
 access.
+
+## 2026-08-25 — Release minimal outcomes and execute frozen Phase 10G plan
+
+Status: approved and completed
+
+The owner accepted the final pre-outcome audit and froze the Phase 10F sample,
+anchors, price definitions, inclusion probabilities, weights, ESS
+calculations, exclusions, subgroup rules, and bootstrap plan. The owner then
+authorized release of only contract identifier, frozen sample identifier, and
+the binary resolution needed for analysis, explicitly excluding settlement
+timestamps, post-resolution metadata, and fields that could modify sample
+construction.
+
+Decision: Phase 10G may use the quarantined source only to build that minimal
+projection and may join it to the frozen research sample only in memory. The
+persisted projection must retain unresolved/nonbinary rows with blank binary
+outcomes; it may not trigger replacement, redrawing, reweighting, eligibility
+changes, or post-outcome filtering. The family-weighted estimand remains
+primary, the contract-weighted estimand remains secondary, and the planned
+10,000-replicate stratified family-cluster bootstrap and fixed subgroup gates
+remain unchanged.
+
+The executed primary favorite-longshot contrast is 0.01004 with a 95%
+interval from -0.02358 to 0.04565. Because the classical pattern predicts a
+negative value and the interval includes zero, the approved interpretation is
+that this analysis does not detect statistically distinguishable evidence of
+the classical favorite-longshot pattern in the frozen, price-observable PR2
+Sports sample. It does not establish the absence of bias in the venue or in
+unobserved, PR1, or otherwise excluded markets. Robustness results and the
+secondary target do not change that conclusion.
+
+The original v1 and v2 Phase 10G outputs remain immutable. Acceptance review
+found that v1 omitted the two already-approved spread sensitivity projections;
+v2 added those frozen sensitivities and unambiguous family-resolution labels.
+A second acceptance check found that the frozen plan also required the
+in-memory joined sample to be fingerprinted before estimation. V3 adds that
+fingerprint and a fail-closed joined-field scope check without persisting the
+joined data. Shared v1/v2/v3 estimates are unchanged. V3 is the reporting
+version under commit identity
+`931a1d35de134e91eee3ed71041a712414c1435fbcd37f1ffc28b263e746252e`.

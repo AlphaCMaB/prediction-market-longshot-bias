@@ -1,6 +1,6 @@
 # Data Runbook
 
-Last updated: 2026-08-24
+Last updated: 2026-08-25
 
 ## Non-negotiable safety limits
 
@@ -1019,3 +1019,53 @@ releases the quarantine.
 The audit adds 14,049 guarded bytes. Final guarded use is 5,348,078,205 bytes,
 leaving 20,630,915 bytes under the 5-GiB ceiling. Free disk at publication was
 107,925,622,784 bytes (100.51 GiB), safely above the 80-GiB floor.
+
+### Phase 10G minimal outcome release and frozen analysis — 2026-08-25
+
+The owner approved the frozen analysis plan and minimal binary-outcome release.
+The production reporting root is:
+
+```text
+data/pipeline_v2/horizon_prices/phase_10g_outcome_analysis_v3/
+```
+
+Run or deterministically validate it without network access:
+
+```console
+python -m scripts.pipeline_v2.run_phase_10g_outcome_analysis
+```
+
+If the final commit exists, the command validates every input and artifact
+hash and returns the existing result rather than recomputing it. The outcome
+projection contains exactly `contract_identifier`, `frozen_sample_identifier`,
+and `binary_resolution_outcome`. It has 11,573 unique contract rows: 5,102
+yes, 6,393 no, and 78 unresolved/nonbinary blanks. Never enrich this release
+with settlement times, settlement values, post-resolution metadata, anchors,
+prices, weights, or eligibility fields.
+
+The final v3 artifact hashes are:
+
+- analysis report: `f8ef01f6f6f7738fdcdcc130c16effe626456e7998aba6d65b60bab76b8b3efe`;
+- minimal binary outcomes: `0c4dc35fcaa59205c379c6de8db227973ed279ef1425d4d43c6520be8195a4b0`;
+- primary calibration bins: `59dd0992a4ad4fede71def24dbd50dffc431c2b370255b3e169695d715a323ed`;
+- provenance: `ba1d146d19889976e9064e7f273c9fd1e8b06e4c8696492c6801e91c1b9490d0`;
+- resolution availability: `c27ffb69e17a535618e62f60eb6488d3745f43bebe153bb0c8e59a44590b00cb`;
+- weighted estimates: `a443906527eb072946bd0824b43b558c963e386d62a80dfee7c799718572b4ff`.
+
+The Phase 10G commit identity is
+`931a1d35de134e91eee3ed71041a712414c1435fbcd37f1ffc28b263e746252e`;
+the commit-file SHA-256 is
+`3c8236bbb3731d0c43679a16efa22c1087744a755df929dbadcdd3cacf609f40`.
+The input outcome quarantine SHA-256 is
+`2114fd25b79627c9c36d716485382548b3812108007c5990bf2f384ca82cc451`.
+The v1 and v2 output directories are immutable provenance and must not be
+deleted or rewritten. V3 is authoritative because it includes both frozen
+spread sensitivities, hashes the nonpersisted joined sample before estimation,
+and records a fail-closed joined-field scope check. The joined-sample SHA-256
+is `dfef97adef8019abe8705fdcbd3ada39e31d65b33cfba010f5a8cf16e49e4f1b`.
+
+Phase 10G performs the outcome join only in memory and never writes a joined
+contract-level research file. Its guarded outputs bring namespace use to
+5,348,508,429 bytes, leaving 20,200,691 bytes below the 5-GiB ceiling. Free
+disk after deterministic replay was 107,832,115,200 bytes (about 100.42 GiB).
+New generated work must preflight this narrow namespace headroom.

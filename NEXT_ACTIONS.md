@@ -1,6 +1,6 @@
 # Next Actions
 
-Last updated: 2026-08-24
+Last updated: 2026-08-25
 
 ## Phase 10A-R — completed
 
@@ -139,3 +139,33 @@ opened. If approved, separately release the outcome quarantine. Until both
 actions occur, do not open outcome artifacts, merge results, compute bias,
 calibration or Brier scores, redraw the sample, change price rules, add
 observation-propensity weights, or pool PR1 and PR2.
+
+## Phase 10G — completed; next phase is paper-ready reporting
+
+The owner approved the frozen plan and minimal binary-outcome release. Phase
+10G completed the pre-specified PR2 analysis without changing sample
+identities, anchors, prices, weights, exclusions, or StudyRules. The primary
+family-target favorite-longshot contrast is 0.01004 with a 95% interval of
+-0.02358 to 0.04565; every pre-specified robustness contrast also spans zero.
+
+The next autonomous phase should convert the frozen Phase 10G artifacts into
+paper-ready tables, figures, and a limitations section. It must:
+
+1. Treat the family-target result as primary and contract-target result as
+   secondary; preserve all pre-specified support gates.
+2. Report resolution missingness and the resolved-versus-unresolved ex-ante
+   comparison before inferential estimates.
+3. Show the ten fixed calibration bins with simultaneous caution about
+   multiple comparisons; do not select the isolated `0.3-0.4` bin after the
+   fact.
+4. Present all five frozen robustness definitions, including both spread
+   sensitivities, without redefining or mixing price measures.
+5. State that inference is limited to the frozen, observable PR2 Sports sample
+   and does not identify venue-wide behavior or the PR1 population.
+6. Keep v1/v2 generated outputs as immutable provenance and use only the v3
+   commit identity
+   `931a1d35de134e91eee3ed71041a712414c1435fbcd37f1ffc28b263e746252e`
+   for reporting.
+
+No generated-data expansion, new outcome fields, new subgroup search, sample
+redraw, observation-weight change, or methodology change is authorized.
