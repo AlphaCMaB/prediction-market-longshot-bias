@@ -30,3 +30,7 @@ __pycache__/
 
 # Mac
 .DS_Store
+
+# Local Phase 10E review working files
+phase_10e_all_165_cases.txt
+phase_10e_all_165_cases_numbered.csv
