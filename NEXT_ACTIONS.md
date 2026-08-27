@@ -1,6 +1,6 @@
 # Next Actions
 
-Last updated: 2026-08-25
+Last updated: 2026-08-28
 
 ## Phase 10A-R — completed
 
@@ -185,3 +185,10 @@ family-target primary result and contract-target secondary result. Any new
 subgroup, model, horizon, price definition, or multiple-comparison procedure
 would be a separately labeled exploratory extension and requires a new
 methodological decision before implementation.
+
+For mentor review, begin with the repository `README.md`, then the compact
+`reports/phase_10g/MENTOR_EXECUTIVE_SUMMARY.md`, and use
+`reports/phase_10g/PAPER_REPORT.md` for the complete methods, results,
+discussion, limitations, tables, and figures. Record requested editorial edits
+separately from any proposed new analysis; the latter requires an explicit
+methodological decision and must not overwrite the frozen confirmatory result.

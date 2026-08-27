@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-08-25
+Last updated: 2026-08-28
 Branch: `methodology-v2-clean`
 
 ## Research objective
@@ -749,3 +749,17 @@ review verified all table cells against their pinned sources, visually
 inspected all four figures, reproduced all 19 files byte-for-byte, and passed
 the full 769-test offline suite plus scoped Black, pyflakes, compilation, TOML,
 and `git diff --check` validation.
+
+## Mentor handoff — finalized
+
+The repository root README now presents the completed study rather than the
+superseded Week 1 prototype. It gives the frozen primary conclusion and
+confidence interval, documents the sample construction and safeguards, states
+the principal limitations, and links directly to the mentor summary, combined
+paper report, tables, figures, and reproducibility manifest. The report
+generator's plotting dependency is explicitly declared in `requirements.txt`.
+
+This editorial handoff changes no sample, anchor, price, outcome, weight,
+estimand, inference procedure, StudyRules setting, or numerical result. Large
+generated artifacts remain ignored and local; the compact aggregate reporting
+package remains the only published analysis output.

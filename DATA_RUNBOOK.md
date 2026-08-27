@@ -1,6 +1,6 @@
 # Data Runbook
 
-Last updated: 2026-08-25
+Last updated: 2026-08-28
 
 ## Non-negotiable safety limits
 
@@ -1075,7 +1075,8 @@ New generated work must preflight this narrow namespace headroom.
 Generate or validate the complete reporting package from repository root:
 
 ```console
-python -m scripts.pipeline_v2.build_phase_10g_paper_report
+python -m scripts.pipeline_v2.build_phase_10g_paper_report \
+  --code-commit 250b9d3f3f1117b7f421020c80b368f2eb02bf5e
 ```
 
 The authoritative output root is `reports/phase_10g/`. The command verifies
@@ -1092,6 +1093,21 @@ manifest records every input and output hash and has SHA-256
 Do not edit numerical table cells or plotted values manually; revise the
 generator and rerun if an approved presentational change is needed.
 
+Always supply the pinned generator commit shown above when replaying the
+published package. Without it, the command uses the current Git HEAD, which is
+appropriate for creating a new package but intentionally differs after later
+documentation-only commits.
+
 This reporting stage reads only already-approved aggregate analysis artifacts.
 It does not reopen the quarantined outcome source, persist contract-level
 joined data, make network requests, or alter the frozen methodology.
+
+### Mentor handoff validation — 2026-08-28
+
+Before sharing the repository, validate the root README links, rerun the
+deterministic Phase 10H reporting command with its pinned generator commit,
+run the full offline test suite, and confirm that
+`git ls-files data/pipeline_v2` is empty. The mentor-facing entry points are
+`README.md`, `reports/phase_10g/MENTOR_EXECUTIVE_SUMMARY.md`, and
+`reports/phase_10g/PAPER_REPORT.md`. Do not commit the local generated
+namespace as part of an editorial handoff.
