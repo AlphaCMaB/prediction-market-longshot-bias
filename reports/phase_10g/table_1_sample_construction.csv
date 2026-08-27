@@ -1,0 +1,11 @@
+Stage,Component,Count,Interpretation
+1,Source event-family universe,427090,Complete Kalshi event universe before anchor screening
+2,Verified ex-ante anchors,167954,PR1-M and PR2-M rules; not an attrition estimate
+3,Verified anchors in frozen window,161343,Anchor time within the pre-specified analysis window
+4,Structurally eligible at t-1h,112166,At least one associated market existed by the target
+5,PR2 eligible family population,64775,Confirmatory scheduled-event-start Sports population
+6,Frozen sampled families,5000,Probability sample drawn before price and outcome access
+7,Frozen sampled contracts,11573,At most three contracts per sampled family
+8,Primary price-observable contracts,9388,Valid midpoint at t-1h with no more than 15-minute staleness
+9,Primary binary-resolved contracts,9353,Price-observable contracts with yes/no resolution
+10,Primary binary-resolved families,4360,Families contributing at least one resolved primary contract
