@@ -1,7 +1,7 @@
 # Project Status
 
-Last updated: 2026-08-28
-Branch: `methodology-v2-clean`
+Last updated: 2026-09-16
+Branch: `main`
 
 ## Research objective
 
@@ -763,3 +763,19 @@ This editorial handoff changes no sample, anchor, price, outcome, weight,
 estimand, inference procedure, StudyRules setting, or numerical result. Large
 generated artifacts remain ignored and local; the compact aggregate reporting
 package remains the only published analysis output.
+
+## Phase 10I — exploratory extension approved and specified
+
+The owner approved a separate post-confirmatory analysis aimed at trading
+interpretation: observed-spread taker entries, pre-target liquidity diagnostics,
+conditional-on-fill maker scenarios, and a separately sampled cross-category
+extension. The exact specification is recorded in
+`PHASE_10I_EXPLORATORY_ANALYSIS_PLAN.md` before Phase 10I estimates are run.
+
+The frozen Phase 10G analysis remains unchanged. The current Sports artifacts
+contain the necessary bid, ask, spread, trade-close, volume, open-interest, and
+timestamp evidence for a compact offline extension. Cross-category production
+is not yet feasible: the prior PR1 pilot yielded zero usable 15-minute quotes
+or trades in 135 requests, and the guarded namespace has only 20,176,099 bytes
+of headroom. Phase 10I will produce a no-network source/sampling preflight before
+any new acquisition.

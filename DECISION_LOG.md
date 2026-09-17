@@ -693,3 +693,26 @@ The resulting package is under `reports/phase_10g/`. Its manifest SHA-256 is
 and its generator is pinned to code commit
 `250b9d3f3f1117b7f421020c80b368f2eb02bf5e`. Reporting changed no frozen
 analysis input and made no network request.
+
+## 2026-09-15 — Approve a separate exploratory execution-aware extension
+
+Status: approved; Phase 10G remains frozen
+
+The owner approved Phase 10I with executable taker prices as the primary
+applied analysis, pre-target liquidity measures only, market-making as
+conditional scenario analysis rather than realized P&L, and a separately
+sampled cross-category extension.
+
+Decision: Phase 10I is post-confirmatory and must be labeled exploratory.
+Observed YES bid/ask closes may define top-of-book taker entries. Exact
+historical market-specific fees are unavailable, so observed-spread gross
+profit is primary and published standard-fee calculations are scenarios.
+Market-maker entries are conditional on fill and may not imply queue position,
+capacity, or realized execution. Activity fields must come only from candles
+ending no later than the frozen target.
+
+The prior fixed-clock pilot makes the current historical source nonviable for a
+cross-category rerun. A separate cross-category sample therefore requires a
+validated alternative source or prospective collection, a new sample identity,
+and a new outcome quarantine. No Phase 10G sample, StudyRules setting, result,
+or interpretation is changed.

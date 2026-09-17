@@ -1,6 +1,6 @@
 # Next Actions
 
-Last updated: 2026-08-28
+Last updated: 2026-09-16
 
 ## Phase 10A-R — completed
 
@@ -192,3 +192,16 @@ For mentor review, begin with the repository `README.md`, then the compact
 discussion, limitations, tables, and figures. Record requested editorial edits
 separately from any proposed new analysis; the latter requires an explicit
 methodological decision and must not overwrite the frozen confirmatory result.
+
+## Phase 10I — exploratory execution-aware extension approved
+
+1. Preserve and revalidate every frozen Phase 10G hash.
+2. Implement the separately labeled Sports taker-price, pre-target activity,
+   and conditional market-maker scenarios in
+   `PHASE_10I_EXPLORATORY_ANALYSIS_PLAN.md`.
+3. Use compact aggregate outputs only; the guarded namespace has roughly
+   20.2 MB of headroom.
+4. Produce a no-network cross-category sampling and storage preflight. Do not
+   acquire PR1 prices using the previously nonviable source.
+5. Stop before cross-category acquisition unless an approved source and full
+   auditable storage projection fit the existing guards.
