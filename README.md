@@ -204,6 +204,7 @@ turns the limitation into a testable next hypothesis.
 - [Reproducibility manifest](reports/phase_10g/reproducibility_manifest.json)
 - [Exploratory execution-aware results](reports/phase_10i/PHASE_10I_RESULTS.md)
 - [Execution tables and reproducibility manifest](reports/phase_10i/reproducibility_manifest.json)
+- [Prospective cross-category design](reports/phase_10j/PHASE_10J_OFFLINE_PREFLIGHT.md)
 
 ## Reproduce the published package
 

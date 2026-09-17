@@ -810,16 +810,38 @@ pyflakes, compilation, TOML validation, and `git diff --check` passed. The
 guarded namespace remains 5,348,533,021 bytes with 20,176,099 bytes of
 headroom; no Phase 10I generated data were added there.
 
-## Phase 10J — prospective route selected
+## Phase 10J-A — prospective offline design complete
 
 The owner selected a new prospective cross-category collection rather than an
 alternative historical source. Phase 10J is a new study identity and cannot
 alter the frozen Phase 10G window, sample, estimates, or conclusion.
 
-Phase 10J-A is limited to an offline design and fail-closed planner. The
-proposed first cohort window, sampling probabilities, anchor-freeze rule,
-executable order-book snapshots, depth scenarios, pre-target trade queries,
-outcome quarantine, and phased authorization gates are recorded in
-`PHASE_10J_PROSPECTIVE_COLLECTION_PLAN.md`. No production window, credentialed
-smoke, network acquisition, namespace increase, or outcome release is yet
-authorized.
+The deterministic offline planner is complete under `reports/phase_10j/`. The
+proposed cohort uses an eight-day discovery warm-up beginning 2026-09-23 and a
+92-day anchor window `[2026-10-01, 2027-01-01)`. Fixed category-level Bernoulli
+probabilities target 625 families each in Sports, Crypto, and Financials;
+Climate and Weather and Commodities are censuses expected to remain
+descriptive. Contract sampling is capped at three per family with exact
+conditional and marginal inclusion probabilities.
+
+Planning implies approximately 2,019.2 enrolled families, at most 6,058
+contracts, and 6,180–10,098 base requests before discovery polling, trade
+pagination, retries, or rate limiting. Two fully pre-target order-book attempts
+support executable one-, ten-, and 100-contract depth measures; separately
+timestamp-filtered trades supply pre-target activity. Midpoint, taker, trade,
+and conditional-maker measures cannot mix.
+
+Every production storage scenario exceeds the remaining 20,176,099-byte
+namespace headroom: compact 58,015,744 bytes, planning 165,658,624 bytes, and
+stress 430,571,520 bytes. Free disk passes the 80 GiB floor in all scenarios,
+but the 5 GiB namespace ceiling blocks production. A proposed Phase 10J-B smoke
+is capped at 20 families, 60 contracts, and 5 MiB and requires explicit
+approval plus read credentials. The smoke must measure actual request and byte
+rates before any production ceiling is proposed.
+
+Phase 10J-A made zero network requests, realized no sample, accessed no
+outcome, wrote nothing to the generated namespace, and changed neither
+StudyRules nor Phase 10G/10I. Eleven focused tests and the full 791-test offline
+suite pass. Planner source commit:
+`2ff886b1114c29b08330f2304632664c1bb9d730`; reproducibility-manifest
+SHA-256: `287953e408faf07f1dab5b8d57e7bed0b9b73cdcb76e57354280ba79820f351c`.

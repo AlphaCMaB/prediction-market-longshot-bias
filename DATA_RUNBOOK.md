@@ -1169,3 +1169,47 @@ Acceptance passed 11 focused tests and the full 780-test offline suite, scoped
 Black, pyflakes, compilation, TOML parsing, visual inspection of both figures,
 and `git diff --check`. Repository-wide Black continues to identify 72
 pre-existing legacy files and is not used as a Phase 10I acceptance gate.
+
+### Phase 10J-A prospective offline planner — 2026-09-16
+
+Generate or validate the compact no-network preflight from repository root:
+
+```console
+python -m scripts.pipeline_v2.build_phase_10j_prospective_plan \
+  --code-commit 2ff886b1114c29b08330f2304632664c1bb9d730
+```
+
+The command verifies the Phase 10J plan, Phase 10I cross-category hard stop,
+frozen configuration hash, and StudyRules fingerprint. It writes only tracked
+aggregate design artifacts under `reports/phase_10j/`; it does not write to
+`data/pipeline_v2`, realize future identities, make a request, read credentials,
+or access outcomes. Existing outputs are immutable and replay byte-for-byte.
+
+The proposed cohort has discovery warm-up at `2026-09-23T00:00:00Z` and an
+anchor window `[2026-10-01T00:00:00Z, 2027-01-01T00:00:00Z)`. Planning expects
+2,019.175 sampled families and caps the sample at 6,058 contracts. Base request
+estimates are 6,180–10,098 before discovery, pagination, retry, and rate-limit
+effects. These are planning values, not production authorization.
+
+Storage scenarios are 58,015,744 compact, 165,658,624 planning, and
+430,571,520 stress bytes. All exceed the 20,176,099-byte namespace headroom,
+although each preserves the 80 GiB free-space floor. Production is fail-closed
+until a bounded smoke measures actual rates and the owner approves a larger
+ceiling.
+
+Artifact SHA-256 values:
+
+- offline preflight memo: `d7e582e5831fdc89b60db285c6cbfe2a5b584b772e04b5c062cd23311c3140fc`;
+- machine-readable preflight: `468004e55e7dd80adc696cedd318ac8a7213c2e882793ec0c837bcaea3cf2c59`;
+- sampling plan: `2dfdc93827e4ee328ae5217b43456510db2d1b3efa48fcf92442e801c9e8a0ce`;
+- capture schema: `13e9333add56e694b11627806169db7cfd731bfc1535a9671f0ebd12276fb4b4`;
+- reproducibility manifest: `287953e408faf07f1dab5b8d57e7bed0b9b73cdcb76e57354280ba79820f351c`;
+- prospective plan: `b29e777123c8942510470195c790ac0bf7d199e3fc5d505cb626ff6e10d061d3`.
+
+Phase 10J-B is not authorized. If approved, it is read-only and capped at 20
+families, 60 contracts, and 5 MiB. Run a fresh fail-closed disk/namespace check,
+retrieve the authenticated account limits, and require credentials via the
+environment or an external path that is never printed or committed. Stop on a
+schema change, late order-book response, trade outside the requested pre-target
+interval, cursor failure, duplicate identity, forbidden outcome field, rate-
+limit anomaly, storage breach, or free disk below 80 GiB.

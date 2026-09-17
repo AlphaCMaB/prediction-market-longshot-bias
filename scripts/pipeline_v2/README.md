@@ -715,3 +715,24 @@ cross-category preflight draws no sample and makes no request because the
 validated PR1 pilot returned 0/135 usable 15-minute quotes or trades. A new
 historical source or a prospective design requires explicit methodological
 approval, a new sample identity, and a new outcome quarantine.
+
+## Phase 10J-A prospective collection planner
+
+`build_phase_10j_prospective_plan` creates the no-network design for a new
+future cross-category cohort:
+
+```console
+python -m scripts.pipeline_v2.build_phase_10j_prospective_plan \
+  --code-commit 2ff886b1114c29b08330f2304632664c1bb9d730
+```
+
+The planner pins the proposed window, exact hash-based family probabilities,
+three-contract cap, outcome-free schemas, fully pre-target order-book timing,
+depth-aware executable-price fields, trade-window validation, storage
+scenarios, and smoke gates. It produces only compact tracked files under
+`reports/phase_10j/` and leaves the generated namespace unchanged.
+
+Production is intentionally blocked: all storage scenarios exceed current
+headroom. A credentialed Phase 10J-B smoke is a separate approval gate and may
+not place orders or access outcomes. Politics and Entertainment remain excluded
+until a separate outcome-blind timing-rule audit is approved.

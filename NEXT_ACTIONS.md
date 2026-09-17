@@ -219,11 +219,23 @@ Do not treat the conditional-maker scenario as realized P&L, impute prices for
 the 928 no-candle contracts, modify Phase 10G, acquire data under the failed
 historical source, or exceed the remaining 20,176,099-byte namespace headroom.
 
-## Phase 10J-A — prospective route selected; offline design in progress
+## Phase 10J-A — complete; Phase 10J-B approval gate
 
-Build and validate the no-network planner described in
-`PHASE_10J_PROSPECTIVE_COLLECTION_PLAN.md`. It must produce deterministic
-sampling probabilities, request/storage scenarios, schemas, endpoint and
-credential gates, and a bounded Phase 10J-B smoke specification. Do not make
-API requests, realize the future sample, access outcomes, or increase the
-generated namespace during Phase 10J-A.
+Review `reports/phase_10j/PHASE_10J_OFFLINE_PREFLIGHT.md` and approve or modify
+the exact prospective window before discovery begins:
+
+- discovery warm-up: `2026-09-23T00:00:00Z`;
+- enrollment anchors: `[2026-10-01T00:00:00Z, 2027-01-01T00:00:00Z)`;
+- inferential targets: Sports, Crypto, and Financials;
+- descriptive censuses: Climate and Weather and Commodities;
+- Politics and Entertainment excluded pending a new timing-rule audit.
+
+Separately approve a read-only Phase 10J-B smoke capped at 20 families, 60
+contracts, and 5 MiB. It requires Kalshi read credentials outside Git and may
+query account rate limits, open/unopened metadata, order books, and trades only.
+It may not place orders, access outcomes, sample replacements, or change the
+approved timing rules.
+
+Do not approve a production namespace ceiling or request budget until the smoke
+measures compressed bytes, pagination, latency, schemas, and rate limits. The
+current 5 GiB ceiling is a hard stop for production.

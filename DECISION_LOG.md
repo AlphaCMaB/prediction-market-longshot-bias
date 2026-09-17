@@ -755,3 +755,21 @@ The exact future window, credentialed smoke, namespace increase, and production
 request budget remain explicit gates because they determine the population and
 operational risk. Politics and Entertainment remain excluded until a separate
 outcome-blind timing-rule audit is approved.
+
+## 2026-09-16 — Complete Phase 10J-A and retain the production hard stop
+
+Status: offline design complete; window and authenticated smoke not approved
+
+The prospective planner fixes hash-based category sampling before prices and
+outcomes, retains a three-contract family cap, and separates executable depth,
+midpoint, actual-trade, and conditional-maker measures. The proposed 92-day
+window is a new cohort. Politics and Entertainment remain outside the frame
+because adding timing rules is a distinct methodological decision.
+
+Decision: no production collection may begin under the current 5 GiB namespace
+ceiling. Even the compact planning case requires 58,015,744 additional bytes,
+versus 20,176,099 available. The next eligible action is a separately approved
+read-only schema smoke of at most 20 families, 60 contracts, and 5 MiB using
+credentials supplied outside the repository. Only smoke measurements may
+support a later request to increase the namespace ceiling and authorize the
+production cohort.
