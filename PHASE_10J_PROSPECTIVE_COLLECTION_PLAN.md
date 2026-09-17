@@ -26,6 +26,11 @@ The proposed first production cohort is:
 
 `[2026-10-01T00:00:00Z, 2027-01-01T00:00:00Z)`
 
+Discovery must begin at `2026-09-23T00:00:00Z`, eight days before enrollment,
+so families near the opening boundary can satisfy the two-hour anchor-freeze
+requirement. Warm-up discovery does not make a family eligible unless its
+anchor lies inside the cohort interval.
+
 The interval contains 92 days and is not yet approved for production. A family
 belongs to the cohort when its frozen ex-ante anchor falls inside this interval.
 The interval is selected before any Phase 10J outcome is observed. Extending or
