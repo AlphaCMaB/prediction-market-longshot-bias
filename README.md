@@ -1,178 +1,203 @@
-# Prediction Market Longshot Bias
+# Do Prediction Markets Overprice Longshots?
 
-This repository contains a leakage-resistant empirical study of
-favorite–longshot bias in Kalshi prediction markets. The current analysis is
-complete through deterministic paper-ready reporting.
+A contract that costs five cents can pay a dollar. That lottery-like payoff is
+exactly why longshots are interesting—and why traders have long suspected that
+people overpay for them.
 
-> **Primary conclusion:** In the pre-specified PR2 Sports sample, we detect no
-> statistically distinguishable evidence of favorite–longshot bias.
+I tested that idea on Kalshi. Starting from 427,090 event families, I built an
+outcome-blind pipeline that identified event start times, sampled 11,573
+contracts, reconstructed prices one hour before each event, and only then
+released the outcomes.
 
-This conclusion is deliberately narrow. It applies to verified
-scheduled-event-start Sports markets, the frozen probability sample, and
-contracts with valid observable prices one hour before the event. It does not
-show that Kalshi as a whole has no favorite–longshot bias, that the true effect
-is exactly zero, or that markets are perfectly calibrated.
+The headline was not what I expected:
 
-## Main result
+> **Among Sports markets with a recent two-sided quote, I found no clear
+> evidence that longshots were more overpriced than favorites.**
 
-The primary estimand gives equal target weight to market families and uses the
-latest fully pre-event YES bid/ask midpoint within 15 minutes of the frozen
-one-hour horizon.
+That is not the same as saying the bias never exists. In fact, the most
+interesting next question may be whether the bias is concentrated in the
+quiet, thinly traded markets that were hardest to observe.
 
-| Quantity | Estimate | 95% family-cluster bootstrap interval |
+## The 60-second version
+
+- The final analysis used **9,353 resolved contracts from 4,360 Sports event
+  families**.
+- Prices were measured **one hour before the event**, using a bid/ask midpoint
+  no more than 15 minutes old.
+- The longshot-minus-favorite calibration gap was **+1.00 percentage point**,
+  with a 95% interval from **-2.36 to +4.57 points**.
+- A classic favorite–longshot bias would produce a negative number. The
+  estimate was small, positive, and statistically indistinguishable from zero.
+- Five pre-planned checks—using older quotes, actual trade closes, and tighter
+  spreads—gave the same qualitative answer.
+- The conclusion is intentionally narrow: it applies to the observable Sports
+  sample, not every Kalshi market.
+
+## What does “longshot bias” mean?
+
+Suppose a YES contract trades at $0.10. If it wins 10% of the time, the price
+is well calibrated. If it wins only 6% of the time, buyers are paying ten cents
+for something worth roughly six cents before fees—the kind of overpricing the
+favorite–longshot hypothesis predicts.
+
+I compared that pricing gap for contracts below $0.20 with the same gap for
+contracts at or above $0.80. Under this definition, a negative
+longshot-minus-favorite number points toward the classic bias.
+
+## The hard part was deciding what “one hour before” means
+
+Prediction-market records include settlement, close, and expiration times.
+Those are convenient timestamps, but they can be recorded after the thing a
+trader was trying to forecast. Using them would quietly leak future information
+into the study.
+
+So I separated the project into stages:
+
+```mermaid
+flowchart LR
+    A["427,090 event families"] --> B["167,954 verified ex-ante anchors"]
+    B --> C["64,775 eligible PR2 Sports families"]
+    C --> D["5,000 families sampled"]
+    D --> E["11,573 contracts"]
+    E --> F["9,388 with a recent midpoint"]
+    F --> G["9,353 priced and resolved"]
+```
+
+First I identified event times from information that existed before the event.
+Then I froze the sample, prices, weights, and analysis plan. Outcomes stayed
+quarantined until those decisions passed an audit. This made the result slower
+to produce, but much harder to accidentally overfit.
+
+## What the data said
+
+| Result | Estimate | 95% family-cluster interval |
 |---|---:|---:|
-| Weighted calibration gap, `Y-P` | 0.00285 | [-0.00333, 0.00906] |
-| Longshot-minus-favorite contrast | 0.01004 | [-0.02358, 0.04565] |
+| Overall outcome-minus-price gap | +0.285 percentage points | [-0.333, +0.906] |
+| Longshot-minus-favorite gap | +1.004 percentage points | [-2.358, +4.565] |
 
-The frozen contrast is
-`mean(Y-P | P < 0.20) - mean(Y-P | P >= 0.80)`. A negative value is
-directionally consistent with the classical favorite–longshot pattern. The
-estimated contrast is small and positive, and its interval includes zero. All
-five pre-specified robustness intervals also include zero.
+The chart below compares market prices with the fraction of contracts that
+actually resolved YES. A perfectly calibrated market would sit on the diagonal.
 
-![Favorite-longshot robustness estimates](reports/phase_10g/figure_3_robustness_forest.png)
+![Calibration curve for the frozen Sports sample](reports/phase_10g/figure_1_calibration_curve.png)
 
-## Study sample
+No individual robustness choice changes the main story. Every interval in the
+next chart crosses zero.
 
-The stages below describe different populations and should not be interpreted
-as a single undifferentiated attrition sequence.
+![Longshot-favorite estimates across price definitions](reports/phase_10g/figure_3_robustness_forest.png)
 
-| Stage | Count |
-|---|---:|
-| Original Kalshi event-family universe | 427,090 families |
-| Verified PR1-M or PR2-M anchors | 167,954 families |
-| Verified anchors inside the frozen window | 161,343 families |
-| Structurally eligible at the one-hour horizon | 112,166 families |
-| Confirmatory PR2 Sports population | 64,775 families |
-| Frozen probability sample | 5,000 families / 11,573 contracts |
-| Primary price-observable sample | 9,388 contracts |
-| Primary binary-resolved sample | 9,353 contracts / 4,360 families |
+The honest reading is not “Kalshi is perfectly efficient.” It is: **this study
+did not detect the classic bias in a pre-specified sample of observable Sports
+markets.**
 
-Binary outcomes were available for 11,495 sampled contracts; 78 were
-unresolved or nonbinary and remained missing without replacement or adaptive
-reweighting. Weighted resolution coverage was 99.21% for the family target and
-99.46% for the contract target.
+## Why start with the midpoint?
 
-## Research design
+The midpoint between the best YES bid and ask is a useful estimate of the
+market's probability. It is less dependent on one potentially stale trade and
+lets us compare contracts on a common basis.
 
-The design separates event timing, prices, and outcomes to prevent look-ahead
-bias:
+But it is not an executable price. A trader usually buys at the ask or sells at
+the bid, pays fees, and may face limited size. That distinction matters. The
+current result is a clean test of pricing calibration, not a claim that the
+strategy could have earned the midpoint return.
 
-1. **Ex-ante anchors.** Settlement, resolution, close, and expiration times are
-   prohibited as research anchors. Candidate event times were constructed from
-   outcome-blind metadata and audited before verification.
-2. **Frozen timing rules.** PR1-M covers approved fixed-clock cases; PR2-M
-   covers one official scheduled-event-start milestone. The confirmatory price
-   analysis is PR2-M Sports only because historical PR1 midpoint coverage was
-   too sparse.
-3. **Frozen horizon and prices.** The target is one hour before the verified
-   event time. The primary measure is a fully pre-target bid/ask midpoint with
-   no more than 15 minutes of staleness. No post-target or previous-price
-   fallback is allowed.
-4. **Probability sampling.** Families were sampled within month × family-size
-   strata, with at most three contracts per family. Exact inclusion
-   probabilities support separate family- and contract-target weights.
-5. **Outcome quarantine.** Outcomes were inaccessible until anchors, sample
-   identities, prices, weights, exclusions, and the analysis plan were frozen
-   and audited. Only a three-field binary-outcome projection was released.
-6. **Family-aware inference.** The primary estimator is family-weighted.
-   Uncertainty uses 10,000 deterministic stratified family-cluster bootstrap
-   replicates.
+The data already preserve the bid, ask, spread, most recent trade close, and
+their timestamps. That makes an execution-aware follow-up possible without
+changing the original result:
 
-The frozen analysis window is
-`[2025-07-01T00:00:00Z, 2026-07-01T00:00:00Z)`. The `StudyRules` fingerprint is
-`12d6955f57b50b5587fdadf02b2bc96e7de48d022c9ac3cc2fe0425d907b9901`.
+1. **Taker returns.** Price a YES purchase at the YES ask and the opposing
+   position at its executable side, then subtract the applicable fees.
+2. **Trade-based estimates.** Use the last observed trade only with an explicit
+   age limit. A last trade is a real transaction, but it is not automatically
+   the current “true price.”
+3. **Market-making scenarios.** Estimate the edge available inside a spread,
+   while reporting results under explicit fill assumptions. A displayed quote
+   alone does not prove that a passive order would have filled or had queue
+   priority.
 
-## Paper-ready materials
+Those analyses would answer a more directly tradable question: not merely
+whether quoted probabilities were calibrated, but whether any apparent error
+survived the spread, fees, staleness, and execution constraints.
 
-The mentor-facing reporting package is in [`reports/phase_10g/`](reports/phase_10g/):
+## The missing markets may be the interesting markets
 
-- [combined paper report](reports/phase_10g/PAPER_REPORT.md);
-- [Methods](reports/phase_10g/METHODS.md),
-  [Results](reports/phase_10g/RESULTS.md),
-  [Discussion](reports/phase_10g/DISCUSSION.md), and
-  [Limitations](reports/phase_10g/LIMITATIONS.md);
-- [short mentor summary](reports/phase_10g/MENTOR_EXECUTIVE_SUMMARY.md);
-- [sample construction](reports/phase_10g/table_1_sample_construction.csv),
-  [primary and robustness estimates](reports/phase_10g/table_2_primary_and_robustness.csv),
-  [calibration deciles](reports/phase_10g/table_3_calibration_deciles.csv), and
-  [missingness diagnostics](reports/phase_10g/table_4_missingness_observability.csv);
-- four figures in publication PNG and editable SVG formats; and
-- the [reproducibility manifest](reports/phase_10g/reproducibility_manifest.json).
+The primary sample excluded 928 contracts with no pre-target candle and 1,256
+whose nearest valid midpoint was 15–60 minutes old. Price availability was not
+random: observable and unavailable contracts differed by market age, family
+size, and month.
 
-The calibration and observability figures are also available directly:
+![Price-observability diagnostics](reports/phase_10g/figure_4_observability_diagnostics.png)
 
-- [Figure 1: calibration curve](reports/phase_10g/figure_1_calibration_curve.png)
-- [Figure 2: calibration gap by decile](reports/phase_10g/figure_2_decile_calibration_gap.png)
-- [Figure 3: robustness forest plot](reports/phase_10g/figure_3_robustness_forest.png)
-- [Figure 4: price-observability diagnostics](reports/phase_10g/figure_4_observability_diagnostics.png)
+That creates a plausible trading hypothesis:
 
-## Important limitations
+> Heavily followed markets may be efficient because information and capital
+> arrive quickly. Longshot bias may be easier to find in low-attention markets
+> with fewer trades, wider spreads, or stale quotes.
 
-- The confirmatory estimate covers PR2-M scheduled-event-start Sports markets,
-  not every Kalshi category or timing structure.
-- Inference is conditional on a valid pre-target price. Observability was not
-  random, and no observation-propensity correction was used because its
-  assumptions were not defensible.
-- A bid/ask midpoint is indicative rather than necessarily executable.
-- Contracts within one event family are dependent; the weighting and bootstrap
-  preserve that family structure.
-- The confidence interval including zero is not proof that the true effect is
-  zero.
-- One of ten descriptive calibration-bin intervals excludes zero, but it was
-  not the primary contrast, the ten bins are reported jointly, and the profile
-  does not show a monotonic favorite–longshot pattern.
+The current study does **not** establish that hypothesis. “Missing a recent
+quote” can reflect several things besides low attention, and selecting markets
+after seeing their outcomes would create a new bias. A defensible follow-up
+should define attention using information available before the target time—such
+as prior trade count, volume, quote availability, spread, market age, and open
+interest—and freeze those definitions before comparing outcomes.
 
-See the full [Limitations section](reports/phase_10g/LIMITATIONS.md) for details.
+## Why look beyond Sports?
 
-## Reproducibility
+Sports was the cleanest first test because event start times are observable and
+repeatable. It may also be a tough place to find a simple edge: major games are
+followed by experienced sportsbooks and many informed traders.
 
-Create a Python environment and run the offline test suite:
+Politics, entertainment, economics, and other categories may have different
+participants, information cycles, and liquidity. The next cross-category study
+should therefore ask two separate questions:
+
+- Does calibration differ by category after applying the same ex-ante timing
+  rules?
+- Does any difference remain after accounting for pre-event liquidity and
+  realistic execution prices?
+
+That extension would be exploratory and separately pre-specified. It would not
+replace the frozen Sports result.
+
+## Why this is a quant project, not just a chart
+
+The statistical estimate is only the final layer. The larger exercise involved:
+
+- building a resumable, partitioned acquisition system for millions of market
+  records;
+- detecting incomplete API collection and recovering omitted events;
+- verifying event times without settlement leakage;
+- designing a two-stage probability sample with exact inclusion weights;
+- reconstructing historical quotes and trades without post-target data;
+- preserving family-level dependence in the bootstrap; and
+- making every published table and figure reproducible from hash-pinned inputs.
+
+The result is less flashy than a profitable backtest, but it is more credible:
+the analysis reports what the data support, surfaces the selection problem, and
+turns the limitation into a testable next hypothesis.
+
+## Read the technical work
+
+- [Short technical summary](reports/phase_10g/MENTOR_EXECUTIVE_SUMMARY.md)
+- [Full methods and results](reports/phase_10g/PAPER_REPORT.md)
+- [Primary and robustness estimates](reports/phase_10g/table_2_primary_and_robustness.csv)
+- [Calibration bins](reports/phase_10g/table_3_calibration_deciles.csv)
+- [Missingness and observability diagnostics](reports/phase_10g/table_4_missingness_observability.csv)
+- [Frozen pre-outcome analysis plan](PHASE_10F_FINAL_ANALYSIS_PLAN.md)
+- [Reproducibility manifest](reports/phase_10g/reproducibility_manifest.json)
+
+## Reproduce the published package
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 python -m pytest -q
-```
-
-With the frozen local data artifacts present, regenerate or validate the
-paper-ready package using:
-
-```bash
 python -m scripts.pipeline_v2.build_phase_10g_paper_report \
   --code-commit 250b9d3f3f1117b7f421020c80b368f2eb02bf5e
 ```
 
-The reporting command verifies every frozen source hash and fails closed if an
-input or existing output differs. The explicit commit argument preserves the
-identity of the code that generated the immutable reporting package even after
-later documentation-only commits. The authoritative Phase 10G analysis
-identity is `931a1d35de134e91eee3ed71041a712414c1435fbcd37f1ffc28b263e746252e`.
-The reporting manifest SHA-256 is
-`db298df905de11e145638d1f633f6829b5a9006f8012f0c02755e5f38443ccc8`.
-
-Large acquisition and contract-level analysis artifacts under
-`data/pipeline_v2/` remain ignored and local; they are not committed to GitHub.
-The repository does include the compact aggregate paper tables, figures, and
-their complete hash manifest. No credentials are stored in the repository.
-
-## Repository guide
-
-- [`reports/phase_10g/`](reports/phase_10g/) — final paper-ready outputs
-- [`scripts/pipeline_v2/`](scripts/pipeline_v2/) — current methodology-v2 code
-- [`scripts/pipeline_v2/README.md`](scripts/pipeline_v2/README.md) — technical pipeline guide
-- [`PHASE_10F_FINAL_ANALYSIS_PLAN.md`](PHASE_10F_FINAL_ANALYSIS_PLAN.md) — plan frozen before outcome access
-- [`PROJECT_STATUS.md`](PROJECT_STATUS.md) — phase-by-phase project record
-- [`DECISION_LOG.md`](DECISION_LOG.md) — methodological decisions and approvals
-- [`DATA_RUNBOOK.md`](DATA_RUNBOOK.md) — reproducibility and safety procedures
-- [`NEXT_ACTIONS.md`](NEXT_ACTIONS.md) — current editorial review gate
-- [`scripts/legacy/`](scripts/legacy/) — superseded prototypes retained for provenance
-
-## Current status
-
-The empirical analysis and deterministic reporting package are complete. The
-next step is mentor/editorial review and integration into the final paper. Any
-new subgroup, model, horizon, price definition, or multiple-comparison
-procedure would be a separately labeled exploratory extension and would not
-replace the frozen confirmatory analysis.
+The authoritative analysis identity is
+`931a1d35de134e91eee3ed71041a712414c1435fbcd37f1ffc28b263e746252e`.
+Large acquisition and contract-level artifacts remain ignored and local;
+GitHub contains the compact aggregate tables, figures, code, tests, and hash
+manifest. No credentials are stored in the repository.
