@@ -764,18 +764,48 @@ estimand, inference procedure, StudyRules setting, or numerical result. Large
 generated artifacts remain ignored and local; the compact aggregate reporting
 package remains the only published analysis output.
 
-## Phase 10I — exploratory extension approved and specified
+## Phase 10I — exploratory execution-aware analysis complete
 
-The owner approved a separate post-confirmatory analysis aimed at trading
-interpretation: observed-spread taker entries, pre-target liquidity diagnostics,
-conditional-on-fill maker scenarios, and a separately sampled cross-category
-extension. The exact specification is recorded in
-`PHASE_10I_EXPLORATORY_ANALYSIS_PLAN.md` before Phase 10I estimates are run.
+The approved post-confirmatory Sports extension is complete under
+`reports/phase_10i/`. Its specification was hash-pinned before estimation, and
+the authoritative run used 10,000 deterministic stratified family-cluster
+bootstrap replicates. The frozen Phase 10G analysis identity and reporting-
+manifest hash remain unchanged.
 
-The frozen Phase 10G analysis remains unchanged. The current Sports artifacts
-contain the necessary bid, ask, spread, trade-close, volume, open-interest, and
-timestamp evidence for a compact offline extension. Cross-category production
-is not yet feasible: the prior PR1 pilot yielded zero usable 15-minute quotes
-or trades in 135 requests, and the guarded namespace has only 20,176,099 bytes
-of headroom. Phase 10I will produce a no-network source/sampling preflight before
-any new acquisition.
+For tail contracts with a frozen midpoint below 0.20 or at least 0.80, the
+primary applied strategy buys the favorite side at the displayed top-of-book
+taker proxy. The family-target result covers 2,261 resolved contracts and
+1,384 families. Gross profit is -0.02145 dollars per contract (95% interval
+-0.03857 to -0.00507). Longshot-side NO purchases produce -0.02419 and
+favorite-side YES purchases -0.01704 dollars per contract. Standard general-
+fee scenarios reduce the combined estimate to -0.03154 for one-contract fee
+rounding and -0.02731 for 100-contract fee rounding. These are top-of-book and
+fee-schedule scenarios, not realized fills or account P&L.
+
+Within the price-observable tail sample, zero reported pre-target-hour volume
+has gross taker profit of -0.05539 across 603 contracts and 504 families;
+positive volume has -0.01117 across 1,658 contracts and 1,041 families. The
+zero-minus-positive difference has a 95% interval of -0.0795 to -0.0088. This
+comparison is exploratory, was designed after Phase 10G outcomes were known,
+and does not identify returns for the 928 contracts without a pre-target
+candle. Conditional maker scenarios are not realized P&L and do not model fill
+probability, queue position, inventory, adverse selection, latency, or depth.
+
+The separately planned cross-category extension stopped before sampling or
+network acquisition. The previously validated PR1 historical-source pilot
+produced 0/135 usable 15-minute midpoints and 0/135 usable 15-minute trades.
+Politics and Entertainment have no coverage under the approved anchor rules.
+Proceeding requires a new methodological choice between validating another
+historical source and defining a prospective collection window; either route
+requires a new sample identity and outcome quarantine.
+
+The Phase 10I generator rehashed all 11,573 raw price requests, found zero
+post-target candles, made zero network requests, persisted no joined contract-
+level outcome data, and reproduced all 12 compact artifacts byte-for-byte.
+Source commit: `9bf98ba33d697a109013f16d06d54252e70e4531`.
+Reproducibility-manifest SHA-256:
+`211639759bac799918ff5a1750493ae54f52e594f118b3d1b2495b4f637ce70b`.
+Acceptance: 11 focused and 780 full offline tests passed; scoped Black,
+pyflakes, compilation, TOML validation, and `git diff --check` passed. The
+guarded namespace remains 5,348,533,021 bytes with 20,176,099 bytes of
+headroom; no Phase 10I generated data were added there.

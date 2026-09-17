@@ -30,6 +30,9 @@ quiet, thinly traded markets that were hardest to observe.
   estimate was small, positive, and statistically indistinguishable from zero.
 - Five pre-planned checks—using older quotes, actual trade closes, and tighter
   spreads—gave the same qualitative answer.
+- In a separate exploratory follow-up, a strategy that crossed the observed
+  spread to buy the favorite side of tail contracts lost **2.15 cents per
+  contract before fees** (95% interval: **-3.86 to -0.51 cents**).
 - The conclusion is intentionally narrow: it applies to the observable Sports
   sample, not every Kalshi market.
 
@@ -89,34 +92,33 @@ The honest reading is not “Kalshi is perfectly efficient.” It is: **this stu
 did not detect the classic bias in a pre-specified sample of observable Sports
 markets.**
 
-## Why start with the midpoint?
+## What happened when I used prices a trader could actually hit?
 
 The midpoint between the best YES bid and ask is a useful estimate of the
 market's probability. It is less dependent on one potentially stale trade and
 lets us compare contracts on a common basis.
 
 But it is not an executable price. A trader usually buys at the ask or sells at
-the bid, pays fees, and may face limited size. That distinction matters. The
-current result is a clean test of pricing calibration, not a claim that the
-strategy could have earned the midpoint return.
+the bid, pays fees, and may face limited size. I therefore ran a separate,
+explicitly exploratory analysis using the top of book a taker could hit. For
+midpoint longshots below $0.20, the strategy bought NO at `1 - YES bid`; for
+favorites at or above $0.80, it bought YES at the YES ask.
 
-The data already preserve the bid, ask, spread, most recent trade close, and
-their timestamps. That makes an execution-aware follow-up possible without
-changing the original result:
+Across 2,261 tail contracts in 1,384 families, the family-weighted strategy
+lost **2.15 cents per contract before fees**. The 95% family-cluster interval
+was **-3.86 to -0.51 cents**. Longshot-side trades lost 2.42 cents and
+favorite-side trades lost 1.70 cents per contract.
 
-1. **Taker returns.** Price a YES purchase at the YES ask and the opposing
-   position at its executable side, then subtract the applicable fees.
-2. **Trade-based estimates.** Use the last observed trade only with an explicit
-   age limit. A last trade is a real transaction, but it is not automatically
-   the current “true price.”
-3. **Market-making scenarios.** Estimate the edge available inside a spread,
-   while reporting results under explicit fill assumptions. A displayed quote
-   alone does not prove that a passive order would have filled or had queue
-   priority.
+![Top-of-book strategy after crossing the spread](reports/phase_10i/figure_1_taker_profit.png)
 
-Those analyses would answer a more directly tradable question: not merely
-whether quoted probabilities were calibrated, but whether any apparent error
-survived the spread, fees, staleness, and execution constraints.
+Standard-fee scenarios made the combined result worse: -3.15 cents under
+one-contract fee rounding and -2.73 cents under 100-contract fee rounding.
+Those are schedule-based illustrations, not reconstructed account P&L. The
+candle data show the displayed top of book, but not depth, latency, or whether
+100 contracts were available there.
+
+The practical takeaway is simple: a probability estimate can look well
+calibrated and still be untradeable once the spread is crossed.
 
 ## The missing markets may be the interesting markets
 
@@ -127,18 +129,26 @@ size, and month.
 
 ![Price-observability diagnostics](reports/phase_10g/figure_4_observability_diagnostics.png)
 
-That creates a plausible trading hypothesis:
+That created a plausible trading hypothesis:
 
 > Heavily followed markets may be efficient because information and capital
 > arrive quickly. Longshot bias may be easier to find in low-attention markets
 > with fewer trades, wider spreads, or stale quotes.
 
-The current study does **not** establish that hypothesis. “Missing a recent
-quote” can reflect several things besides low attention, and selecting markets
-after seeing their outcomes would create a new bias. A defensible follow-up
-should define attention using information available before the target time—such
-as prior trade count, volume, quote availability, spread, market age, and open
-interest—and freeze those definitions before comparing outcomes.
+The exploratory follow-up tested the part of that hypothesis visible in the
+existing data, using only activity recorded before the target. Among tail
+contracts with a usable quote, the taker strategy lost 5.54 cents in markets
+with zero reported volume during the prior hour, versus 1.12 cents when volume
+was positive. The 95% interval for that difference was -7.95 to -0.88 cents.
+
+![Execution scenarios by pre-target activity](reports/phase_10i/figure_2_attention_profit.png)
+
+That is evidence of harsher execution economics in the quiet observable
+markets, not proof that all low-attention markets lack an edge. The 928
+contracts with no pre-target candle still have no defensible executable price,
+so their returns remain unidentified. A passive-entry scenario also cannot
+solve this: its result is conditional on getting filled, precisely the hard
+part in a market with no recent trade.
 
 ## Why look beyond Sports?
 
@@ -147,8 +157,16 @@ repeatable. It may also be a tough place to find a simple edge: major games are
 followed by experienced sportsbooks and many informed traders.
 
 Politics, entertainment, economics, and other categories may have different
-participants, information cycles, and liquidity. The next cross-category study
-should therefore ask two separate questions:
+participants, information cycles, and liquidity. The cross-category preflight
+found a real data constraint before any new sample was drawn: the validated
+historical source produced **0 usable 15-minute quotes and 0 usable 15-minute
+trades in a 135-request fixed-clock pilot**. Politics and Entertainment also
+have no eligible families under the already approved timing rules.
+
+So the extension is intentionally stopped. The next version needs either an
+independently validated historical source or a prospective collection window
+with timestamped quotes, depth, trades, and fees. It should ask two separate
+questions:
 
 - Does calibration differ by category after applying the same ex-ante timing
   rules?
@@ -184,6 +202,8 @@ turns the limitation into a testable next hypothesis.
 - [Missingness and observability diagnostics](reports/phase_10g/table_4_missingness_observability.csv)
 - [Frozen pre-outcome analysis plan](PHASE_10F_FINAL_ANALYSIS_PLAN.md)
 - [Reproducibility manifest](reports/phase_10g/reproducibility_manifest.json)
+- [Exploratory execution-aware results](reports/phase_10i/PHASE_10I_RESULTS.md)
+- [Execution tables and reproducibility manifest](reports/phase_10i/reproducibility_manifest.json)
 
 ## Reproduce the published package
 
@@ -194,10 +214,14 @@ python -m pip install -r requirements.txt
 python -m pytest -q
 python -m scripts.pipeline_v2.build_phase_10g_paper_report \
   --code-commit 250b9d3f3f1117b7f421020c80b368f2eb02bf5e
+python -m scripts.pipeline_v2.run_phase_10i_exploratory_analysis \
+  --code-commit 9bf98ba33d697a109013f16d06d54252e70e4531
 ```
 
 The authoritative analysis identity is
 `931a1d35de134e91eee3ed71041a712414c1435fbcd37f1ffc28b263e746252e`.
+The separate exploratory Phase 10I manifest is
+`211639759bac799918ff5a1750493ae54f52e594f118b3d1b2495b4f637ce70b`.
 Large acquisition and contract-level artifacts remain ignored and local;
 GitHub contains the compact aggregate tables, figures, code, tests, and hash
 manifest. No credentials are stored in the repository.

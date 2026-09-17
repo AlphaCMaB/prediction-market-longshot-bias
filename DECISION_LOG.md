@@ -716,3 +716,26 @@ cross-category rerun. A separate cross-category sample therefore requires a
 validated alternative source or prospective collection, a new sample identity,
 and a new outcome quarantine. No Phase 10G sample, StudyRules setting, result,
 or interpretation is changed.
+
+## 2026-09-16 — Complete Sports Phase 10I and stop cross-category work
+
+Status: Sports analysis complete; methodological choice required for expansion
+
+The outcome-aware exploratory analysis was executed exactly under the
+pre-recorded Phase 10I specification. The displayed-spread taker proxy is the
+primary applied result; standard taker fees remain scenarios because exact
+historical overrides and rebates cannot be reconstructed. Passive-entry
+results remain conditional-on-fill scenarios and are not realized P&L.
+
+Decision: preserve the 2,261-contract/1,384-family Sports result as a distinct
+post-confirmatory package. Do not revise the frozen Phase 10G result or use the
+Phase 10I result as a confirmatory test. The zero-versus-positive pre-target-
+volume comparison is limited to price-observable tail contracts; do not impute
+returns for the 928 contracts with no pre-target candle.
+
+The no-network cross-category preflight triggers the pre-specified hard stop:
+the validated historical source produced 0/135 usable 15-minute PR1 midpoints
+and 0/135 usable PR1 trades. No sample was drawn and no network request was
+made. Choosing between an alternative historical source and a prospective
+collection window changes the population, time period, and trading
+interpretation, so it requires explicit owner approval before work resumes.

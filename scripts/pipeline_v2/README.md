@@ -689,3 +689,29 @@ a combined report, and a manifest containing the source, code, table, and
 figure hashes. Re-running must reproduce every byte; changed or unexpected
 artifacts fail closed. The generator performs no network request and no new
 analysis.
+
+## Phase 10I exploratory execution-aware analysis
+
+`run_phase_10i_exploratory_analysis` is the separately approved,
+post-confirmatory applied extension. It leaves Phase 10G immutable, rehashes
+all frozen price and outcome inputs, derives activity only from pre-target raw
+candles, and persists aggregate reports rather than a joined contract-level
+dataset.
+
+```console
+python -m scripts.pipeline_v2.run_phase_10i_exploratory_analysis \
+  --code-commit 9bf98ba33d697a109013f16d06d54252e70e4531
+```
+
+The taker proxy buys NO against midpoint longshots using `1 - YES bid` and
+buys YES favorites at the YES ask. Published fee calculations are scenarios
+because historical per-market overrides and participant rebates are not in the
+frozen data. Maker calculations use the displayed bid side and are conditional
+on a complete fill; they are never realized-P&L estimates.
+
+The output root is `reports/phase_10i/`. Existing outputs are immutable and a
+rerun reproduces them byte-for-byte after a fresh storage-guard check. The
+cross-category preflight draws no sample and makes no request because the
+validated PR1 pilot returned 0/135 usable 15-minute quotes or trades. A new
+historical source or a prospective design requires explicit methodological
+approval, a new sample identity, and a new outcome quarantine.

@@ -1,0 +1,8 @@
+category,eligible_families,eligible_contracts,proposed_families_if_source_validated,current_rule,historical_source_viable
+Crypto,43889,3269845,500,PR1_fixed_clock,False
+Financials,2930,990760,500,PR1_fixed_clock,False
+Climate and Weather,571,6995,500,PR1_fixed_clock,False
+Commodities,1,15,1,PR1_fixed_clock,False
+Sports,64775,319364,0,PR2_scheduled_start,False
+Politics,0,0,0,no_approved_rule_coverage,False
+Entertainment,0,0,0,no_approved_rule_coverage,False

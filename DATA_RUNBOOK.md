@@ -1111,3 +1111,61 @@ run the full offline test suite, and confirm that
 `README.md`, `reports/phase_10g/MENTOR_EXECUTIVE_SUMMARY.md`, and
 `reports/phase_10g/PAPER_REPORT.md`. Do not commit the local generated
 namespace as part of an editorial handoff.
+
+### Phase 10I exploratory execution-aware analysis — 2026-09-16
+
+The separately specified post-confirmatory analysis is published under
+`reports/phase_10i/`. Reproduce or validate it offline from repository root:
+
+```console
+python -m scripts.pipeline_v2.run_phase_10i_exploratory_analysis \
+  --code-commit 9bf98ba33d697a109013f16d06d54252e70e4531
+```
+
+The runner verifies the Phase 10I plan; frozen Phase 10G manifest and commit;
+minimal outcome projection; normalized price file; raw-request manifest; and
+Phase 10F-C/10F-B2 source reports. It rehashes all 11,573 sample raw responses,
+rejects post-target candles, recalculates activity only from candles ending no
+later than the target, and joins the minimal outcome in memory. It never writes
+a contract-level joined file or changes the guarded generated-data namespace.
+
+Primary family-target Sports results:
+
+- combined favorite-side taker strategy: 2,261 contracts, 1,384 families,
+  -0.0214546 gross dollars per contract, 95% interval -0.0385745 to
+  -0.0050669;
+- longshot-side NO purchase: -0.0241910, interval -0.0411481 to -0.0082702;
+- favorite-side YES purchase: -0.0170378, interval -0.0387935 to 0.0045142;
+- combined one-contract general-fee scenario: -0.0315381;
+- combined 100-contract general-fee-rounding scenario: -0.0273105.
+
+The named activity comparison is zero versus positive reported volume in the
+pre-target response window. Zero-volume contracts produce -0.0553915 gross
+taker profit; positive-volume contracts produce -0.0111731. The 95% interval
+for zero minus positive volume is -0.0795 to -0.0088. Conditional-maker
+results must always be labeled conditional on a complete fill; they do not
+model queue priority, fill probability, inventory, adverse selection, latency,
+depth, or capacity.
+
+The cross-category preflight made zero network requests and drew no sample. It
+stopped because the validated PR1 source pilot had 0/135 usable 15-minute
+midpoints and 0/135 usable 15-minute trades. Do not start acquisition until
+the owner selects and approves a new historical source or prospective design.
+
+Artifact hashes:
+
+- results memo: `0f912c593242362da68b6c9a3d1de7ab2824e873bacaa2aa3750f5684b01a5b7`;
+- analysis report: `85c59e001d7a8b034cdb0fc831bb5c54dbe2cd4db4add319dc980026fcf98d91`;
+- taker table: `66432d33de8444029759c406549b58c62e3cc7a4403974676c7e6d072c5d6bb0`;
+- maker table: `f7f63e87898a82e3a4d886457eb80f0bf798a0109211e97e6a34786ce9bbb979`;
+- activity table: `7a5bd1030d755a2b67c6d6a455c52866d2edba3d9756d643a9063dde2a52c3d3`;
+- cross-category preflight: `e3ddce6cffe180fb19eaebf106508244a96fffd240679b840db8f7c9462f236f`;
+- reproducibility manifest: `211639759bac799918ff5a1750493ae54f52e594f118b3d1b2495b4f637ce70b`.
+
+The 12 tracked outputs use 313,604 bytes. The deterministic replay is byte-
+identical. Phase 10G's reporting-manifest SHA-256 remains
+`db298df905de11e145638d1f633f6829b5a9006f8012f0c02755e5f38443ccc8`.
+Acceptance passed 11 focused tests and the full 780-test offline suite, scoped
+Black, pyflakes, compilation, TOML parsing, visual inspection of both figures,
+and `git diff --check`. Repository-wide Black continues to identify 72
+pre-existing legacy files and is not used as a Phase 10I acceptance gate.

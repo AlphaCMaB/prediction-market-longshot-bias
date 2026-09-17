@@ -193,15 +193,28 @@ discussion, limitations, tables, and figures. Record requested editorial edits
 separately from any proposed new analysis; the latter requires an explicit
 methodological decision and must not overwrite the frozen confirmatory result.
 
-## Phase 10I — exploratory execution-aware extension approved
+## Phase 10I — Sports analysis complete; cross-category decision required
 
-1. Preserve and revalidate every frozen Phase 10G hash.
-2. Implement the separately labeled Sports taker-price, pre-target activity,
-   and conditional market-maker scenarios in
-   `PHASE_10I_EXPLORATORY_ANALYSIS_PLAN.md`.
-3. Use compact aggregate outputs only; the guarded namespace has roughly
-   20.2 MB of headroom.
-4. Produce a no-network cross-category sampling and storage preflight. Do not
-   acquire PR1 prices using the previously nonviable source.
-5. Stop before cross-category acquisition unless an approved source and full
-   auditable storage projection fit the existing guards.
+The separately labeled exploratory Sports analysis is complete. Begin with
+`reports/phase_10i/PHASE_10I_RESULTS.md`; use the CSV tables for exact estimates
+and `reports/phase_10i/reproducibility_manifest.json` for hashes. The frozen
+Phase 10G conclusion remains the only confirmatory result.
+
+The next phase is not autonomous because the two defensible cross-category
+routes have materially different interpretations:
+
+1. validate a different historical source capable of returning executable
+   pre-target quotes/trades for PR1 fixed-clock markets; or
+2. define a new prospective collection window with timestamped quotes, depth,
+   trades, and applicable fee evidence.
+
+Do not draw a cross-category sample until that choice is approved. Either route
+must have a new sample identity, separate category/month/family-size strata,
+exact inclusion probabilities, a fresh outcome quarantine, and a complete
+storage/request preflight. Politics and Entertainment require new outcome-
+blind timing-rule work because the approved PR1/PR2 rules currently yield no
+eligible families in those categories.
+
+Do not treat the conditional-maker scenario as realized P&L, impute prices for
+the 928 no-candle contracts, modify Phase 10G, acquire data under the failed
+historical source, or exceed the remaining 20,176,099-byte namespace headroom.
