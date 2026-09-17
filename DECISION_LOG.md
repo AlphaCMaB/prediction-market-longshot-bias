@@ -739,3 +739,19 @@ and 0/135 usable PR1 trades. No sample was drawn and no network request was
 made. Choosing between an alternative historical source and a prospective
 collection window changes the population, time period, and trading
 interpretation, so it requires explicit owner approval before work resumes.
+
+## 2026-09-16 — Select prospective cross-category collection
+
+Status: prospective route approved for offline design only
+
+The owner selected a prospective collection rather than an alternative
+historical-data search. This creates a new future cohort and does not modify the
+frozen Phase 10G or exploratory Phase 10I populations.
+
+Decision: proceed autonomously with a no-network design and fail-closed
+preflight for live executable quotes, depth, pre-target trades, and fee
+evidence. Production collection is not authorized by this route selection.
+The exact future window, credentialed smoke, namespace increase, and production
+request budget remain explicit gates because they determine the population and
+operational risk. Politics and Entertainment remain excluded until a separate
+outcome-blind timing-rule audit is approved.

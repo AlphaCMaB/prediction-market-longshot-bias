@@ -809,3 +809,17 @@ Acceptance: 11 focused and 780 full offline tests passed; scoped Black,
 pyflakes, compilation, TOML validation, and `git diff --check` passed. The
 guarded namespace remains 5,348,533,021 bytes with 20,176,099 bytes of
 headroom; no Phase 10I generated data were added there.
+
+## Phase 10J — prospective route selected
+
+The owner selected a new prospective cross-category collection rather than an
+alternative historical source. Phase 10J is a new study identity and cannot
+alter the frozen Phase 10G window, sample, estimates, or conclusion.
+
+Phase 10J-A is limited to an offline design and fail-closed planner. The
+proposed first cohort window, sampling probabilities, anchor-freeze rule,
+executable order-book snapshots, depth scenarios, pre-target trade queries,
+outcome quarantine, and phased authorization gates are recorded in
+`PHASE_10J_PROSPECTIVE_COLLECTION_PLAN.md`. No production window, credentialed
+smoke, network acquisition, namespace increase, or outcome release is yet
+authorized.

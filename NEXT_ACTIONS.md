@@ -218,3 +218,12 @@ eligible families in those categories.
 Do not treat the conditional-maker scenario as realized P&L, impute prices for
 the 928 no-candle contracts, modify Phase 10G, acquire data under the failed
 historical source, or exceed the remaining 20,176,099-byte namespace headroom.
+
+## Phase 10J-A — prospective route selected; offline design in progress
+
+Build and validate the no-network planner described in
+`PHASE_10J_PROSPECTIVE_COLLECTION_PLAN.md`. It must produce deterministic
+sampling probabilities, request/storage scenarios, schemas, endpoint and
+credential gates, and a bounded Phase 10J-B smoke specification. Do not make
+API requests, realize the future sample, access outcomes, or increase the
+generated namespace during Phase 10J-A.
